@@ -1,11 +1,11 @@
 # Passmint
 
-A Dockerized monorepo pass management system for issuing QR passes and validating entry at the gate.
+A Dockerized monorepo ticketing system for selling QR tickets and validating entry at the gate.
 
-- React frontend for events, checkout, passes, and gate scanning
+- React frontend for event discovery, anonymous checkout, account history, and admin verification
 - NestJS backend API
 - PostgreSQL database
-- QR code passes that can be scanned at the gate
+- QR code tickets that can be scanned once at the gate
 
 ## Quick Start
 
@@ -13,6 +13,8 @@ A Dockerized monorepo pass management system for issuing QR passes and validatin
 cp .env.example .env
 docker compose up --build
 ```
+
+Set `ADMIN_EMAILS` in `.env` to a comma-separated list of admin email addresses. Users register and log in the same way; matching admin emails receive verifier access.
 
 Then open:
 
@@ -32,10 +34,11 @@ infra/
 ## Main Flows
 
 1. Create or view events.
-2. Buy a ticket for an event.
+2. Buy a ticket anonymously, or log in first to attach the purchase to account history.
 3. The API creates a unique ticket code and QR code.
-4. The gate scanner reads the QR code and calls the validation endpoint.
-5. Valid unused tickets are marked as checked in. Duplicate scans are rejected.
+4. Logged-in users can view ticket history.
+5. Logged-in admins use the verification app to scan QR codes at the gate.
+6. Valid unused tickets are marked as checked in. Duplicate scans are rejected.
 
 ## Useful Commands
 

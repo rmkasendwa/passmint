@@ -24,7 +24,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { api, Event, GateResult, Ticket } from './api';
+import { api, AuthSession, Event, GateResult, Ticket } from './api';
 
 const money = new Intl.NumberFormat('en-UG', {
   style: 'currency',
@@ -54,6 +54,7 @@ const categories = [
 ];
 
 const countries = ['Uganda', 'Kenya', 'Rwanda', 'Tanzania', 'Nigeria', 'Ghana'];
+const SESSION_KEY = 'passmint-session';
 
 const demoEvents: Event[] = [
   {
@@ -131,6 +132,16 @@ export function App() {
   const [cameraEnabled, setCameraEnabled] = useState(false);
   const [query, setQuery] = useState('');
   const [dateFilter, setDateFilter] = useState('');
+  const [session, setSession] = useState<AuthSession | null>(() => {
+    const saved = window.localStorage.getItem(SESSION_KEY);
+    return saved ? (JSON.parse(saved) as AuthSession) : null;
+  });
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [authName, setAuthName] = useState('');
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authState, setAuthState] = useState('');
+  const [ticketHistory, setTicketHistory] = useState<Ticket[]>([]);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const controlsRef = useRef<IScannerControls | null>(null);
 
@@ -148,6 +159,17 @@ export function App() {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!session) {
+      window.localStorage.removeItem(SESSION_KEY);
+      setTicketHistory([]);
+      return;
+    }
+
+    window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    void loadHistory(session.token);
+  }, [session]);
 
   useEffect(() => {
     if (!cameraEnabled || !videoRef.current) return;
@@ -196,6 +218,15 @@ export function App() {
 
   const featuredEvent = filteredEvents[0] ?? events[0];
   const visibleEvents = filteredEvents.length > 0 ? filteredEvents : events;
+  const isAdmin = session?.user.role === 'admin';
+
+  async function loadHistory(token: string) {
+    try {
+      setTicketHistory(await api.myTickets(token));
+    } catch {
+      setTicketHistory([]);
+    }
+  }
 
   async function buyTickets(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -207,9 +238,12 @@ export function App() {
         buyerName,
         buyerEmail,
         quantity,
-      });
+      }, session?.token);
       setTickets(created);
-      setPurchaseState('Ticket purchase complete.');
+      if (session) {
+        await loadHistory(session.token);
+      }
+      setPurchaseState(session ? 'Ticket purchase complete and saved to your history.' : 'Ticket purchase complete.');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Ticket purchase failed.';
       setPurchaseState(message);
@@ -223,8 +257,13 @@ export function App() {
     setScanState('Checking ticket...');
     setGateResult(null);
 
+    if (!session || !isAdmin) {
+      setScanState('Admin login required to verify tickets.');
+      return;
+    }
+
     try {
-      const result = await api.scanTicket(normalized);
+      const result = await api.scanTicket(normalized, session.token);
       setGateResult(result);
       setScanState(result.message);
     } catch (error) {
@@ -244,6 +283,31 @@ export function App() {
     setPurchaseState('');
   }
 
+  async function submitAuth(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setAuthState(authMode === 'login' ? 'Logging in...' : 'Creating account...');
+
+    try {
+      const nextSession =
+        authMode === 'login'
+          ? await api.login({ email: authEmail, password: authPassword })
+          : await api.register({ name: authName, email: authEmail, password: authPassword });
+      setSession(nextSession);
+      setBuyerName(nextSession.user.name);
+      setBuyerEmail(nextSession.user.email);
+      setAuthPassword('');
+      setAuthState(`Logged in as ${nextSession.user.role}.`);
+    } catch (error) {
+      const fallback = error as { message?: string };
+      setAuthState(fallback.message ?? 'Authentication failed.');
+    }
+  }
+
+  function logout() {
+    setSession(null);
+    setAuthState('Logged out.');
+  }
+
   return (
     <main className="app-shell">
       <header className="site-header">
@@ -256,10 +320,11 @@ export function App() {
         <nav aria-label="Main navigation">
           <a href="#discover">Discover</a>
           <a href="#checkout">Tickets</a>
-          <a href="#gate">Gate</a>
+          <a href="#account">Account</a>
+          <a href="#verify">Verify</a>
         </nav>
         <a className="host-link" href="#checkout">
-          List an event
+          {session ? session.user.name : 'Login optional'}
           <ChevronRight size={16} />
         </a>
       </header>
@@ -419,7 +484,12 @@ export function App() {
             <form onSubmit={buyTickets} className="form-grid">
               <label>
                 Buyer name
-                <input value={buyerName} onChange={(event) => setBuyerName(event.target.value)} required />
+                <input
+                  value={buyerName}
+                  onChange={(event) => setBuyerName(event.target.value)}
+                  placeholder={session?.user.name ?? 'Anonymous buyer name'}
+                  required
+                />
               </label>
               <label>
                 Buyer email
@@ -427,6 +497,7 @@ export function App() {
                   type="email"
                   value={buyerEmail}
                   onChange={(event) => setBuyerEmail(event.target.value)}
+                  placeholder={session?.user.email ?? 'Email for ticket delivery'}
                   required
                 />
               </label>
@@ -446,6 +517,9 @@ export function App() {
                 Buy ticket
               </button>
             </form>
+            <p className="helper-line">
+              Checkout works anonymously. Login first if you want this order saved to your history.
+            </p>
             {purchaseState && <p className="state-line">{purchaseState}</p>}
           </section>
 
@@ -471,16 +545,105 @@ export function App() {
               </div>
             )}
           </section>
+
+          <section className="account-panel" id="account">
+            <div className="panel-heading">
+              <Users size={22} />
+              <h2>Account</h2>
+            </div>
+            {session ? (
+              <div className="account-summary">
+                <strong>{session.user.name}</strong>
+                <span>{session.user.email}</span>
+                <span className={`role-pill ${session.user.role}`}>{session.user.role}</span>
+                <button className="secondary-action" type="button" onClick={logout}>
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <form className="form-grid" onSubmit={submitAuth}>
+                <div className="auth-tabs" role="tablist" aria-label="Account mode">
+                  <button
+                    type="button"
+                    className={authMode === 'login' ? 'selected' : ''}
+                    onClick={() => setAuthMode('login')}
+                  >
+                    Login
+                  </button>
+                  <button
+                    type="button"
+                    className={authMode === 'register' ? 'selected' : ''}
+                    onClick={() => setAuthMode('register')}
+                  >
+                    Register
+                  </button>
+                </div>
+                {authMode === 'register' && (
+                  <label>
+                    Name
+                    <input value={authName} onChange={(event) => setAuthName(event.target.value)} required />
+                  </label>
+                )}
+                <label>
+                  Email
+                  <input
+                    type="email"
+                    value={authEmail}
+                    onChange={(event) => setAuthEmail(event.target.value)}
+                    required
+                  />
+                </label>
+                <label>
+                  Password
+                  <input
+                    type="password"
+                    minLength={8}
+                    value={authPassword}
+                    onChange={(event) => setAuthPassword(event.target.value)}
+                    required
+                  />
+                </label>
+                <button className="primary-action" type="submit">
+                  {authMode === 'login' ? 'Login' : 'Create account'}
+                </button>
+              </form>
+            )}
+            {authState && <p className="state-line">{authState}</p>}
+
+            {session && (
+              <div className="history-list">
+                <h3>Ticket history</h3>
+                {ticketHistory.length === 0 ? (
+                  <p className="muted">Tickets bought while logged in will show here.</p>
+                ) : (
+                  ticketHistory.map((ticket) => (
+                    <article className="history-card" key={ticket.id}>
+                      <strong>{ticket.event.name}</strong>
+                      <span>{ticket.status.replace('_', ' ')}</span>
+                    </article>
+                  ))
+                )}
+              </div>
+            )}
+          </section>
         </aside>
       </section>
 
-      <section className="gate-panel" id="gate">
+      <section className="gate-panel" id="verify">
         <div>
           <div className="panel-heading">
             <ScanLine size={22} />
-            <h2>Gate scanner</h2>
+            <h2>Verification app</h2>
           </div>
-          <p>Validate QR tickets at the door, detect duplicates, and keep entry moving.</p>
+          <p>
+            Admins use this separate gate surface to verify QR tickets. Accepted tickets are marked entered and
+            cannot be reused.
+          </p>
+          {!isAdmin && (
+            <p className="locked-note">
+              Login with an admin account to use ticket verification.
+            </p>
+          )}
         </div>
         <div className="scanner-box">
           {cameraEnabled ? (
@@ -492,7 +655,12 @@ export function App() {
           )}
         </div>
         <div className="gate-actions">
-          <button type="button" className="secondary-action" onClick={() => setCameraEnabled((value) => !value)}>
+          <button
+            type="button"
+            className="secondary-action"
+            onClick={() => setCameraEnabled((value) => !value)}
+            disabled={!isAdmin}
+          >
             <ScanLine size={18} />
             {cameraEnabled ? 'Stop camera' : 'Start camera'}
           </button>
@@ -501,7 +669,7 @@ export function App() {
             value={gateCode}
             onChange={(event) => setGateCode(event.target.value)}
           />
-          <button type="button" className="primary-action" onClick={() => void scan()}>
+          <button type="button" className="primary-action" onClick={() => void scan()} disabled={!isAdmin}>
             Validate
           </button>
         </div>

@@ -29,10 +29,23 @@ export type GateResult = {
   ticket?: Ticket;
 };
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+export type User = {
+  id: string;
+  name: string;
+  email: string;
+  role: 'user' | 'admin';
+};
+
+export type AuthSession = {
+  token: string;
+  user: User;
+};
+
+async function request<T>(path: string, init?: RequestInit, token?: string): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...init?.headers,
     },
     ...init,
@@ -55,14 +68,26 @@ export const api = {
     buyerName: string;
     buyerEmail: string;
     quantity: number;
-  }) =>
+  }, token?: string) =>
     request<Ticket[]>('/tickets', {
       method: 'POST',
       body: JSON.stringify(payload),
-    }),
-  scanTicket: (code: string) =>
+    }, token),
+  myTickets: (token: string) => request<Ticket[]>('/tickets/mine', undefined, token),
+  scanTicket: (code: string, token: string) =>
     request<GateResult>('/gate/scan', {
       method: 'POST',
       body: JSON.stringify({ code }),
+    }, token),
+  register: (payload: { name: string; email: string; password: string }) =>
+    request<AuthSession>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(payload),
     }),
+  login: (payload: { email: string; password: string }) =>
+    request<AuthSession>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  me: (token: string) => request<User>('/auth/me', undefined, token),
 };

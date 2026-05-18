@@ -2,11 +2,13 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
+import { AuthModule } from './auth/auth.module';
 import { Event } from './events/event.entity';
 import { EventsModule } from './events/events.module';
 import { GateModule } from './gate/gate.module';
 import { Ticket } from './tickets/ticket.entity';
 import { TicketsModule } from './tickets/tickets.module';
+import { User } from './users/user.entity';
 
 @Module({
   imports: [
@@ -16,11 +18,12 @@ import { TicketsModule } from './tickets/tickets.module';
       useFactory: (config: ConfigService) => ({
         type: 'postgres',
         url: config.getOrThrow<string>('DATABASE_URL'),
-        entities: [Event, Ticket],
+        entities: [Event, Ticket, User],
         synchronize: true,
         ssl: false,
       }),
     }),
+    AuthModule,
     EventsModule,
     TicketsModule,
     GateModule,
