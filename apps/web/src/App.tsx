@@ -2,13 +2,16 @@ import { BrowserQRCodeReader, IScannerControls } from '@zxing/browser';
 import {
   CalendarDays,
   CheckCircle2,
-  ChevronRight,
   CircleDollarSign,
   Clapperboard,
   Drama,
   Dumbbell,
   Globe2,
+  History,
   Landmark,
+  LockKeyhole,
+  LogIn,
+  LogOut,
   MapPin,
   Martini,
   Mic2,
@@ -20,6 +23,7 @@ import {
   Sparkles,
   Ticket as TicketIcon,
   Trophy,
+  UserPlus,
   Users,
   XCircle,
 } from 'lucide-react';
@@ -117,6 +121,27 @@ function eventTone(index: number) {
   return `tone-${(index % 6) + 1}`;
 }
 
+function readSavedSession() {
+  const saved = window.localStorage.getItem(SESSION_KEY);
+  if (!saved) return null;
+
+  try {
+    return JSON.parse(saved) as AuthSession;
+  } catch {
+    window.localStorage.removeItem(SESSION_KEY);
+    return null;
+  }
+}
+
+function initials(name: string) {
+  return name
+    .split(' ')
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+}
+
 export function App() {
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEventId, setSelectedEventId] = useState('');
@@ -132,10 +157,7 @@ export function App() {
   const [cameraEnabled, setCameraEnabled] = useState(false);
   const [query, setQuery] = useState('');
   const [dateFilter, setDateFilter] = useState('');
-  const [session, setSession] = useState<AuthSession | null>(() => {
-    const saved = window.localStorage.getItem(SESSION_KEY);
-    return saved ? (JSON.parse(saved) as AuthSession) : null;
-  });
+  const [session, setSession] = useState<AuthSession | null>(readSavedSession);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [authName, setAuthName] = useState('');
   const [authEmail, setAuthEmail] = useState('');
@@ -283,6 +305,11 @@ export function App() {
     setPurchaseState('');
   }
 
+  function openAuth(mode: 'login' | 'register') {
+    setAuthMode(mode);
+    document.getElementById('account')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   async function submitAuth(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setAuthState(authMode === 'login' ? 'Logging in...' : 'Creating account...');
@@ -323,10 +350,29 @@ export function App() {
           <a href="#account">Account</a>
           <a href="#verify">Verify</a>
         </nav>
-        <a className="host-link" href="#checkout">
-          {session ? session.user.name : 'Login optional'}
-          <ChevronRight size={16} />
-        </a>
+        {session ? (
+          <div className="header-account">
+            <a className="account-chip" href="#account">
+              <span>{initials(session.user.name)}</span>
+              <strong>{session.user.name}</strong>
+              <small>{session.user.role}</small>
+            </a>
+            <button type="button" className="icon-button" onClick={logout} aria-label="Logout">
+              <LogOut size={18} />
+            </button>
+          </div>
+        ) : (
+          <div className="header-actions">
+            <button type="button" className="secondary-action compact-action" onClick={() => openAuth('login')}>
+              <LogIn size={17} />
+              Login
+            </button>
+            <button type="button" className="primary-action compact-action" onClick={() => openAuth('register')}>
+              <UserPlus size={17} />
+              Sign up
+            </button>
+          </div>
+        )}
       </header>
 
       <section className="hero-section" id="discover">
@@ -337,6 +383,20 @@ export function App() {
             A ticketing marketplace for concerts, sport, nightlife, meetups, and community experiences,
             with QR passes issued instantly at checkout.
           </p>
+          <div className="hero-badges" aria-label="Account options">
+            <span>
+              <TicketIcon size={16} />
+              Anonymous checkout
+            </span>
+            <span>
+              <History size={16} />
+              Login for history
+            </span>
+            <span>
+              <LockKeyhole size={16} />
+              Admin verification
+            </span>
+          </div>
         </div>
 
         <form className="search-panel" onSubmit={(event) => event.preventDefault()}>
@@ -469,6 +529,27 @@ export function App() {
         </div>
 
         <aside className="side-column" id="checkout">
+          <section className={`identity-panel ${session ? 'signed-in' : 'anonymous'}`}>
+            <div>
+              <p className="section-kicker">{session ? 'Signed in checkout' : 'Guest checkout'}</p>
+              <h2>{session ? `Buying as ${session.user.name}` : 'Buy now, login when it matters.'}</h2>
+            </div>
+            {session ? (
+              <span className={`role-pill ${session.user.role}`}>{session.user.role}</span>
+            ) : (
+              <div className="inline-actions">
+                <button type="button" className="secondary-action" onClick={() => openAuth('login')}>
+                  <LogIn size={17} />
+                  Login
+                </button>
+                <button type="button" className="primary-action" onClick={() => openAuth('register')}>
+                  <UserPlus size={17} />
+                  Sign up
+                </button>
+              </div>
+            )}
+          </section>
+
           <section className="checkout-panel">
             <div className="panel-heading">
               <TicketIcon size={22} />
@@ -549,14 +630,29 @@ export function App() {
           <section className="account-panel" id="account">
             <div className="panel-heading">
               <Users size={22} />
-              <h2>Account</h2>
+              <h2>Account access</h2>
             </div>
             {session ? (
-              <div className="account-summary">
-                <strong>{session.user.name}</strong>
-                <span>{session.user.email}</span>
-                <span className={`role-pill ${session.user.role}`}>{session.user.role}</span>
+              <div className="account-summary signed-in-summary">
+                <div className="profile-row">
+                  <span className="profile-avatar">{initials(session.user.name)}</span>
+                  <div>
+                    <strong>{session.user.name}</strong>
+                    <span>{session.user.email}</span>
+                  </div>
+                </div>
+                <div className="account-stats">
+                  <span>
+                    <strong>{ticketHistory.length}</strong>
+                    saved tickets
+                  </span>
+                  <span>
+                    <strong>{session.user.role}</strong>
+                    access
+                  </span>
+                </div>
                 <button className="secondary-action" type="button" onClick={logout}>
+                  <LogOut size={17} />
                   Logout
                 </button>
               </div>
@@ -568,6 +664,7 @@ export function App() {
                     className={authMode === 'login' ? 'selected' : ''}
                     onClick={() => setAuthMode('login')}
                   >
+                    <LogIn size={16} />
                     Login
                   </button>
                   <button
@@ -575,13 +672,24 @@ export function App() {
                     className={authMode === 'register' ? 'selected' : ''}
                     onClick={() => setAuthMode('register')}
                   >
-                    Register
+                    <UserPlus size={16} />
+                    Sign up
                   </button>
                 </div>
+                <p className="helper-line auth-helper">
+                  {authMode === 'login'
+                    ? 'Use the same login for buyer history and admin verification.'
+                    : 'Create an account before checkout to keep this and future tickets in one place.'}
+                </p>
                 {authMode === 'register' && (
                   <label>
                     Name
-                    <input value={authName} onChange={(event) => setAuthName(event.target.value)} required />
+                    <input
+                      value={authName}
+                      onChange={(event) => setAuthName(event.target.value)}
+                      placeholder="Full name"
+                      required
+                    />
                   </label>
                 )}
                 <label>
@@ -590,6 +698,7 @@ export function App() {
                     type="email"
                     value={authEmail}
                     onChange={(event) => setAuthEmail(event.target.value)}
+                    placeholder="you@example.com"
                     required
                   />
                 </label>
@@ -600,6 +709,7 @@ export function App() {
                     minLength={8}
                     value={authPassword}
                     onChange={(event) => setAuthPassword(event.target.value)}
+                    placeholder="At least 8 characters"
                     required
                   />
                 </label>
@@ -612,14 +722,20 @@ export function App() {
 
             {session && (
               <div className="history-list">
-                <h3>Ticket history</h3>
+                <div className="history-heading">
+                  <h3>Ticket history</h3>
+                  <History size={18} />
+                </div>
                 {ticketHistory.length === 0 ? (
                   <p className="muted">Tickets bought while logged in will show here.</p>
                 ) : (
                   ticketHistory.map((ticket) => (
                     <article className="history-card" key={ticket.id}>
-                      <strong>{ticket.event.name}</strong>
-                      <span>{ticket.status.replace('_', ' ')}</span>
+                      <div>
+                        <strong>{ticket.event.name}</strong>
+                        <small>{dateTime.format(new Date(ticket.event.startsAt))}</small>
+                      </div>
+                      <span className={`ticket-status ${ticket.status}`}>{ticket.status.replace('_', ' ')}</span>
                     </article>
                   ))
                 )}
@@ -639,7 +755,12 @@ export function App() {
             Admins use this separate gate surface to verify QR tickets. Accepted tickets are marked entered and
             cannot be reused.
           </p>
-          {!isAdmin && (
+          {isAdmin ? (
+            <div className="verifier-access granted">
+              <ShieldCheck size={18} />
+              {session.user.name} has verifier access.
+            </div>
+          ) : (
             <p className="locked-note">
               Login with an admin account to use ticket verification.
             </p>
@@ -649,8 +770,9 @@ export function App() {
           {cameraEnabled ? (
             <video ref={videoRef} muted playsInline />
           ) : (
-            <div className="scanner-placeholder">
-              <ShieldCheck size={54} />
+            <div className={`scanner-placeholder ${isAdmin ? 'ready' : 'locked'}`}>
+              {isAdmin ? <ShieldCheck size={54} /> : <LockKeyhole size={54} />}
+              <span>{isAdmin ? 'Ready to scan' : 'Admin only'}</span>
             </div>
           )}
         </div>
