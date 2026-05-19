@@ -2,7 +2,7 @@
 
 A Dockerized monorepo ticketing system for selling QR tickets and validating entry at the gate.
 
-- React frontend for event discovery, anonymous checkout, account history, and admin verification
+- Server-rendered React frontend for event discovery, anonymous checkout, account history, and admin verification
 - NestJS backend API
 - PostgreSQL database
 - QR code tickets that can be scanned once at the gate
@@ -45,4 +45,17 @@ infra/
 ```bash
 npm run dev       # run the full stack with Docker Compose
 npm run build     # build all workspaces locally
+```
+
+The web app uses Vite SSR. Local web-only development runs the SSR dev server:
+
+```bash
+npm --workspace apps/web run dev
+```
+
+Production preview renders routes through the Node SSR server:
+
+```bash
+npm --workspace apps/web run build
+npm --workspace apps/web run preview
 ```

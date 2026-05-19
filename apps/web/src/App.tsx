@@ -1,4 +1,4 @@
-import { BrowserQRCodeReader, IScannerControls } from '@zxing/browser';
+import type { IScannerControls } from '@zxing/browser';
 import {
   CalendarDays,
   CheckCircle2,
@@ -28,6 +28,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { api, AuthSession, Event, GateResult, Ticket } from './api';
 
 const money = new Intl.NumberFormat('en-UG', {
@@ -122,6 +123,8 @@ function eventTone(index: number) {
 }
 
 function readSavedSession() {
+  if (typeof window === 'undefined') return null;
+
   const saved = window.localStorage.getItem(SESSION_KEY);
   if (!saved) return null;
 
@@ -143,6 +146,8 @@ function initials(name: string) {
 }
 
 export function App() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEventId, setSelectedEventId] = useState('');
   const [buyerName, setBuyerName] = useState('');
@@ -157,7 +162,8 @@ export function App() {
   const [cameraEnabled, setCameraEnabled] = useState(false);
   const [query, setQuery] = useState('');
   const [dateFilter, setDateFilter] = useState('');
-  const [session, setSession] = useState<AuthSession | null>(readSavedSession);
+  const [session, setSession] = useState<AuthSession | null>(null);
+  const [sessionLoaded, setSessionLoaded] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [authName, setAuthName] = useState('');
   const [authEmail, setAuthEmail] = useState('');
@@ -183,6 +189,14 @@ export function App() {
   }, []);
 
   useEffect(() => {
+    setSession(readSavedSession());
+    setSessionLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!sessionLoaded) return;
+
     if (!session) {
       window.localStorage.removeItem(SESSION_KEY);
       setTicketHistory([]);
@@ -191,35 +205,56 @@ export function App() {
 
     window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
     void loadHistory(session.token);
-  }, [session]);
+  }, [session, sessionLoaded]);
 
   useEffect(() => {
     if (!cameraEnabled || !videoRef.current) return;
 
-    const reader = new BrowserQRCodeReader();
-    reader
-      .decodeFromVideoDevice(undefined, videoRef.current, (result) => {
-        if (result) {
-          const text = result.getText();
-          setGateCode(text);
-          void scan(text);
-          controlsRef.current?.stop();
+    let cancelled = false;
+
+    void import('@zxing/browser').then(({ BrowserQRCodeReader }) => {
+      if (cancelled || !videoRef.current) return;
+
+      const reader = new BrowserQRCodeReader();
+      reader
+        .decodeFromVideoDevice(undefined, videoRef.current, (result) => {
+          if (result) {
+            const text = result.getText();
+            setGateCode(text);
+            void scan(text);
+            controlsRef.current?.stop();
+            setCameraEnabled(false);
+          }
+        })
+        .then((controls) => {
+          controlsRef.current = controls;
+        })
+        .catch(() => {
+          setScanState('Camera scanner could not start. You can enter the code manually.');
           setCameraEnabled(false);
-        }
-      })
-      .then((controls) => {
-        controlsRef.current = controls;
-      })
-      .catch(() => {
-        setScanState('Camera scanner could not start. You can enter the code manually.');
-        setCameraEnabled(false);
-      });
+        });
+    });
 
     return () => {
+      cancelled = true;
       controlsRef.current?.stop();
       controlsRef.current = null;
     };
   }, [cameraEnabled]);
+
+  useEffect(() => {
+    const sectionByPath: Record<string, string> = {
+      '/': 'discover',
+      '/tickets': 'checkout',
+      '/account': 'account',
+      '/verify': 'verify',
+    };
+    const section = sectionByPath[location.pathname];
+
+    if (section) {
+      document.getElementById(section)?.scrollIntoView({ block: 'start' });
+    }
+  }, [location.pathname]);
 
   const filteredEvents = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -307,6 +342,7 @@ export function App() {
 
   function openAuth(mode: 'login' | 'register') {
     setAuthMode(mode);
+    navigate('/account');
     document.getElementById('account')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
@@ -338,25 +374,25 @@ export function App() {
   return (
     <main className="app-shell">
       <header className="site-header">
-        <a className="brand" href="#discover" aria-label="Passmint home">
+        <Link className="brand" to="/" aria-label="Passmint home">
           <span className="brand-mark">
             <TicketIcon size={22} />
           </span>
           <span>Passmint</span>
-        </a>
+        </Link>
         <nav aria-label="Main navigation">
-          <a href="#discover">Discover</a>
-          <a href="#checkout">Tickets</a>
-          <a href="#account">Account</a>
-          <a href="#verify">Verify</a>
+          <Link to="/">Discover</Link>
+          <Link to="/tickets">Tickets</Link>
+          <Link to="/account">Account</Link>
+          <Link to="/verify">Verify</Link>
         </nav>
         {session ? (
           <div className="header-account">
-            <a className="account-chip" href="#account">
+            <Link className="account-chip" to="/account">
               <span>{initials(session.user.name)}</span>
               <strong>{session.user.name}</strong>
               <small>{session.user.role}</small>
-            </a>
+            </Link>
             <button type="button" className="icon-button" onClick={logout} aria-label="Logout">
               <LogOut size={18} />
             </button>
