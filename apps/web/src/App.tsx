@@ -381,6 +381,9 @@ export function App() {
       setBuyerEmail(nextSession.user.email);
       setAuthPassword('');
       setAuthState(`Logged in as ${nextSession.user.role}.`);
+      if (nextSession.user.role === 'admin') {
+        router.push('/admin');
+      }
     } catch (error) {
       const fallback = error as { message?: string };
       setAuthState(fallback.message ?? 'Authentication failed.');
@@ -397,81 +400,69 @@ export function App() {
   return (
     <main className="app-shell">
       <header className="site-header">
-        <Link className="brand" href="/" aria-label="Passmint home">
-          <span className="brand-mark">
-            <TicketIcon size={22} />
-          </span>
-          <span>Passmint</span>
-        </Link>
-        <nav aria-label="Main navigation">
-          <Link href="/">Discover</Link>
-          <Link href="/tickets">Tickets</Link>
-          <Link href="/account">Account</Link>
-          <Link href="/admin">Admin</Link>
-        </nav>
-        {session ? (
-          <div className="header-account">
-            <Link className="account-chip" href="/account">
-              <span>{initials(session.user.name)}</span>
-              <strong>{session.user.name}</strong>
-              <small>{session.user.role}</small>
-            </Link>
-            <button
-              type="button"
-              className="icon-button"
-              onClick={logout}
-              aria-label="Logout"
-            >
-              <LogOut size={18} />
-            </button>
-          </div>
-        ) : (
-          <div className="header-actions">
-            <button
-              type="button"
-              className="secondary-action compact-action"
-              onClick={() => openAuth('login')}
-            >
-              <LogIn size={17} />
-              Login
-            </button>
-            <button
-              type="button"
-              className="primary-action compact-action"
-              onClick={() => openAuth('register')}
-            >
-              <UserPlus size={17} />
-              Sign up
-            </button>
-          </div>
-        )}
+        <div className="site-header-inner">
+          <Link className="brand" href="/" aria-label="Passmint home">
+            <span className="brand-mark">
+              <TicketIcon size={22} />
+            </span>
+            <span>Passmint</span>
+          </Link>
+          <nav aria-label="Main navigation">
+            <Link href="/">Discover</Link>
+            <Link href="/tickets">Tickets</Link>
+          </nav>
+          {session ? (
+            <div className="header-account">
+              <Link
+                className="account-chip"
+                href={isAdmin ? '/admin' : '/account'}
+              >
+                <span>{initials(session.user.name)}</span>
+                <strong>{session.user.name}</strong>
+                <small>{isAdmin ? 'gate access' : session.user.role}</small>
+              </Link>
+              <button
+                type="button"
+                className="icon-button"
+                onClick={logout}
+                aria-label="Logout"
+              >
+                <LogOut size={18} />
+              </button>
+            </div>
+          ) : (
+            <div className="header-actions">
+              <button
+                type="button"
+                className="secondary-action compact-action"
+                onClick={() => openAuth('login')}
+              >
+                <LogIn size={17} />
+                Login
+              </button>
+              <button
+                type="button"
+                className="primary-action compact-action"
+                onClick={() => openAuth('register')}
+              >
+                <UserPlus size={17} />
+                Sign up
+              </button>
+            </div>
+          )}
+        </div>
       </header>
 
       {page === '/' && (
         <>
           <section className="hero-section">
             <div className="hero-copy">
-              <p className="eyebrow">Africa-ready ticketing</p>
+              <p className="eyebrow">Events across Africa</p>
               <h1>Passmint</h1>
               <p className="hero-text">
-                Premium ticketing for concerts, sport, nightlife, meetups, and
-                community experiences, with instant QR passes and protected gate
-                verification for authorised teams.
+                Discover live events, get your QR ticket in seconds, and walk
+                in with a pass that is ready at the door.
               </p>
-              <div className="hero-badges" aria-label="Account options">
-                <span>
-                  <TicketIcon size={16} />
-                  Instant QR tickets
-                </span>
-                <span>
-                  <History size={16} />
-                  Buyer history
-                </span>
-                <span>
-                  <LockKeyhole size={16} />
-                  Admin gate control
-                </span>
-              </div>
             </div>
 
             <form
@@ -529,41 +520,41 @@ export function App() {
             </div>
           </section>
 
-          <section className="market-layout public-market" aria-label="Ticket marketplace">
+          <section className="market-layout public-market home-feed" aria-label="Ticket marketplace">
             <div className="main-column">
-          {featuredEvent && (
-            <section className="featured-event">
-              <div className={`poster-art ${eventTone(0)}`}>
-                <Sparkles size={34} />
-                <span>
-                  {shortDate.format(new Date(featuredEvent.startsAt))}
-                </span>
-              </div>
-              <div className="featured-copy">
-                <p className="section-kicker">Featured ticket</p>
-                <h2>{featuredEvent.name}</h2>
-                <p>{featuredEvent.description}</p>
-                <div className="event-meta">
-                  <span>
-                    <MapPin size={16} />
-                    {featuredEvent.venue}
-                  </span>
-                  <span>
-                    <CircleDollarSign size={16} />
-                    {money.format(featuredEvent.priceCents / 100)}
-                  </span>
-                </div>
-                <button
-                  className="primary-action"
-                  type="button"
-                  onClick={() => chooseEvent(featuredEvent.id)}
-                >
-                  <TicketIcon size={18} />
-                  Get tickets
-                </button>
-              </div>
-            </section>
-          )}
+              {featuredEvent && (
+                <section className="featured-event">
+                  <div className={`poster-art ${eventTone(0)}`}>
+                    <Sparkles size={34} />
+                    <span>
+                      {shortDate.format(new Date(featuredEvent.startsAt))}
+                    </span>
+                  </div>
+                  <div className="featured-copy">
+                    <p className="section-kicker">Featured ticket</p>
+                    <h2>{featuredEvent.name}</h2>
+                    <p>{featuredEvent.description}</p>
+                    <div className="event-meta">
+                      <span>
+                        <MapPin size={16} />
+                        {featuredEvent.venue}
+                      </span>
+                      <span>
+                        <CircleDollarSign size={16} />
+                        {money.format(featuredEvent.priceCents / 100)}
+                      </span>
+                    </div>
+                    <Link
+                      className="primary-action"
+                      href="/tickets"
+                      onClick={() => chooseEvent(featuredEvent.id)}
+                    >
+                      <TicketIcon size={18} />
+                      Explore tickets
+                    </Link>
+                  </div>
+                </section>
+              )}
 
           <section>
             <div className="section-heading">
@@ -627,26 +618,6 @@ export function App() {
             </div>
           </section>
             </div>
-
-            <aside className="side-column">
-              <section className="premium-panel">
-                <p className="section-kicker">Built for busy doors</p>
-                <h2>Sell beautifully, scan confidently.</h2>
-                <p>
-                  Passmint separates buyer discovery from gate operations, so
-                  the public site stays polished while event teams get a focused
-                  verification console.
-                </p>
-                <Link className="primary-action" href="/tickets">
-                  <TicketIcon size={18} />
-                  Buy tickets
-                </Link>
-                <Link className="secondary-action" href="/admin">
-                  <ScanLine size={18} />
-                  Admin console
-                </Link>
-              </section>
-            </aside>
           </section>
         </>
       )}
@@ -1195,6 +1166,23 @@ export function App() {
           </section>
         </section>
       )}
+
+      <footer className="site-footer">
+        <div className="site-footer-inner">
+          <Link className="brand" href="/" aria-label="Passmint home">
+            <span className="brand-mark">
+              <TicketIcon size={20} />
+            </span>
+            <span>Passmint</span>
+          </Link>
+          <p>© {new Date().getFullYear()} Passmint. All rights reserved.</p>
+          <nav aria-label="Footer navigation">
+            <Link href="/">Discover</Link>
+            <Link href="/tickets">Tickets</Link>
+            <Link href="/account">Account</Link>
+          </nav>
+        </div>
+      </footer>
     </main>
   );
 }
