@@ -61,7 +61,14 @@ const categories = [
   { label: 'Community', detail: 'Meetups', icon: Users },
 ];
 
-const countries = ['Uganda', 'Kenya', 'Rwanda', 'Tanzania', 'Nigeria', 'Ghana'];
+const countries = [
+  'United States',
+  'United Kingdom',
+  'Uganda',
+  'Singapore',
+  'Brazil',
+  'Germany',
+];
 const SESSION_KEY = 'passmint-session';
 
 const demoEvents: Event[] = [
@@ -69,27 +76,27 @@ const demoEvents: Event[] = [
     id: 'demo-citrus-brunch',
     name: 'Citrus & Rose Brunch',
     description:
-      'A sunny food, music, and lifestyle ticket for Nairobi weekend crowds.',
-    venue: 'RFUEA Ground, Nairobi',
+      'A sunny food, music, and lifestyle ticket for weekend crowds.',
+    venue: 'The Line, Los Angeles',
     startsAt: '2026-05-29T11:00:00.000Z',
     capacity: 800,
     priceCents: 8500000,
   },
   {
     id: 'demo-kampala-js',
-    name: 'JavaScript Kampala Meetup',
+    name: 'JavaScript Builders Meetup',
     description:
-      'Talks, demos, and community networking for builders across Kampala.',
-    venue: "Africa's Talking, Kampala",
+      'Talks, demos, and community networking for product builders.',
+    venue: 'Village Underground, London',
     startsAt: '2026-06-04T15:00:00.000Z',
     capacity: 220,
     priceCents: 0,
   },
   {
     id: 'demo-nec-vipers',
-    name: 'NEC FC vs Vipers FC',
+    name: 'City FC vs United FC',
     description: 'Matchday tickets with fast QR entry for football fans.',
-    venue: 'MTN Omondi Stadium, Kampala',
+    venue: 'National Stadium, Singapore',
     startsAt: '2026-06-13T13:00:00.000Z',
     capacity: 4500,
     priceCents: 3000000,
@@ -99,17 +106,17 @@ const demoEvents: Event[] = [
     name: 'Vibes & Valour',
     description:
       'A live conversation and social evening for the next generation of leaders.',
-    venue: 'Yujo Izakaya, Kampala',
+    venue: 'House of Yes, Brooklyn',
     startsAt: '2026-06-20T16:30:00.000Z',
     capacity: 180,
     priceCents: 5000000,
   },
   {
     id: 'demo-campus-pitch',
-    name: 'Campus Pitch Africa',
+    name: 'Campus Pitch Global',
     description:
       'Student founders, investors, product demos, and campus energy.',
-    venue: 'Akwa Ibom State University',
+    venue: 'TU Berlin, Germany',
     startsAt: '2026-07-02T09:00:00.000Z',
     capacity: 600,
     priceCents: 2000000,
@@ -119,7 +126,7 @@ const demoEvents: Event[] = [
     name: 'Basketball League Opening Night',
     description:
       'Courtside tickets for the first night of the city league season.',
-    venue: 'Lugogo Sports Complex, Kampala',
+    venue: 'Ginásio do Ibirapuera, São Paulo',
     startsAt: '2026-07-10T17:00:00.000Z',
     capacity: 1200,
     priceCents: 2500000,
@@ -457,11 +464,11 @@ export function App() {
         <>
           <section className="hero-section">
             <div className="hero-copy">
-              <p className="eyebrow">Events across Africa</p>
+              <p className="eyebrow">Ticketing and attendance</p>
               <h1>Passmint</h1>
               <p className="hero-text">
-                Discover live events, get your QR ticket in seconds, and walk
-                in with a pass that is ready at the door.
+                Issue QR tickets, sell access, and track attendance for events
+                anywhere in the world.
               </p>
             </div>
 
@@ -598,8 +605,8 @@ export function App() {
           <section>
             <div className="section-heading">
               <div>
-                <p className="section-kicker">Discover by country</p>
-                <h2>Explore events across Africa</h2>
+                <p className="section-kicker">Discover by market</p>
+                <h2>Explore events worldwide</h2>
               </div>
               <Globe2 size={22} />
             </div>
@@ -612,7 +619,7 @@ export function App() {
                 >
                   <Landmark size={18} />
                   <span>{country}</span>
-                  <small>East & West Africa</small>
+                  <small>Global events</small>
                 </button>
               ))}
             </div>
