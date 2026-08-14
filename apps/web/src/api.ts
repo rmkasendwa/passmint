@@ -8,6 +8,7 @@ export type Event = {
   startsAt: string;
   capacity: number;
   priceCents: number;
+  thumbnailUrl?: string | null;
 };
 
 export type Ticket = {
@@ -68,6 +69,19 @@ async function request<T>(
 
 export const api = {
   listEvents: () => request<Event[]>('/events'),
+  createEvent: (payload: {
+    name: string;
+    description: string;
+    venue: string;
+    startsAt: string;
+    capacity: number;
+    priceCents: number;
+    thumbnailUrl?: string;
+  }) =>
+    request<Event>('/events', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
   buyTickets: (
     payload: {
       eventId: string;

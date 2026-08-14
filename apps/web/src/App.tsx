@@ -10,6 +10,7 @@ import {
   Dumbbell,
   Globe2,
   History,
+  ImagePlus,
   Landmark,
   LockKeyhole,
   LogIn,
@@ -22,9 +23,9 @@ import {
   ScanLine,
   Search,
   ShieldCheck,
-  Sparkles,
   Ticket as TicketIcon,
   Trophy,
+  Upload,
   UserPlus,
   Users,
   XCircle,
@@ -43,11 +44,6 @@ const money = new Intl.NumberFormat('en-UG', {
 const dateTime = new Intl.DateTimeFormat('en-UG', {
   dateStyle: 'medium',
   timeStyle: 'short',
-});
-
-const shortDate = new Intl.DateTimeFormat('en-UG', {
-  month: 'short',
-  day: 'numeric',
 });
 
 const categories = [
@@ -133,6 +129,16 @@ const demoEvents: Event[] = [
   },
 ];
 
+const emptyHostEvent = {
+  name: '',
+  description: '',
+  venue: '',
+  startsAt: '',
+  capacity: 120,
+  priceCents: 0,
+  thumbnailUrl: '',
+};
+
 function eventTone(index: number) {
   return `tone-${(index % 6) + 1}`;
 }
@@ -160,6 +166,49 @@ function initials(name: string) {
     .toUpperCase();
 }
 
+function EventThumbnail({
+  event,
+  tone,
+  variant = 'card',
+}: {
+  event: Event;
+  tone: string;
+  variant?: 'card' | 'featured' | 'preview';
+}) {
+  const date = new Date(event.startsAt);
+  const day = new Intl.DateTimeFormat('en-UG', { day: 'numeric' }).format(date);
+  const month = new Intl.DateTimeFormat('en-UG', { month: 'short' }).format(date);
+
+  return (
+    <span
+      className={`event-thumbnail event-thumbnail-${variant} ${tone} ${
+        event.thumbnailUrl ? 'has-image' : 'fallback'
+      }`}
+    >
+      {event.thumbnailUrl && (
+        <img src={event.thumbnailUrl} alt="" aria-hidden="true" />
+      )}
+      <span className="thumbnail-scrim" />
+      <span className="thumbnail-frame" />
+      <span className="thumbnail-badge">
+        <TicketIcon size={variant === 'featured' ? 25 : 18} />
+        <small>Passmint</small>
+      </span>
+      {!event.thumbnailUrl && (
+        <span className="thumbnail-initials">{initials(event.name)}</span>
+      )}
+      <span className="thumbnail-date">
+        <strong>{day}</strong>
+        <small>{month}</small>
+      </span>
+      <span className="thumbnail-title">
+        <strong>{event.name || 'New event'}</strong>
+        <small>{event.venue || 'Venue to be announced'}</small>
+      </span>
+    </span>
+  );
+}
+
 export function App() {
   const pathname = usePathname();
   const router = useRouter();
@@ -184,6 +233,9 @@ export function App() {
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
   const [authState, setAuthState] = useState('');
+  const [hostEvent, setHostEvent] = useState(emptyHostEvent);
+  const [hostThumbnailName, setHostThumbnailName] = useState('');
+  const [hostState, setHostState] = useState('');
   const [ticketHistory, setTicketHistory] = useState<Ticket[]>([]);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const controlsRef = useRef<IScannerControls | null>(null);
@@ -291,6 +343,20 @@ export function App() {
   const featuredEvent = filteredEvents[0] ?? events[0];
   const visibleEvents = filteredEvents.length > 0 ? filteredEvents : events;
   const isAdmin = session?.user.role === 'admin';
+  const hostPreviewEvent: Event = {
+    id: 'host-preview',
+    name: hostEvent.name || 'Fresh ticket drop',
+    description:
+      hostEvent.description ||
+      'Upload a photo or let Passmint design the thumbnail.',
+    venue: hostEvent.venue || 'Venue to be announced',
+    startsAt: hostEvent.startsAt
+      ? new Date(hostEvent.startsAt).toISOString()
+      : new Date().toISOString(),
+    capacity: hostEvent.capacity,
+    priceCents: hostEvent.priceCents,
+    thumbnailUrl: hostEvent.thumbnailUrl || null,
+  };
 
   async function loadHistory(token: string) {
     try {
@@ -361,6 +427,76 @@ export function App() {
   function chooseEvent(eventId: string) {
     setSelectedEventId(eventId);
     setPurchaseState('');
+  }
+
+  function updateHostEvent(
+    key: keyof typeof emptyHostEvent,
+    value: string | number,
+  ) {
+    setHostEvent((current) => ({ ...current, [key]: value }));
+  }
+
+  function selectThumbnail(file: File | null) {
+    if (!file) {
+      setHostThumbnailName('');
+      updateHostEvent('thumbnailUrl', '');
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setHostState('Choose an image file for the ticket thumbnail.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      updateHostEvent('thumbnailUrl', String(reader.result ?? ''));
+      setHostThumbnailName(file.name);
+      setHostState('');
+    };
+    reader.onerror = () => {
+      setHostState('Thumbnail upload failed. Try a smaller image.');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function publishEvent(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!isAdmin) {
+      setHostState('Admin login required to publish events.');
+      return;
+    }
+
+    setHostState('Publishing event...');
+
+    try {
+      const created = await api.createEvent({
+        name: hostEvent.name,
+        description: hostEvent.description,
+        venue: hostEvent.venue,
+        startsAt: new Date(hostEvent.startsAt).toISOString(),
+        capacity: hostEvent.capacity,
+        priceCents: hostEvent.priceCents,
+        ...(hostEvent.thumbnailUrl
+          ? { thumbnailUrl: hostEvent.thumbnailUrl }
+          : {}),
+      });
+      setEvents((current) =>
+        [...current, created].sort(
+          (left, right) =>
+            new Date(left.startsAt).getTime() -
+            new Date(right.startsAt).getTime(),
+        ),
+      );
+      setSelectedEventId(created.id);
+      setHostEvent(emptyHostEvent);
+      setHostThumbnailName('');
+      setHostState('Event published with ticket thumbnail ready.');
+    } catch (error) {
+      const fallback = error as { message?: string };
+      setHostState(fallback.message ?? 'Event could not be published.');
+    }
   }
 
   function openAuth(mode: 'login' | 'register') {
@@ -531,12 +667,11 @@ export function App() {
             <div className="main-column">
               {featuredEvent && (
                 <section className="featured-event">
-                  <div className={`poster-art ${eventTone(0)}`}>
-                    <Sparkles size={34} />
-                    <span>
-                      {shortDate.format(new Date(featuredEvent.startsAt))}
-                    </span>
-                  </div>
+                  <EventThumbnail
+                    event={featuredEvent}
+                    tone={eventTone(0)}
+                    variant="featured"
+                  />
                   <div className="featured-copy">
                     <p className="section-kicker">Featured ticket</p>
                     <h2>{featuredEvent.name}</h2>
@@ -585,12 +720,7 @@ export function App() {
                     onClick={() => chooseEvent(event.id)}
                     type="button"
                   >
-                    <span className="event-poster">
-                      <TicketIcon size={24} />
-                      <strong>
-                        {shortDate.format(new Date(event.startsAt))}
-                      </strong>
-                    </span>
+                    <EventThumbnail event={event} tone={eventTone(index)} />
                     <span className="event-card-copy">
                       <strong>{event.name}</strong>
                       <small>{event.venue}</small>
@@ -657,10 +787,7 @@ export function App() {
                     onClick={() => chooseEvent(event.id)}
                     type="button"
                   >
-                    <span className="event-poster">
-                      <TicketIcon size={24} />
-                      <strong>{shortDate.format(new Date(event.startsAt))}</strong>
-                    </span>
+                    <EventThumbnail event={event} tone={eventTone(index)} />
                     <span className="event-card-copy">
                       <strong>{event.name}</strong>
                       <small>{event.venue}</small>
@@ -1099,6 +1226,132 @@ export function App() {
             </p>
           </div>
 
+          <div className="admin-workbench">
+            <section className="event-publisher-panel">
+              <div className="panel-heading">
+                <ImagePlus size={22} />
+                <h2>Publish event</h2>
+              </div>
+              <div className="thumbnail-preview">
+                <EventThumbnail
+                  event={hostPreviewEvent}
+                  tone="tone-2"
+                  variant="preview"
+                />
+              </div>
+              <form className="form-grid" onSubmit={publishEvent}>
+                <label>
+                  Event name
+                  <input
+                    value={hostEvent.name}
+                    onChange={(event) =>
+                      updateHostEvent('name', event.target.value)
+                    }
+                    placeholder="Kampala rooftop sessions"
+                    required
+                  />
+                </label>
+                <label>
+                  Description
+                  <textarea
+                    value={hostEvent.description}
+                    onChange={(event) =>
+                      updateHostEvent('description', event.target.value)
+                    }
+                    placeholder="Short public summary"
+                    required
+                  />
+                </label>
+                <label>
+                  Venue
+                  <input
+                    value={hostEvent.venue}
+                    onChange={(event) =>
+                      updateHostEvent('venue', event.target.value)
+                    }
+                    placeholder="Venue, city"
+                    required
+                  />
+                </label>
+                <div className="split-fields">
+                  <label>
+                    Starts
+                    <input
+                      type="datetime-local"
+                      value={hostEvent.startsAt}
+                      onChange={(event) =>
+                        updateHostEvent('startsAt', event.target.value)
+                      }
+                      required
+                    />
+                  </label>
+                  <label>
+                    Capacity
+                    <input
+                      min={1}
+                      type="number"
+                      value={hostEvent.capacity}
+                      onChange={(event) =>
+                        updateHostEvent('capacity', Number(event.target.value))
+                      }
+                      required
+                    />
+                  </label>
+                </div>
+                <label>
+                  Price in UGX
+                  <input
+                    min={0}
+                    type="number"
+                    value={hostEvent.priceCents / 100}
+                    onChange={(event) =>
+                      updateHostEvent(
+                        'priceCents',
+                        Number(event.target.value) * 100,
+                      )
+                    }
+                    required
+                  />
+                </label>
+                <label className="upload-field">
+                  <span>Ticket thumbnail photo</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) =>
+                      selectThumbnail(event.target.files?.[0] ?? null)
+                    }
+                  />
+                  <span>
+                    <Upload size={17} />
+                    {hostThumbnailName || 'Optional image upload'}
+                  </span>
+                </label>
+                {hostEvent.thumbnailUrl && (
+                  <button
+                    className="secondary-action"
+                    type="button"
+                    onClick={() => selectThumbnail(null)}
+                  >
+                    Remove photo
+                  </button>
+                )}
+                <button
+                  className="primary-action"
+                  type="submit"
+                  disabled={!isAdmin}
+                >
+                  <ImagePlus size={18} />
+                  Publish event
+                </button>
+              </form>
+              <p className="helper-line">
+                Photos are optional. Without one, Passmint creates a branded
+                ticket thumbnail automatically.
+              </p>
+              {hostState && <p className="state-line">{hostState}</p>}
+            </section>
+
           <section className="gate-panel">
         <div>
           <div className="panel-heading">
@@ -1171,6 +1424,7 @@ export function App() {
           </div>
         )}
           </section>
+          </div>
         </section>
       )}
 

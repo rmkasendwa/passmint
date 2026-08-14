@@ -33,6 +33,9 @@ export class Event {
   @Column({ type: 'int' })
   priceCents: number;
 
+  @Column({ type: 'text', nullable: true })
+  thumbnailUrl?: string | null;
+
   @OneToMany(() => Ticket, (ticket) => ticket.event)
   tickets: Ticket[];
 

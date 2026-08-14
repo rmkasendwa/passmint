@@ -1,5 +1,14 @@
 import { Type } from 'class-transformer';
-import { IsDate, IsInt, IsNotEmpty, IsPositive, IsString, Min } from 'class-validator';
+import {
+  IsDate,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsPositive,
+  IsString,
+  MaxLength,
+  Min,
+} from 'class-validator';
 
 export class CreateEventDto {
   @IsString()
@@ -27,4 +36,9 @@ export class CreateEventDto {
   @IsInt()
   @Min(0)
   priceCents: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2_500_000)
+  thumbnailUrl?: string;
 }
