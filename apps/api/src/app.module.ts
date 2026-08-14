@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { join } from 'path';
 import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
 import { Event } from './events/event.entity';
@@ -13,7 +14,7 @@ import { User } from './users/user.entity';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: ['.env', '../../.env'],
+      envFilePath: [join(__dirname, '../../../.env')],
       isGlobal: true,
     }),
     TypeOrmModule.forRootAsync({

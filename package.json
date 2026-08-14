@@ -4,8 +4,9 @@
   "version": "0.1.0",
   "packageManager": "pnpm@9.14.4",
   "scripts": {
-    "dev": "node scripts/run-with-env.mjs pnpm --parallel --filter @passmint/api --filter @passmint/web dev",
-    "dev:db": "docker compose up postgres",
+    "dev": "node scripts/dev.mjs",
+    "dev:db": "node scripts/run-with-env.mjs docker compose up postgres",
+    "db:reset": "node scripts/run-with-env.mjs docker compose down -v --remove-orphans",
     "dev:api": "node scripts/run-with-env.mjs pnpm --filter @passmint/api dev",
     "dev:web": "node scripts/run-with-env.mjs pnpm --filter @passmint/web dev",
     "docker:build": "node scripts/run-with-env.mjs docker build --build-arg NEXT_PUBLIC_API_URL -t passmint .",
