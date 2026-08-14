@@ -255,17 +255,8 @@ export function App() {
   }, [cameraEnabled]);
 
   useEffect(() => {
-    const sectionByPath: Record<string, string> = {
-      '/': 'discover',
-      '/tickets': 'checkout',
-      '/account': 'account',
-      '/verify': 'verify',
-    };
-    const section = sectionByPath[pathname];
-
-    if (section) {
-      document.getElementById(section)?.scrollIntoView({ block: 'start' });
-    }
+    if (pathname === '/admin' || pathname === '/verify') return;
+    setCameraEnabled(false);
   }, [pathname]);
 
   const filteredEvents = useMemo(() => {
@@ -368,9 +359,6 @@ export function App() {
   function openAuth(mode: 'login' | 'register') {
     setAuthMode(mode);
     router.push('/account');
-    document
-      .getElementById('account')
-      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   async function submitAuth(event: FormEvent<HTMLFormElement>) {
@@ -404,6 +392,8 @@ export function App() {
     setAuthState('Logged out.');
   }
 
+  const page = pathname === '/verify' ? '/admin' : pathname;
+
   return (
     <main className="app-shell">
       <header className="site-header">
@@ -417,7 +407,7 @@ export function App() {
           <Link href="/">Discover</Link>
           <Link href="/tickets">Tickets</Link>
           <Link href="/account">Account</Link>
-          <Link href="/verify">Verify</Link>
+          <Link href="/admin">Admin</Link>
         </nav>
         {session ? (
           <div className="header-account">
@@ -457,83 +447,90 @@ export function App() {
         )}
       </header>
 
-      <section className="hero-section" id="discover">
-        <div className="hero-copy">
-          <p className="eyebrow">Africa-ready ticketing</p>
-          <h1>Find the room, buy the ticket, scan the gate.</h1>
-          <p className="hero-text">
-            A ticketing marketplace for concerts, sport, nightlife, meetups, and
-            community experiences, with QR passes issued instantly at checkout.
-          </p>
-          <div className="hero-badges" aria-label="Account options">
-            <span>
-              <TicketIcon size={16} />
-              Anonymous checkout
-            </span>
-            <span>
-              <History size={16} />
-              Login for history
-            </span>
-            <span>
-              <LockKeyhole size={16} />
-              Admin verification
-            </span>
-          </div>
-        </div>
-
-        <form
-          className="search-panel"
-          onSubmit={(event) => event.preventDefault()}
-        >
-          <label>
-            <span>Where to?</span>
-            <div className="input-shell">
-              <MapPin size={18} />
-              <input
-                aria-label="Search by event or venue"
-                placeholder="Any event or venue"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-              />
+      {page === '/' && (
+        <>
+          <section className="hero-section">
+            <div className="hero-copy">
+              <p className="eyebrow">Africa-ready ticketing</p>
+              <h1>Passmint</h1>
+              <p className="hero-text">
+                Premium ticketing for concerts, sport, nightlife, meetups, and
+                community experiences, with instant QR passes and protected gate
+                verification for authorised teams.
+              </p>
+              <div className="hero-badges" aria-label="Account options">
+                <span>
+                  <TicketIcon size={16} />
+                  Instant QR tickets
+                </span>
+                <span>
+                  <History size={16} />
+                  Buyer history
+                </span>
+                <span>
+                  <LockKeyhole size={16} />
+                  Admin gate control
+                </span>
+              </div>
             </div>
-          </label>
-          <label>
-            <span>When</span>
-            <div className="input-shell">
-              <CalendarDays size={18} />
-              <input
-                aria-label="Filter by date"
-                type="date"
-                value={dateFilter}
-                onChange={(event) => setDateFilter(event.target.value)}
-              />
+
+            <form
+              className="search-panel"
+              onSubmit={(event) => event.preventDefault()}
+            >
+              <label>
+                <span>Where to?</span>
+                <div className="input-shell">
+                  <MapPin size={18} />
+                  <input
+                    aria-label="Search by event or venue"
+                    placeholder="Any event or venue"
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                  />
+                </div>
+              </label>
+              <label>
+                <span>When</span>
+                <div className="input-shell">
+                  <CalendarDays size={18} />
+                  <input
+                    aria-label="Filter by date"
+                    type="date"
+                    value={dateFilter}
+                    onChange={(event) => setDateFilter(event.target.value)}
+                  />
+                </div>
+              </label>
+              <button
+                className="search-button"
+                type="submit"
+                aria-label="Search events"
+              >
+                <Search size={19} />
+                Search
+              </button>
+            </form>
+
+            <div className="category-strip" aria-label="Event categories">
+              {categories.map(({ label, detail, icon: Icon }) => (
+                <button
+                  type="button"
+                  key={label}
+                  onClick={() => setQuery(label)}
+                >
+                  <Icon size={20} />
+                  <span>
+                    <strong>{label}</strong>
+                    <small>{detail}</small>
+                  </span>
+                </button>
+              ))}
             </div>
-          </label>
-          <button
-            className="search-button"
-            type="submit"
-            aria-label="Search events"
-          >
-            <Search size={19} />
-            Search
-          </button>
-        </form>
+          </section>
 
-        <div className="category-strip" aria-label="Event categories">
-          {categories.map(({ label, detail, icon: Icon }) => (
-            <button type="button" key={label} onClick={() => setQuery(label)}>
-              <Icon size={20} />
-              <span>
-                <strong>{label}</strong>
-                <small>{detail}</small>
-              </span>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="market-layout" aria-label="Ticket marketplace">
-        <div className="main-column">
+          <section className="market-layout public-market" aria-label="Ticket marketplace">
+            <div className="main-column">
           {featuredEvent && (
             <section className="featured-event">
               <div className={`poster-art ${eventTone(0)}`}>
@@ -629,9 +626,74 @@ export function App() {
               ))}
             </div>
           </section>
-        </div>
+            </div>
 
-        <aside className="side-column" id="checkout">
+            <aside className="side-column">
+              <section className="premium-panel">
+                <p className="section-kicker">Built for busy doors</p>
+                <h2>Sell beautifully, scan confidently.</h2>
+                <p>
+                  Passmint separates buyer discovery from gate operations, so
+                  the public site stays polished while event teams get a focused
+                  verification console.
+                </p>
+                <Link className="primary-action" href="/tickets">
+                  <TicketIcon size={18} />
+                  Buy tickets
+                </Link>
+                <Link className="secondary-action" href="/admin">
+                  <ScanLine size={18} />
+                  Admin console
+                </Link>
+              </section>
+            </aside>
+          </section>
+        </>
+      )}
+
+      {page === '/tickets' && (
+        <section className="page-layout tickets-page" aria-label="Ticket checkout">
+          <div className="page-intro">
+            <p className="section-kicker">Tickets</p>
+            <h1>Choose your event and check out.</h1>
+            <p>
+              Purchase as a guest or sign in first to keep your tickets attached
+              to your Passmint account.
+            </p>
+          </div>
+
+          <div className="tickets-grid">
+            <section>
+              <div className="section-heading">
+                <div>
+                  <p className="section-kicker">Available now</p>
+                  <h2>Pick an event</h2>
+                </div>
+                <span>{loading ? 'Loading...' : `${visibleEvents.length} live`}</span>
+              </div>
+              <div className="event-grid compact-events">
+                {visibleEvents.map((event, index) => (
+                  <button
+                    className={`event-card ${eventTone(index)} ${event.id === selectedEventId ? 'selected' : ''}`}
+                    key={event.id}
+                    onClick={() => chooseEvent(event.id)}
+                    type="button"
+                  >
+                    <span className="event-poster">
+                      <TicketIcon size={24} />
+                      <strong>{shortDate.format(new Date(event.startsAt))}</strong>
+                    </span>
+                    <span className="event-card-copy">
+                      <strong>{event.name}</strong>
+                      <small>{event.venue}</small>
+                      <span>{money.format(event.priceCents / 100)}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            <aside className="checkout-stack">
           <section
             className={`identity-panel ${session ? 'signed-in' : 'anonymous'}`}
           >
@@ -891,10 +953,175 @@ export function App() {
               </div>
             )}
           </section>
-        </aside>
-      </section>
+            </aside>
+          </div>
+        </section>
+      )}
 
-      <section className="gate-panel" id="verify">
+      {page === '/account' && (
+        <section className="page-layout account-page">
+          <div className="page-intro">
+            <p className="section-kicker">Account</p>
+            <h1>Your tickets, profile, and access.</h1>
+            <p>
+              Sign in to save buyer history. Admin users also unlock the
+              protected scanning console.
+            </p>
+          </div>
+
+          <section className="account-panel account-page-panel">
+            <div className="panel-heading">
+              <Users size={22} />
+              <h2>Account access</h2>
+            </div>
+            {session ? (
+              <div className="account-summary signed-in-summary">
+                <div className="profile-row">
+                  <span className="profile-avatar">
+                    {initials(session.user.name)}
+                  </span>
+                  <div>
+                    <strong>{session.user.name}</strong>
+                    <span>{session.user.email}</span>
+                  </div>
+                </div>
+                <div className="account-stats">
+                  <span>
+                    <strong>{ticketHistory.length}</strong>
+                    saved tickets
+                  </span>
+                  <span>
+                    <strong>{session.user.role}</strong>
+                    access
+                  </span>
+                </div>
+                {isAdmin && (
+                  <Link className="primary-action" href="/admin">
+                    <ShieldCheck size={17} />
+                    Open admin console
+                  </Link>
+                )}
+                <button
+                  className="secondary-action"
+                  type="button"
+                  onClick={logout}
+                >
+                  <LogOut size={17} />
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <form className="form-grid" onSubmit={submitAuth}>
+                <div
+                  className="auth-tabs"
+                  role="tablist"
+                  aria-label="Account mode"
+                >
+                  <button
+                    type="button"
+                    className={authMode === 'login' ? 'selected' : ''}
+                    onClick={() => setAuthMode('login')}
+                  >
+                    <LogIn size={16} />
+                    Login
+                  </button>
+                  <button
+                    type="button"
+                    className={authMode === 'register' ? 'selected' : ''}
+                    onClick={() => setAuthMode('register')}
+                  >
+                    <UserPlus size={16} />
+                    Sign up
+                  </button>
+                </div>
+                <p className="helper-line auth-helper">
+                  {authMode === 'login'
+                    ? 'Use the same login for buyer history and admin verification.'
+                    : 'Create an account before checkout to keep this and future tickets in one place.'}
+                </p>
+                {authMode === 'register' && (
+                  <label>
+                    Name
+                    <input
+                      value={authName}
+                      onChange={(event) => setAuthName(event.target.value)}
+                      placeholder="Full name"
+                      required
+                    />
+                  </label>
+                )}
+                <label>
+                  Email
+                  <input
+                    type="email"
+                    value={authEmail}
+                    onChange={(event) => setAuthEmail(event.target.value)}
+                    placeholder="you@example.com"
+                    required
+                  />
+                </label>
+                <label>
+                  Password
+                  <input
+                    type="password"
+                    minLength={8}
+                    value={authPassword}
+                    onChange={(event) => setAuthPassword(event.target.value)}
+                    placeholder="At least 8 characters"
+                    required
+                  />
+                </label>
+                <button className="primary-action" type="submit">
+                  {authMode === 'login' ? 'Login' : 'Create account'}
+                </button>
+              </form>
+            )}
+            {authState && <p className="state-line">{authState}</p>}
+
+            {session && (
+              <div className="history-list">
+                <div className="history-heading">
+                  <h3>Ticket history</h3>
+                  <History size={18} />
+                </div>
+                {ticketHistory.length === 0 ? (
+                  <p className="muted">
+                    Tickets bought while logged in will show here.
+                  </p>
+                ) : (
+                  ticketHistory.map((ticket) => (
+                    <article className="history-card" key={ticket.id}>
+                      <div>
+                        <strong>{ticket.event.name}</strong>
+                        <small>
+                          {dateTime.format(new Date(ticket.event.startsAt))}
+                        </small>
+                      </div>
+                      <span className={`ticket-status ${ticket.status}`}>
+                        {ticket.status.replace('_', ' ')}
+                      </span>
+                    </article>
+                  ))
+                )}
+              </div>
+            )}
+          </section>
+        </section>
+      )}
+
+      {page === '/admin' && (
+        <section className="admin-layout">
+          <div className="admin-hero">
+            <p className="section-kicker">Admin gate console</p>
+            <h1>Scan tickets without slowing the line.</h1>
+            <p>
+              A dedicated verification surface for event admins and authorised
+              users. Admin authentication is required before a QR code can be
+              validated.
+            </p>
+          </div>
+
+          <section className="gate-panel">
         <div>
           <div className="panel-heading">
             <ScanLine size={22} />
@@ -965,7 +1192,9 @@ export function App() {
             </div>
           </div>
         )}
-      </section>
+          </section>
+        </section>
+      )}
     </main>
   );
 }
