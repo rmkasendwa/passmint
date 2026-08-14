@@ -9,17 +9,17 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-passmint}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-passmint}
     expose:
-      - "5432"
+      - '5432'
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - '${POSTGRES_PORT:-5432}:5432'
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test:
         [
-          "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_USER:-passmint} -d ${POSTGRES_DB:-passmint}",
+          'CMD-SHELL',
+          'pg_isready -U ${POSTGRES_USER:-passmint} -d ${POSTGRES_DB:-passmint}',
         ]
       interval: 5s
       timeout: 5s
@@ -33,17 +33,17 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:${API_PORT:-3000}}
     restart: unless-stopped
     environment:
       DATABASE_URL: ${APP_DATABASE_URL:-postgres://passmint:passmint@postgres:5432/passmint}
       API_PORT: ${API_PORT:-3000}
       WEB_PORT: ${WEB_PORT:-8088}
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:${API_PORT:-3000}}
       CORS_ORIGIN: http://localhost:${WEB_PORT:-8088}
     ports:
-      - "${API_PORT:-3000}:3000"
-      - "${WEB_PORT:-8088}:8088"
+      - '${API_PORT:-3000}:${API_PORT:-3000}'
+      - '${WEB_PORT:-8088}:${WEB_PORT:-8088}'
     depends_on:
       postgres:
         condition: service_healthy

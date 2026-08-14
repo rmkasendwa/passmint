@@ -18,13 +18,24 @@ import { User } from './users/user.entity';
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        url: config.getOrThrow<string>('DATABASE_URL'),
-        entities: [Event, Ticket, User],
-        synchronize: true,
-        ssl: false,
-      }),
+      useFactory: (config: ConfigService) => {
+        const postgresUser = config.get<string>('POSTGRES_USER') ?? 'passmint';
+        const postgresPassword =
+          config.get<string>('POSTGRES_PASSWORD') ?? 'passmint';
+        const postgresHost = config.get<string>('POSTGRES_HOST') ?? 'localhost';
+        const postgresPort = config.get<string>('POSTGRES_PORT') ?? '5432';
+        const postgresDb = config.get<string>('POSTGRES_DB') ?? 'passmint';
+
+        return {
+          type: 'postgres',
+          url:
+            config.get<string>('DATABASE_URL') ??
+            `postgres://${postgresUser}:${postgresPassword}@${postgresHost}:${postgresPort}/${postgresDb}`,
+          entities: [Event, Ticket, User],
+          synchronize: true,
+          ssl: false,
+        };
+      },
     }),
     AuthModule,
     EventsModule,
