@@ -1,16 +1,18 @@
 import {
+  BeforeInsert,
   Column,
   CreateDateColumn,
   Entity,
   OneToMany,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { prefixedId } from '../common/prefixed-id';
 import { Ticket } from '../tickets/ticket.entity';
 
 @Entity({ name: 'events' })
 export class Event {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn()
   id: string;
 
   @Column()
@@ -39,4 +41,9 @@ export class Event {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @BeforeInsert()
+  assignId() {
+    this.id ??= prefixedId('evt');
+  }
 }

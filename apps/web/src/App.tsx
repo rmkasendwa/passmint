@@ -1,3 +1,5 @@
+'use client';
+
 import type { IScannerControls } from '@zxing/browser';
 import {
   CalendarDays,
@@ -27,8 +29,9 @@ import {
   Users,
   XCircle,
 } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router';
 import { api, AuthSession, Event, GateResult, Ticket } from './api';
 
 const money = new Intl.NumberFormat('en-UG', {
@@ -65,7 +68,8 @@ const demoEvents: Event[] = [
   {
     id: 'demo-citrus-brunch',
     name: 'Citrus & Rose Brunch',
-    description: 'A sunny food, music, and lifestyle ticket for Nairobi weekend crowds.',
+    description:
+      'A sunny food, music, and lifestyle ticket for Nairobi weekend crowds.',
     venue: 'RFUEA Ground, Nairobi',
     startsAt: '2026-05-29T11:00:00.000Z',
     capacity: 800,
@@ -74,7 +78,8 @@ const demoEvents: Event[] = [
   {
     id: 'demo-kampala-js',
     name: 'JavaScript Kampala Meetup',
-    description: 'Talks, demos, and community networking for builders across Kampala.',
+    description:
+      'Talks, demos, and community networking for builders across Kampala.',
     venue: "Africa's Talking, Kampala",
     startsAt: '2026-06-04T15:00:00.000Z',
     capacity: 220,
@@ -92,7 +97,8 @@ const demoEvents: Event[] = [
   {
     id: 'demo-vibes-valour',
     name: 'Vibes & Valour',
-    description: 'A live conversation and social evening for the next generation of leaders.',
+    description:
+      'A live conversation and social evening for the next generation of leaders.',
     venue: 'Yujo Izakaya, Kampala',
     startsAt: '2026-06-20T16:30:00.000Z',
     capacity: 180,
@@ -101,7 +107,8 @@ const demoEvents: Event[] = [
   {
     id: 'demo-campus-pitch',
     name: 'Campus Pitch Africa',
-    description: 'Student founders, investors, product demos, and campus energy.',
+    description:
+      'Student founders, investors, product demos, and campus energy.',
     venue: 'Akwa Ibom State University',
     startsAt: '2026-07-02T09:00:00.000Z',
     capacity: 600,
@@ -110,7 +117,8 @@ const demoEvents: Event[] = [
   {
     id: 'demo-basketball',
     name: 'Basketball League Opening Night',
-    description: 'Courtside tickets for the first night of the city league season.',
+    description:
+      'Courtside tickets for the first night of the city league season.',
     venue: 'Lugogo Sports Complex, Kampala',
     startsAt: '2026-07-10T17:00:00.000Z',
     capacity: 1200,
@@ -146,8 +154,8 @@ function initials(name: string) {
 }
 
 export function App() {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const pathname = usePathname();
+  const router = useRouter();
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEventId, setSelectedEventId] = useState('');
   const [buyerName, setBuyerName] = useState('');
@@ -183,7 +191,9 @@ export function App() {
       .catch(() => {
         setEvents(demoEvents);
         setSelectedEventId(demoEvents[0].id);
-        setPurchaseState('Demo events loaded. Start the API to issue real tickets.');
+        setPurchaseState(
+          'Demo events loaded. Start the API to issue real tickets.',
+        );
       })
       .finally(() => setLoading(false));
   }, []);
@@ -230,7 +240,9 @@ export function App() {
           controlsRef.current = controls;
         })
         .catch(() => {
-          setScanState('Camera scanner could not start. You can enter the code manually.');
+          setScanState(
+            'Camera scanner could not start. You can enter the code manually.',
+          );
           setCameraEnabled(false);
         });
     });
@@ -249,20 +261,25 @@ export function App() {
       '/account': 'account',
       '/verify': 'verify',
     };
-    const section = sectionByPath[location.pathname];
+    const section = sectionByPath[pathname];
 
     if (section) {
       document.getElementById(section)?.scrollIntoView({ block: 'start' });
     }
-  }, [location.pathname]);
+  }, [pathname]);
 
   const filteredEvents = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
     return events.filter((event) => {
-      const haystack = `${event.name} ${event.description} ${event.venue}`.toLowerCase();
-      const matchesQuery = normalizedQuery ? haystack.includes(normalizedQuery) : true;
-      const matchesDate = dateFilter ? event.startsAt.slice(0, 10) === dateFilter : true;
+      const haystack =
+        `${event.name} ${event.description} ${event.venue}`.toLowerCase();
+      const matchesQuery = normalizedQuery
+        ? haystack.includes(normalizedQuery)
+        : true;
+      const matchesDate = dateFilter
+        ? event.startsAt.slice(0, 10) === dateFilter
+        : true;
 
       return matchesQuery && matchesDate;
     });
@@ -290,19 +307,27 @@ export function App() {
     setPurchaseState('Creating ticket...');
 
     try {
-      const created = await api.buyTickets({
-        eventId: selectedEventId,
-        buyerName,
-        buyerEmail,
-        quantity,
-      }, session?.token);
+      const created = await api.buyTickets(
+        {
+          eventId: selectedEventId,
+          buyerName,
+          buyerEmail,
+          quantity,
+        },
+        session?.token,
+      );
       setTickets(created);
       if (session) {
         await loadHistory(session.token);
       }
-      setPurchaseState(session ? 'Ticket purchase complete and saved to your history.' : 'Ticket purchase complete.');
+      setPurchaseState(
+        session
+          ? 'Ticket purchase complete and saved to your history.'
+          : 'Ticket purchase complete.',
+      );
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Ticket purchase failed.';
+      const message =
+        error instanceof Error ? error.message : 'Ticket purchase failed.';
       setPurchaseState(message);
     }
   }
@@ -342,19 +367,27 @@ export function App() {
 
   function openAuth(mode: 'login' | 'register') {
     setAuthMode(mode);
-    navigate('/account');
-    document.getElementById('account')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    router.push('/account');
+    document
+      .getElementById('account')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   async function submitAuth(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setAuthState(authMode === 'login' ? 'Logging in...' : 'Creating account...');
+    setAuthState(
+      authMode === 'login' ? 'Logging in...' : 'Creating account...',
+    );
 
     try {
       const nextSession =
         authMode === 'login'
           ? await api.login({ email: authEmail, password: authPassword })
-          : await api.register({ name: authName, email: authEmail, password: authPassword });
+          : await api.register({
+              name: authName,
+              email: authEmail,
+              password: authPassword,
+            });
       setSession(nextSession);
       setBuyerName(nextSession.user.name);
       setBuyerEmail(nextSession.user.email);
@@ -374,36 +407,49 @@ export function App() {
   return (
     <main className="app-shell">
       <header className="site-header">
-        <Link className="brand" to="/" aria-label="Passmint home">
+        <Link className="brand" href="/" aria-label="Passmint home">
           <span className="brand-mark">
             <TicketIcon size={22} />
           </span>
           <span>Passmint</span>
         </Link>
         <nav aria-label="Main navigation">
-          <Link to="/">Discover</Link>
-          <Link to="/tickets">Tickets</Link>
-          <Link to="/account">Account</Link>
-          <Link to="/verify">Verify</Link>
+          <Link href="/">Discover</Link>
+          <Link href="/tickets">Tickets</Link>
+          <Link href="/account">Account</Link>
+          <Link href="/verify">Verify</Link>
         </nav>
         {session ? (
           <div className="header-account">
-            <Link className="account-chip" to="/account">
+            <Link className="account-chip" href="/account">
               <span>{initials(session.user.name)}</span>
               <strong>{session.user.name}</strong>
               <small>{session.user.role}</small>
             </Link>
-            <button type="button" className="icon-button" onClick={logout} aria-label="Logout">
+            <button
+              type="button"
+              className="icon-button"
+              onClick={logout}
+              aria-label="Logout"
+            >
               <LogOut size={18} />
             </button>
           </div>
         ) : (
           <div className="header-actions">
-            <button type="button" className="secondary-action compact-action" onClick={() => openAuth('login')}>
+            <button
+              type="button"
+              className="secondary-action compact-action"
+              onClick={() => openAuth('login')}
+            >
               <LogIn size={17} />
               Login
             </button>
-            <button type="button" className="primary-action compact-action" onClick={() => openAuth('register')}>
+            <button
+              type="button"
+              className="primary-action compact-action"
+              onClick={() => openAuth('register')}
+            >
               <UserPlus size={17} />
               Sign up
             </button>
@@ -416,8 +462,8 @@ export function App() {
           <p className="eyebrow">Africa-ready ticketing</p>
           <h1>Find the room, buy the ticket, scan the gate.</h1>
           <p className="hero-text">
-            A ticketing marketplace for concerts, sport, nightlife, meetups, and community experiences,
-            with QR passes issued instantly at checkout.
+            A ticketing marketplace for concerts, sport, nightlife, meetups, and
+            community experiences, with QR passes issued instantly at checkout.
           </p>
           <div className="hero-badges" aria-label="Account options">
             <span>
@@ -435,7 +481,10 @@ export function App() {
           </div>
         </div>
 
-        <form className="search-panel" onSubmit={(event) => event.preventDefault()}>
+        <form
+          className="search-panel"
+          onSubmit={(event) => event.preventDefault()}
+        >
           <label>
             <span>Where to?</span>
             <div className="input-shell">
@@ -460,7 +509,11 @@ export function App() {
               />
             </div>
           </label>
-          <button className="search-button" type="submit" aria-label="Search events">
+          <button
+            className="search-button"
+            type="submit"
+            aria-label="Search events"
+          >
             <Search size={19} />
             Search
           </button>
@@ -485,7 +538,9 @@ export function App() {
             <section className="featured-event">
               <div className={`poster-art ${eventTone(0)}`}>
                 <Sparkles size={34} />
-                <span>{shortDate.format(new Date(featuredEvent.startsAt))}</span>
+                <span>
+                  {shortDate.format(new Date(featuredEvent.startsAt))}
+                </span>
               </div>
               <div className="featured-copy">
                 <p className="section-kicker">Featured ticket</p>
@@ -501,7 +556,11 @@ export function App() {
                     {money.format(featuredEvent.priceCents / 100)}
                   </span>
                 </div>
-                <button className="primary-action" type="button" onClick={() => chooseEvent(featuredEvent.id)}>
+                <button
+                  className="primary-action"
+                  type="button"
+                  onClick={() => chooseEvent(featuredEvent.id)}
+                >
                   <TicketIcon size={18} />
                   Get tickets
                 </button>
@@ -515,7 +574,9 @@ export function App() {
                 <p className="section-kicker">Latest published events</p>
                 <h2>Tickets selling now</h2>
               </div>
-              <span>{loading ? 'Loading...' : `${visibleEvents.length} live`}</span>
+              <span>
+                {loading ? 'Loading...' : `${visibleEvents.length} live`}
+              </span>
             </div>
 
             {loading ? (
@@ -531,7 +592,9 @@ export function App() {
                   >
                     <span className="event-poster">
                       <TicketIcon size={24} />
-                      <strong>{shortDate.format(new Date(event.startsAt))}</strong>
+                      <strong>
+                        {shortDate.format(new Date(event.startsAt))}
+                      </strong>
                     </span>
                     <span className="event-card-copy">
                       <strong>{event.name}</strong>
@@ -554,7 +617,11 @@ export function App() {
             </div>
             <div className="country-grid">
               {countries.map((country) => (
-                <button type="button" key={country} onClick={() => setQuery(country)}>
+                <button
+                  type="button"
+                  key={country}
+                  onClick={() => setQuery(country)}
+                >
                   <Landmark size={18} />
                   <span>{country}</span>
                   <small>East & West Africa</small>
@@ -565,20 +632,38 @@ export function App() {
         </div>
 
         <aside className="side-column" id="checkout">
-          <section className={`identity-panel ${session ? 'signed-in' : 'anonymous'}`}>
+          <section
+            className={`identity-panel ${session ? 'signed-in' : 'anonymous'}`}
+          >
             <div>
-              <p className="section-kicker">{session ? 'Signed in checkout' : 'Guest checkout'}</p>
-              <h2>{session ? `Buying as ${session.user.name}` : 'Buy now, login when it matters.'}</h2>
+              <p className="section-kicker">
+                {session ? 'Signed in checkout' : 'Guest checkout'}
+              </p>
+              <h2>
+                {session
+                  ? `Buying as ${session.user.name}`
+                  : 'Buy now, login when it matters.'}
+              </h2>
             </div>
             {session ? (
-              <span className={`role-pill ${session.user.role}`}>{session.user.role}</span>
+              <span className={`role-pill ${session.user.role}`}>
+                {session.user.role}
+              </span>
             ) : (
               <div className="inline-actions">
-                <button type="button" className="secondary-action" onClick={() => openAuth('login')}>
+                <button
+                  type="button"
+                  className="secondary-action"
+                  onClick={() => openAuth('login')}
+                >
                   <LogIn size={17} />
                   Login
                 </button>
-                <button type="button" className="primary-action" onClick={() => openAuth('register')}>
+                <button
+                  type="button"
+                  className="primary-action"
+                  onClick={() => openAuth('register')}
+                >
                   <UserPlus size={17} />
                   Sign up
                 </button>
@@ -614,7 +699,9 @@ export function App() {
                   type="email"
                   value={buyerEmail}
                   onChange={(event) => setBuyerEmail(event.target.value)}
-                  placeholder={session?.user.email ?? 'Email for ticket delivery'}
+                  placeholder={
+                    session?.user.email ?? 'Email for ticket delivery'
+                  }
                   required
                 />
               </label>
@@ -629,13 +716,18 @@ export function App() {
                   required
                 />
               </label>
-              <button className="primary-action" type="submit" disabled={!selectedEventId}>
+              <button
+                className="primary-action"
+                type="submit"
+                disabled={!selectedEventId}
+              >
                 <CircleDollarSign size={18} />
                 Buy ticket
               </button>
             </form>
             <p className="helper-line">
-              Checkout works anonymously. Login first if you want this order saved to your history.
+              Checkout works anonymously. Login first if you want this order
+              saved to your history.
             </p>
             {purchaseState && <p className="state-line">{purchaseState}</p>}
           </section>
@@ -646,12 +738,17 @@ export function App() {
               <h2>Issued tickets</h2>
             </div>
             {tickets.length === 0 ? (
-              <p className="muted">Purchased tickets will appear here with scannable QR codes.</p>
+              <p className="muted">
+                Purchased tickets will appear here with scannable QR codes.
+              </p>
             ) : (
               <div className="ticket-list">
                 {tickets.map((ticket) => (
                   <article className="ticket-card" key={ticket.id}>
-                    <img src={ticket.qrCodeDataUrl} alt={`QR code for ${ticket.buyerName}`} />
+                    <img
+                      src={ticket.qrCodeDataUrl}
+                      alt={`QR code for ${ticket.buyerName}`}
+                    />
                     <div>
                       <h3>{ticket.buyerName}</h3>
                       <p>{ticket.event.name}</p>
@@ -671,7 +768,9 @@ export function App() {
             {session ? (
               <div className="account-summary signed-in-summary">
                 <div className="profile-row">
-                  <span className="profile-avatar">{initials(session.user.name)}</span>
+                  <span className="profile-avatar">
+                    {initials(session.user.name)}
+                  </span>
                   <div>
                     <strong>{session.user.name}</strong>
                     <span>{session.user.email}</span>
@@ -687,14 +786,22 @@ export function App() {
                     access
                   </span>
                 </div>
-                <button className="secondary-action" type="button" onClick={logout}>
+                <button
+                  className="secondary-action"
+                  type="button"
+                  onClick={logout}
+                >
                   <LogOut size={17} />
                   Logout
                 </button>
               </div>
             ) : (
               <form className="form-grid" onSubmit={submitAuth}>
-                <div className="auth-tabs" role="tablist" aria-label="Account mode">
+                <div
+                  className="auth-tabs"
+                  role="tablist"
+                  aria-label="Account mode"
+                >
                   <button
                     type="button"
                     className={authMode === 'login' ? 'selected' : ''}
@@ -763,15 +870,21 @@ export function App() {
                   <History size={18} />
                 </div>
                 {ticketHistory.length === 0 ? (
-                  <p className="muted">Tickets bought while logged in will show here.</p>
+                  <p className="muted">
+                    Tickets bought while logged in will show here.
+                  </p>
                 ) : (
                   ticketHistory.map((ticket) => (
                     <article className="history-card" key={ticket.id}>
                       <div>
                         <strong>{ticket.event.name}</strong>
-                        <small>{dateTime.format(new Date(ticket.event.startsAt))}</small>
+                        <small>
+                          {dateTime.format(new Date(ticket.event.startsAt))}
+                        </small>
                       </div>
-                      <span className={`ticket-status ${ticket.status}`}>{ticket.status.replace('_', ' ')}</span>
+                      <span className={`ticket-status ${ticket.status}`}>
+                        {ticket.status.replace('_', ' ')}
+                      </span>
                     </article>
                   ))
                 )}
@@ -788,8 +901,8 @@ export function App() {
             <h2>Verification app</h2>
           </div>
           <p>
-            Admins use this separate gate surface to verify QR tickets. Accepted tickets are marked entered and
-            cannot be reused.
+            Admins use this separate gate surface to verify QR tickets. Accepted
+            tickets are marked entered and cannot be reused.
           </p>
           {isAdmin ? (
             <div className="verifier-access granted">
@@ -806,7 +919,9 @@ export function App() {
           {cameraEnabled ? (
             <video ref={videoRef} muted playsInline />
           ) : (
-            <div className={`scanner-placeholder ${isAdmin ? 'ready' : 'locked'}`}>
+            <div
+              className={`scanner-placeholder ${isAdmin ? 'ready' : 'locked'}`}
+            >
               {isAdmin ? <ShieldCheck size={54} /> : <LockKeyhole size={54} />}
               <span>{isAdmin ? 'Ready to scan' : 'Admin only'}</span>
             </div>
@@ -827,14 +942,23 @@ export function App() {
             value={gateCode}
             onChange={(event) => setGateCode(event.target.value)}
           />
-          <button type="button" className="primary-action" onClick={() => void scan()} disabled={!isAdmin}>
+          <button
+            type="button"
+            className="primary-action"
+            onClick={() => void scan()}
+            disabled={!isAdmin}
+          >
             Validate
           </button>
         </div>
         {scanState && <p className="state-line">{scanState}</p>}
         {gateResult && (
           <div className={`gate-result ${gateResult.result}`}>
-            {gateResult.result === 'accepted' ? <CheckCircle2 size={28} /> : <XCircle size={28} />}
+            {gateResult.result === 'accepted' ? (
+              <CheckCircle2 size={28} />
+            ) : (
+              <XCircle size={28} />
+            )}
             <div>
               <strong>{gateResult.result.replace('_', ' ')}</strong>
               <span>{gateResult.ticket?.buyerName ?? gateResult.message}</span>

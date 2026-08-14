@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
 
 export type Event = {
   id: string;
@@ -41,7 +41,11 @@ export type AuthSession = {
   user: User;
 };
 
-async function request<T>(path: string, init?: RequestInit, token?: string): Promise<T> {
+async function request<T>(
+  path: string,
+  init?: RequestInit,
+  token?: string,
+): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
     headers: {
       'Content-Type': 'application/json',
@@ -54,7 +58,8 @@ async function request<T>(path: string, init?: RequestInit, token?: string): Pro
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    const payload = data?.message && typeof data.message === 'object' ? data.message : data;
+    const payload =
+      data?.message && typeof data.message === 'object' ? data.message : data;
     throw payload;
   }
 
@@ -63,22 +68,34 @@ async function request<T>(path: string, init?: RequestInit, token?: string): Pro
 
 export const api = {
   listEvents: () => request<Event[]>('/events'),
-  buyTickets: (payload: {
-    eventId: string;
-    buyerName: string;
-    buyerEmail: string;
-    quantity: number;
-  }, token?: string) =>
-    request<Ticket[]>('/tickets', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }, token),
-  myTickets: (token: string) => request<Ticket[]>('/tickets/mine', undefined, token),
+  buyTickets: (
+    payload: {
+      eventId: string;
+      buyerName: string;
+      buyerEmail: string;
+      quantity: number;
+    },
+    token?: string,
+  ) =>
+    request<Ticket[]>(
+      '/tickets',
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      },
+      token,
+    ),
+  myTickets: (token: string) =>
+    request<Ticket[]>('/tickets/mine', undefined, token),
   scanTicket: (code: string, token: string) =>
-    request<GateResult>('/gate/scan', {
-      method: 'POST',
-      body: JSON.stringify({ code }),
-    }, token),
+    request<GateResult>(
+      '/gate/scan',
+      {
+        method: 'POST',
+        body: JSON.stringify({ code }),
+      },
+      token,
+    ),
   register: (payload: { name: string; email: string; password: string }) =>
     request<AuthSession>('/auth/register', {
       method: 'POST',

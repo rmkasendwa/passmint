@@ -1,8 +1,8 @@
 # Passmint
 
-A Dockerized monorepo ticketing system for selling QR tickets and validating entry at the gate.
+A pnpm monorepo ticketing system for selling QR tickets and validating entry at the gate.
 
-- Server-rendered React frontend for event discovery, anonymous checkout, account history, and admin verification
+- Next.js frontend for event discovery, anonymous checkout, account history, and admin verification
 - NestJS backend API
 - PostgreSQL database
 - QR code tickets that can be scanned once at the gate
@@ -11,7 +11,14 @@ A Dockerized monorepo ticketing system for selling QR tickets and validating ent
 
 ```bash
 cp .env.example .env
-docker compose up --build
+pnpm install
+pnpm run dev:db
+```
+
+In another terminal, run both local apps:
+
+```bash
+pnpm run dev
 ```
 
 Set `ADMIN_EMAILS` in `.env` to a comma-separated list of admin email addresses. Users register and log in the same way; matching admin emails receive verifier access.
@@ -21,14 +28,31 @@ Then open:
 - Web app: http://localhost:8088
 - API health: http://localhost:3000/health
 
+The default local setup uses Docker only for PostgreSQL. The API and web app run as independent local workspaces.
+
 ## Monorepo Layout
 
 ```text
 apps/
   api/      NestJS API and PostgreSQL integration
-  web/      React + Vite frontend
+  web/      Next.js frontend
 infra/
   postgres/ Database initialization scripts
+```
+
+## Database IDs
+
+Entity IDs are application-generated strings with readable prefixes:
+
+- Users: `usr_...`
+- Events: `evt_...`
+- Tickets: `tkt_...`
+
+If you have an older local database with UUID primary keys, wipe it and recreate the schema:
+
+```bash
+docker compose down -v
+pnpm run dev:db
 ```
 
 ## Main Flows
@@ -43,19 +67,19 @@ infra/
 ## Useful Commands
 
 ```bash
-npm run dev       # run the full stack with Docker Compose
-npm run build     # build all workspaces locally
+pnpm run dev       # run API and web locally
+pnpm run dev:db    # run PostgreSQL in Docker
+pnpm run dev:api   # run only the API
+pnpm run dev:web   # run only the Next.js app
+pnpm run build     # build all workspaces locally
+pnpm run lint      # type-check all workspaces
 ```
 
-The web app uses Vite SSR. Local web-only development runs the SSR dev server:
+## Docker Image
+
+The production Dockerfile builds the API and web app into one image. Docker Compose keeps that app image behind an explicit profile so local development can use only the database container.
 
 ```bash
-npm --workspace apps/web run dev
-```
-
-Production preview renders routes through the Node SSR server:
-
-```bash
-npm --workspace apps/web run build
-npm --workspace apps/web run preview
+pnpm run docker:build
+pnpm run docker:up
 ```

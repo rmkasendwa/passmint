@@ -2,16 +2,16 @@
   "name": "passmint",
   "private": true,
   "version": "0.1.0",
-  "workspaces": [
-    "apps/api",
-    "apps/web"
-  ],
+  "packageManager": "pnpm@9.14.4",
   "scripts": {
-    "dev": "docker compose up --build",
-    "dev:api": "npm --workspace apps/api run start:dev",
-    "dev:web": "npm --workspace apps/web run dev",
-    "build": "npm --workspaces run build",
-    "lint": "npm --workspaces run lint",
+    "dev": "pnpm --parallel --filter @passmint/api --filter @passmint/web dev",
+    "dev:db": "docker compose up postgres",
+    "dev:api": "pnpm --filter @passmint/api dev",
+    "dev:web": "pnpm --filter @passmint/web dev",
+    "docker:build": "docker build -t passmint .",
+    "docker:up": "docker compose --profile app up --build",
+    "build": "pnpm --recursive run build",
+    "lint": "pnpm --recursive run lint",
     "format": "prettier --write ."
   },
   "devDependencies": {

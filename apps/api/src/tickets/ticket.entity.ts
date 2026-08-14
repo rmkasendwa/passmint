@@ -1,20 +1,22 @@
 import {
+  BeforeInsert,
   Column,
   CreateDateColumn,
   Entity,
   Index,
   JoinColumn,
   ManyToOne,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { prefixedId } from '../common/prefixed-id';
 import { Event } from '../events/event.entity';
 import { User } from '../users/user.entity';
 import { TicketStatus } from './ticket-status.enum';
 
 @Entity({ name: 'tickets' })
 export class Ticket {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn()
   id: string;
 
   @Index({ unique: true })
@@ -33,10 +35,16 @@ export class Ticket {
   @Column({ type: 'timestamptz', nullable: true })
   checkedInAt: Date | null;
 
-  @ManyToOne(() => Event, (event) => event.tickets, { eager: true, onDelete: 'CASCADE' })
+  @ManyToOne(() => Event, (event) => event.tickets, {
+    eager: true,
+    onDelete: 'CASCADE',
+  })
   event: Event;
 
-  @ManyToOne(() => User, (user) => user.tickets, { nullable: true, onDelete: 'SET NULL' })
+  @ManyToOne(() => User, (user) => user.tickets, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   @JoinColumn()
   owner: User | null;
 
@@ -45,4 +53,9 @@ export class Ticket {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @BeforeInsert()
+  assignId() {
+    this.id ??= prefixedId('tkt');
+  }
 }
