@@ -1,11 +1,12 @@
-'use client';
+"use client";
 
-import type { IScannerControls } from '@zxing/browser';
+import type { IScannerControls } from "@zxing/browser";
 import {
   CalendarDays,
   CheckCircle2,
   CircleDollarSign,
   Clapperboard,
+  Compass,
   Drama,
   Dumbbell,
   History,
@@ -27,41 +28,48 @@ import {
   UserPlus,
   Users,
   XCircle,
-} from 'lucide-react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { api, AuthSession, Event, GateResult, Ticket } from './api';
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { api, AuthSession, Event, GateResult, Ticket } from "./api";
 
-const money = new Intl.NumberFormat('en-UG', {
-  style: 'currency',
-  currency: 'UGX',
+const money = new Intl.NumberFormat("en-UG", {
+  style: "currency",
+  currency: "UGX",
   maximumFractionDigits: 0,
 });
 
-const dateTime = new Intl.DateTimeFormat('en-UG', {
-  dateStyle: 'medium',
-  timeStyle: 'short',
+const dateTime = new Intl.DateTimeFormat("en-UG", {
+  dateStyle: "medium",
+  timeStyle: "short",
 });
 
-const shortDate = new Intl.DateTimeFormat('en-UG', {
-  weekday: 'short',
-  month: 'short',
-  day: 'numeric',
+const shortDate = new Intl.DateTimeFormat("en-UG", {
+  weekday: "short",
+  month: "short",
+  day: "numeric",
+});
+
+const chipDate = new Intl.DateTimeFormat("en-UG", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
 });
 
 const categories = [
-  { label: 'Music', detail: 'Live shows', icon: Music2 },
-  { label: 'Sports', detail: 'Games & matches', icon: Trophy },
-  { label: 'Nightlife', detail: 'Clubs & raves', icon: Martini },
-  { label: 'Theatre', detail: 'Stage & culture', icon: Drama },
-  { label: 'Conferences', detail: 'Business', icon: Mic2 },
-  { label: 'Cinema', detail: 'Film nights', icon: Clapperboard },
-  { label: 'Wellness', detail: 'Fitness', icon: Dumbbell },
-  { label: 'Community', detail: 'Meetups', icon: Users },
+  { label: "For you", query: "", icon: Compass },
+  { label: "Concerts", query: "music", icon: Music2 },
+  { label: "Nightlife", query: "nightlife", icon: Martini },
+  { label: "Sports", query: "sports", icon: Trophy },
+  { label: "Theatre", query: "theatre", icon: Drama },
+  { label: "Conferences", query: "conference", icon: Mic2 },
+  { label: "Cinema", query: "cinema", icon: Clapperboard },
+  { label: "Wellness", query: "wellness", icon: Dumbbell },
+  { label: "Community", query: "community", icon: Users },
 ];
 
-const SESSION_KEY = 'passmint-session';
+const SESSION_KEY = "passmint-session";
 
 function daysFromNow(days: number, hour: number) {
   const date = new Date();
@@ -72,85 +80,85 @@ function daysFromNow(days: number, hour: number) {
 
 const demoEvents: Event[] = [
   {
-    id: 'demo-citrus-brunch',
-    name: 'Citrus & Rose Brunch',
+    id: "demo-citrus-brunch",
+    name: "Citrus & Rose Brunch",
     description:
-      'A sunny food, music, and lifestyle ticket for weekend crowds.',
-    venue: 'The Line, Los Angeles',
+      "A sunny food, music, and lifestyle ticket for weekend crowds.",
+    venue: "The Line, Los Angeles",
     startsAt: daysFromNow(5, 11),
     capacity: 800,
     priceCents: 8500000,
     thumbnailUrl:
-      'https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=1200&q=80',
+      "https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=1200&q=80",
   },
   {
-    id: 'demo-kampala-js',
-    name: 'JavaScript Builders Meetup',
-    description: 'Talks, demos, and community networking for product builders.',
-    venue: 'Village Underground, London',
+    id: "demo-kampala-js",
+    name: "JavaScript Builders Meetup",
+    description: "Talks, demos, and community networking for product builders.",
+    venue: "Village Underground, London",
     startsAt: daysFromNow(8, 15),
     capacity: 220,
     priceCents: 0,
     thumbnailUrl:
-      'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80',
+      "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80",
   },
   {
-    id: 'demo-nec-vipers',
-    name: 'City FC vs United FC',
-    description: 'Matchday tickets with fast QR entry for football fans.',
-    venue: 'National Stadium, Singapore',
+    id: "demo-nec-vipers",
+    name: "City FC vs United FC",
+    description: "Matchday tickets with fast QR entry for football fans.",
+    venue: "National Stadium, Singapore",
     startsAt: daysFromNow(12, 13),
     capacity: 4500,
     priceCents: 3000000,
     thumbnailUrl:
-      'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=1200&q=80',
+      "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=1200&q=80",
   },
   {
-    id: 'demo-vibes-valour',
-    name: 'Vibes & Valour',
+    id: "demo-vibes-valour",
+    name: "Vibes & Valour",
     description:
-      'A live conversation and social evening for the next generation of leaders.',
-    venue: 'House of Yes, Brooklyn',
+      "A live conversation and social evening for the next generation of leaders.",
+    venue: "House of Yes, Brooklyn",
     startsAt: daysFromNow(17, 16),
     capacity: 180,
     priceCents: 5000000,
     thumbnailUrl:
-      'https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=1200&q=80',
+      "https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=1200&q=80",
   },
   {
-    id: 'demo-campus-pitch',
-    name: 'Campus Pitch Global',
+    id: "demo-campus-pitch",
+    name: "Campus Pitch Global",
     description:
-      'Student founders, investors, product demos, and campus energy.',
-    venue: 'TU Berlin, Germany',
+      "Student founders, investors, product demos, and campus energy.",
+    venue: "TU Berlin, Germany",
     startsAt: daysFromNow(24, 9),
     capacity: 600,
     priceCents: 2000000,
     thumbnailUrl:
-      'https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&w=1200&q=80',
+      "https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&w=1200&q=80",
   },
   {
-    id: 'demo-basketball',
-    name: 'Basketball League Opening Night',
+    id: "demo-basketball",
+    name: "Basketball League Opening Night",
     description:
-      'Courtside tickets for the first night of the city league season.',
-    venue: 'Ginásio do Ibirapuera, São Paulo',
+      "Courtside tickets for the first night of the city league season.",
+    venue: "Ginásio do Ibirapuera, São Paulo",
     startsAt: daysFromNow(31, 17),
     capacity: 1200,
     priceCents: 2500000,
     thumbnailUrl:
-      'https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=1200&q=80',
+      "https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=1200&q=80",
   },
 ];
 
 const emptyHostEvent = {
-  name: '',
-  description: '',
-  venue: '',
-  startsAt: '',
+  name: "",
+  description: "",
+  venue: "",
+  startsAt: "",
   capacity: 120,
   priceCents: 0,
-  thumbnailUrl: '',
+  thumbnailUrl: "",
 };
 
 function eventTone(index: number) {
@@ -158,7 +166,7 @@ function eventTone(index: number) {
 }
 
 function readSavedSession() {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === "undefined") return null;
 
   const saved = window.localStorage.getItem(SESSION_KEY);
   if (!saved) return null;
@@ -173,32 +181,62 @@ function readSavedSession() {
 
 function initials(name: string) {
   return name
-    .split(' ')
+    .split(" ")
     .map((part) => part[0])
-    .join('')
+    .join("")
     .slice(0, 2)
     .toUpperCase();
+}
+
+function eventStatus(event: Event) {
+  const startsAt = new Date(event.startsAt).getTime();
+  const now = Date.now();
+
+  if (Number.isNaN(startsAt)) return "Tickets open";
+  return startsAt >= now ? "Upcoming" : "Past";
+}
+
+function eventCategory(event: Event) {
+  const haystack =
+    `${event.name} ${event.description} ${event.venue}`.toLowerCase();
+
+  if (/sport|match|fc|league|basket|stadium|arena/.test(haystack)) {
+    return "Sports";
+  }
+
+  if (/music|dj|concert|brunch|night|club|vibes|show/.test(haystack)) {
+    return "Music";
+  }
+
+  if (/meetup|launch|conference|builder|javascript|talk|demo/.test(haystack)) {
+    return "Conference";
+  }
+
+  if (/film|cinema|screen/.test(haystack)) return "Cinema";
+  if (/theatre|stage|drama/.test(haystack)) return "Theatre";
+
+  return "Event";
 }
 
 function EventThumbnail({
   event,
   tone,
-  variant = 'card',
+  variant = "card",
 }: {
   event: Event;
   tone: string;
-  variant?: 'card' | 'featured' | 'preview';
+  variant?: "card" | "featured" | "preview";
 }) {
   const date = new Date(event.startsAt);
-  const day = new Intl.DateTimeFormat('en-UG', { day: 'numeric' }).format(date);
-  const month = new Intl.DateTimeFormat('en-UG', { month: 'short' }).format(
+  const day = new Intl.DateTimeFormat("en-UG", { day: "numeric" }).format(date);
+  const month = new Intl.DateTimeFormat("en-UG", { month: "short" }).format(
     date,
   );
 
   return (
     <span
       className={`event-thumbnail event-thumbnail-${variant} ${tone} ${
-        event.thumbnailUrl ? 'has-image' : 'fallback'
+        event.thumbnailUrl ? "has-image" : "fallback"
       }`}
     >
       {event.thumbnailUrl && (
@@ -207,8 +245,8 @@ function EventThumbnail({
       <span className="thumbnail-scrim" />
       <span className="thumbnail-frame" />
       <span className="thumbnail-badge">
-        <TicketIcon size={variant === 'featured' ? 25 : 18} />
-        <small>Passmint</small>
+        <TicketIcon size={variant === "featured" ? 25 : 18} />
+        <small>{eventCategory(event)}</small>
       </span>
       {!event.thumbnailUrl && (
         <span className="thumbnail-initials">{initials(event.name)}</span>
@@ -218,8 +256,8 @@ function EventThumbnail({
         <small>{month}</small>
       </span>
       <span className="thumbnail-title">
-        <strong>{event.name || 'New event'}</strong>
-        <small>{event.venue || 'Venue to be announced'}</small>
+        <strong>{event.name || "New event"}</strong>
+        <small>{event.venue || "Venue to be announced"}</small>
       </span>
     </span>
   );
@@ -230,34 +268,34 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
   const router = useRouter();
   const [events, setEvents] = useState<Event[]>(() => initialEvents);
   const [selectedEventId, setSelectedEventId] = useState(
-    () => initialEvents[0]?.id ?? '',
+    () => initialEvents[0]?.id ?? "",
   );
-  const [buyerName, setBuyerName] = useState('');
-  const [buyerEmail, setBuyerEmail] = useState('');
+  const [buyerName, setBuyerName] = useState("");
+  const [buyerEmail, setBuyerEmail] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [gateCode, setGateCode] = useState('');
+  const [gateCode, setGateCode] = useState("");
   const [gateResult, setGateResult] = useState<GateResult | null>(null);
   const [loading, setLoading] = useState(initialEvents.length === 0);
-  const [purchaseState, setPurchaseState] = useState('');
-  const [scanState, setScanState] = useState('');
+  const [purchaseState, setPurchaseState] = useState("");
+  const [scanState, setScanState] = useState("");
   const [cameraEnabled, setCameraEnabled] = useState(false);
-  const [query, setQuery] = useState('');
-  const [dateFilter, setDateFilter] = useState('');
+  const [query, setQuery] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
   const [session, setSession] = useState<AuthSession | null>(null);
   const [sessionLoaded, setSessionLoaded] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
-  const [authName, setAuthName] = useState('');
-  const [authEmail, setAuthEmail] = useState('');
-  const [authPassword, setAuthPassword] = useState('');
-  const [authState, setAuthState] = useState('');
+  const [authMode, setAuthMode] = useState<"login" | "register">("login");
+  const [authName, setAuthName] = useState("");
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authState, setAuthState] = useState("");
   const [hostEvent, setHostEvent] = useState(emptyHostEvent);
-  const [hostThumbnailName, setHostThumbnailName] = useState('');
+  const [hostThumbnailName, setHostThumbnailName] = useState("");
   const [hostThumbnailFile, setHostThumbnailFile] = useState<{
     fileName: string;
     contentType: string;
   } | null>(null);
-  const [hostState, setHostState] = useState('');
+  const [hostState, setHostState] = useState("");
   const [ticketHistory, setTicketHistory] = useState<Ticket[]>([]);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const controlsRef = useRef<IScannerControls | null>(null);
@@ -269,13 +307,13 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
       .listEvents()
       .then((data) => {
         setEvents(data);
-        setSelectedEventId(data[0]?.id ?? '');
+        setSelectedEventId(data[0]?.id ?? "");
       })
       .catch(() => {
         setEvents(demoEvents);
         setSelectedEventId(demoEvents[0].id);
         setPurchaseState(
-          'Demo events loaded. Start the API to issue real tickets.',
+          "Demo events loaded. Start the API to issue real tickets.",
         );
       })
       .finally(() => setLoading(false));
@@ -287,7 +325,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
   }, []);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     if (!sessionLoaded) return;
 
     if (!session) {
@@ -305,7 +343,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
 
     let cancelled = false;
 
-    void import('@zxing/browser').then(({ BrowserQRCodeReader }) => {
+    void import("@zxing/browser").then(({ BrowserQRCodeReader }) => {
       if (cancelled || !videoRef.current) return;
 
       const reader = new BrowserQRCodeReader();
@@ -324,7 +362,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
         })
         .catch(() => {
           setScanState(
-            'Camera scanner could not start. You can enter the code manually.',
+            "Camera scanner could not start. You can enter the code manually.",
           );
           setCameraEnabled(false);
         });
@@ -338,7 +376,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
   }, [cameraEnabled]);
 
   useEffect(() => {
-    if (pathname === '/admin' || pathname === '/verify') return;
+    if (pathname === "/admin" || pathname === "/verify") return;
     setCameraEnabled(false);
   }, [pathname]);
 
@@ -366,14 +404,18 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
 
   const featuredEvent = filteredEvents[0] ?? events[0];
   const visibleEvents = filteredEvents.length > 0 ? filteredEvents : events;
-  const isAdmin = session?.user.role === 'admin';
+  const upcomingEvents = visibleEvents.filter(
+    (event) => eventStatus(event) === "Upcoming",
+  );
+  const nextTicketDrop = upcomingEvents[0] ?? visibleEvents[0];
+  const isAdmin = session?.user.role === "admin";
   const hostPreviewEvent: Event = {
-    id: 'host-preview',
-    name: hostEvent.name || 'Fresh ticket drop',
+    id: "host-preview",
+    name: hostEvent.name || "Fresh ticket drop",
     description:
       hostEvent.description ||
-      'Upload a photo or let Passmint design the thumbnail.',
-    venue: hostEvent.venue || 'Venue to be announced',
+      "Upload a photo or let Passmint design the thumbnail.",
+    venue: hostEvent.venue || "Venue to be announced",
     startsAt: hostEvent.startsAt
       ? new Date(hostEvent.startsAt).toISOString()
       : new Date().toISOString(),
@@ -392,7 +434,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
 
   async function buyTickets(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setPurchaseState('Creating ticket...');
+    setPurchaseState("Creating ticket...");
 
     try {
       const created = await api.buyTickets(
@@ -410,12 +452,12 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
       }
       setPurchaseState(
         session
-          ? 'Ticket purchase complete and saved to your history.'
-          : 'Ticket purchase complete.',
+          ? "Ticket purchase complete and saved to your history."
+          : "Ticket purchase complete.",
       );
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : 'Ticket purchase failed.';
+        error instanceof Error ? error.message : "Ticket purchase failed.";
       setPurchaseState(message);
     }
   }
@@ -424,11 +466,11 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
     const normalized = code.trim();
     if (!normalized) return;
 
-    setScanState('Checking ticket...');
+    setScanState("Checking ticket...");
     setGateResult(null);
 
     if (!session || !isAdmin) {
-      setScanState('Admin login required to verify tickets.');
+      setScanState("Admin login required to verify tickets.");
       return;
     }
 
@@ -439,18 +481,18 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
     } catch (error) {
       const fallback = error as Partial<GateResult>;
       setGateResult({
-        result: fallback.result ?? 'invalid',
-        message: fallback.message ?? 'Ticket could not be validated.',
+        result: fallback.result ?? "invalid",
+        message: fallback.message ?? "Ticket could not be validated.",
         checkedInAt: fallback.checkedInAt,
         ticket: fallback.ticket,
       });
-      setScanState(fallback.message ?? 'Ticket could not be validated.');
+      setScanState(fallback.message ?? "Ticket could not be validated.");
     }
   }
 
   function chooseEvent(eventId: string) {
     setSelectedEventId(eventId);
-    setPurchaseState('');
+    setPurchaseState("");
   }
 
   function updateHostEvent(
@@ -462,29 +504,29 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
 
   function selectThumbnail(file: File | null) {
     if (!file) {
-      setHostThumbnailName('');
+      setHostThumbnailName("");
       setHostThumbnailFile(null);
-      updateHostEvent('thumbnailUrl', '');
+      updateHostEvent("thumbnailUrl", "");
       return;
     }
 
-    if (!file.type.startsWith('image/')) {
-      setHostState('Choose an image file for the ticket thumbnail.');
+    if (!file.type.startsWith("image/")) {
+      setHostState("Choose an image file for the ticket thumbnail.");
       return;
     }
 
     const reader = new FileReader();
     reader.onload = () => {
-      updateHostEvent('thumbnailUrl', String(reader.result ?? ''));
+      updateHostEvent("thumbnailUrl", String(reader.result ?? ""));
       setHostThumbnailName(file.name);
       setHostThumbnailFile({
         fileName: file.name,
         contentType: file.type,
       });
-      setHostState('');
+      setHostState("");
     };
     reader.onerror = () => {
-      setHostState('Thumbnail upload failed. Try a smaller image.');
+      setHostState("Thumbnail upload failed. Try a smaller image.");
     };
     reader.readAsDataURL(file);
   }
@@ -493,23 +535,23 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
     event.preventDefault();
 
     if (!isAdmin) {
-      setHostState('Admin login required to publish events.');
+      setHostState("Admin login required to publish events.");
       return;
     }
 
     const adminToken = session?.token;
     if (!adminToken) {
-      setHostState('Admin login required to publish events.');
+      setHostState("Admin login required to publish events.");
       return;
     }
 
-    setHostState('Publishing event...');
+    setHostState("Publishing event...");
 
     try {
-      let thumbnailUrl = hostEvent.thumbnailUrl || '';
+      let thumbnailUrl = hostEvent.thumbnailUrl || "";
 
-      if (thumbnailUrl.startsWith('data:') && hostThumbnailFile) {
-        setHostState('Uploading thumbnail...');
+      if (thumbnailUrl.startsWith("data:") && hostThumbnailFile) {
+        setHostState("Uploading thumbnail...");
         const upload = await api.uploadEventImage(
           {
             ...hostThumbnailFile,
@@ -541,29 +583,29 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
       );
       setSelectedEventId(created.id);
       setHostEvent(emptyHostEvent);
-      setHostThumbnailName('');
+      setHostThumbnailName("");
       setHostThumbnailFile(null);
-      setHostState('Event published with ticket thumbnail ready.');
+      setHostState("Event published with ticket thumbnail ready.");
     } catch (error) {
       const fallback = error as { message?: string };
-      setHostState(fallback.message ?? 'Event could not be published.');
+      setHostState(fallback.message ?? "Event could not be published.");
     }
   }
 
-  function openAuth(mode: 'login' | 'register') {
+  function openAuth(mode: "login" | "register") {
     setAuthMode(mode);
-    router.push('/account');
+    router.push("/account");
   }
 
   async function submitAuth(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setAuthState(
-      authMode === 'login' ? 'Logging in...' : 'Creating account...',
+      authMode === "login" ? "Logging in..." : "Creating account...",
     );
 
     try {
       const nextSession =
-        authMode === 'login'
+        authMode === "login"
           ? await api.login({ email: authEmail, password: authPassword })
           : await api.register({
               name: authName,
@@ -573,23 +615,23 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
       setSession(nextSession);
       setBuyerName(nextSession.user.name);
       setBuyerEmail(nextSession.user.email);
-      setAuthPassword('');
+      setAuthPassword("");
       setAuthState(`Logged in as ${nextSession.user.role}.`);
-      if (nextSession.user.role === 'admin') {
-        router.push('/admin');
+      if (nextSession.user.role === "admin") {
+        router.push("/admin");
       }
     } catch (error) {
       const fallback = error as { message?: string };
-      setAuthState(fallback.message ?? 'Authentication failed.');
+      setAuthState(fallback.message ?? "Authentication failed.");
     }
   }
 
   function logout() {
     setSession(null);
-    setAuthState('Logged out.');
+    setAuthState("Logged out.");
   }
 
-  const page = pathname === '/verify' ? '/admin' : pathname;
+  const page = pathname === "/verify" ? "/admin" : pathname;
 
   return (
     <main className="app-shell">
@@ -609,11 +651,11 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
             <div className="header-account">
               <Link
                 className="account-chip"
-                href={isAdmin ? '/admin' : '/account'}
+                href={isAdmin ? "/admin" : "/account"}
               >
                 <span>{initials(session.user.name)}</span>
                 <strong>{session.user.name}</strong>
-                <small>{isAdmin ? 'gate access' : session.user.role}</small>
+                <small>{isAdmin ? "gate access" : session.user.role}</small>
               </Link>
               <button
                 type="button"
@@ -629,7 +671,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
               <button
                 type="button"
                 className="secondary-action compact-action"
-                onClick={() => openAuth('login')}
+                onClick={() => openAuth("login")}
               >
                 <LogIn size={17} />
                 Login
@@ -637,7 +679,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
               <button
                 type="button"
                 className="primary-action compact-action"
-                onClick={() => openAuth('register')}
+                onClick={() => openAuth("register")}
               >
                 <UserPlus size={17} />
                 Sign up
@@ -647,29 +689,20 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
         </div>
       </header>
 
-      {page === '/' && (
+      {page === "/" && (
         <>
-          <section className="hero-section">
-            <div className="hero-copy">
-              <p className="eyebrow">Ticketing and attendance</p>
-              <h1>Passmint</h1>
-              <p className="hero-text">
-                Issue QR tickets, sell access, and track attendance for events
-                anywhere in the world.
-              </p>
-            </div>
-
+          <section className="discovery-bar" aria-label="Event discovery">
             <form
               className="search-panel"
               onSubmit={(event) => event.preventDefault()}
             >
               <label>
-                <span>Where to?</span>
+                <span>Search</span>
                 <div className="input-shell">
-                  <MapPin size={18} />
+                  <Search size={18} />
                   <input
                     aria-label="Search by event or venue"
-                    placeholder="Any event or venue"
+                    placeholder="Event, venue, artist, team"
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                   />
@@ -693,22 +726,20 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                 aria-label="Search events"
               >
                 <Search size={19} />
-                Search
+                Find tickets
               </button>
             </form>
 
             <div className="category-strip" aria-label="Event categories">
-              {categories.map(({ label, detail, icon: Icon }) => (
+              {categories.map(({ label, query: categoryQuery, icon: Icon }) => (
                 <button
                   type="button"
                   key={label}
-                  onClick={() => setQuery(label)}
+                  className={query === categoryQuery ? "selected" : ""}
+                  onClick={() => setQuery(categoryQuery)}
                 >
                   <Icon size={20} />
-                  <span>
-                    <strong>{label}</strong>
-                    <small>{detail}</small>
-                  </span>
+                  <strong>{label}</strong>
                 </button>
               ))}
             </div>
@@ -720,13 +751,19 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
           >
             <div className="main-column">
               {featuredEvent && (
-                <section className="featured-event">
+                <section className="featured-event hero-ticket">
                   <EventThumbnail
                     event={featuredEvent}
                     tone={eventTone(0)}
                     variant="featured"
                   />
                   <div className="featured-copy">
+                    <div className="ticket-badges">
+                      <span>{eventStatus(featuredEvent)}</span>
+                      <span>
+                        {chipDate.format(new Date(featuredEvent.startsAt))}
+                      </span>
+                    </div>
                     <p className="section-kicker">Featured ticket</p>
                     <h2>{featuredEvent.name}</h2>
                     <p>{featuredEvent.description}</p>
@@ -739,6 +776,10 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                         <CircleDollarSign size={16} />
                         {money.format(featuredEvent.priceCents / 100)}
                       </span>
+                      <span>
+                        <Users size={16} />
+                        {featuredEvent.capacity.toLocaleString("en-UG")} spots
+                      </span>
                     </div>
                     <Link
                       className="primary-action"
@@ -746,7 +787,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                       onClick={() => chooseEvent(featuredEvent.id)}
                     >
                       <TicketIcon size={18} />
-                      Explore tickets
+                      Get tickets
                     </Link>
                   </div>
                 </section>
@@ -755,12 +796,10 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
               <section>
                 <div className="section-heading">
                   <div>
-                    <p className="section-kicker">Latest published events</p>
-                    <h2>Tickets selling now</h2>
+                    <p className="section-kicker">Fresh from the platform</p>
+                    <h2>Latest ticket drops</h2>
                   </div>
-                  <span>
-                    {loading ? 'Loading...' : `${visibleEvents.length} live`}
-                  </span>
+                  <Link href="/tickets">See everything</Link>
                 </div>
 
                 {loading ? (
@@ -769,13 +808,19 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                   <div className="event-grid">
                     {visibleEvents.map((event, index) => (
                       <button
-                        className={`event-card ${eventTone(index)} ${event.id === selectedEventId ? 'selected' : ''}`}
+                        className={`event-card ${eventTone(index)} ${event.id === selectedEventId ? "selected" : ""}`}
                         key={event.id}
                         onClick={() => chooseEvent(event.id)}
                         type="button"
                       >
                         <EventThumbnail event={event} tone={eventTone(index)} />
                         <span className="event-card-copy">
+                          <span className="ticket-badges compact">
+                            <span>
+                              {chipDate.format(new Date(event.startsAt))}
+                            </span>
+                            <span>{eventStatus(event)}</span>
+                          </span>
                           <strong>{event.name}</strong>
                           <small>{event.description}</small>
                           <span className="event-card-meta">
@@ -797,12 +842,33 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                   </div>
                 )}
               </section>
+
+              {nextTicketDrop && (
+                <section className="ticket-cta">
+                  <div>
+                    <p className="section-kicker">Next ticket to buy</p>
+                    <h2>{nextTicketDrop.name}</h2>
+                    <p>
+                      {dateTime.format(new Date(nextTicketDrop.startsAt))} at{" "}
+                      {nextTicketDrop.venue}
+                    </p>
+                  </div>
+                  <Link
+                    className="primary-action"
+                    href="/tickets"
+                    onClick={() => chooseEvent(nextTicketDrop.id)}
+                  >
+                    <TicketIcon size={18} />
+                    Reserve spot
+                  </Link>
+                </section>
+              )}
             </div>
           </section>
         </>
       )}
 
-      {page === '/tickets' && (
+      {page === "/tickets" && (
         <section
           className="page-layout tickets-page"
           aria-label="Ticket checkout"
@@ -824,13 +890,13 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                   <h2>Pick an event</h2>
                 </div>
                 <span>
-                  {loading ? 'Loading...' : `${visibleEvents.length} live`}
+                  {loading ? "Loading..." : `${visibleEvents.length} live`}
                 </span>
               </div>
               <div className="event-grid compact-events">
                 {visibleEvents.map((event, index) => (
                   <button
-                    className={`event-card ${eventTone(index)} ${event.id === selectedEventId ? 'selected' : ''}`}
+                    className={`event-card ${eventTone(index)} ${event.id === selectedEventId ? "selected" : ""}`}
                     key={event.id}
                     onClick={() => chooseEvent(event.id)}
                     type="button"
@@ -860,16 +926,16 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
 
             <aside className="checkout-stack">
               <section
-                className={`identity-panel ${session ? 'signed-in' : 'anonymous'}`}
+                className={`identity-panel ${session ? "signed-in" : "anonymous"}`}
               >
                 <div>
                   <p className="section-kicker">
-                    {session ? 'Signed in checkout' : 'Guest checkout'}
+                    {session ? "Signed in checkout" : "Guest checkout"}
                   </p>
                   <h2>
                     {session
                       ? `Buying as ${session.user.name}`
-                      : 'Buy now, login when it matters.'}
+                      : "Buy now, login when it matters."}
                   </h2>
                 </div>
                 {session ? (
@@ -881,7 +947,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                     <button
                       type="button"
                       className="secondary-action"
-                      onClick={() => openAuth('login')}
+                      onClick={() => openAuth("login")}
                     >
                       <LogIn size={17} />
                       Login
@@ -889,7 +955,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                     <button
                       type="button"
                       className="primary-action"
-                      onClick={() => openAuth('register')}
+                      onClick={() => openAuth("register")}
                     >
                       <UserPlus size={17} />
                       Sign up
@@ -918,7 +984,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                     <input
                       value={buyerName}
                       onChange={(event) => setBuyerName(event.target.value)}
-                      placeholder={session?.user.name ?? 'Anonymous buyer name'}
+                      placeholder={session?.user.name ?? "Anonymous buyer name"}
                       required
                     />
                   </label>
@@ -929,7 +995,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                       value={buyerEmail}
                       onChange={(event) => setBuyerEmail(event.target.value)}
                       placeholder={
-                        session?.user.email ?? 'Email for ticket delivery'
+                        session?.user.email ?? "Email for ticket delivery"
                       }
                       required
                     />
@@ -1035,27 +1101,27 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                     >
                       <button
                         type="button"
-                        className={authMode === 'login' ? 'selected' : ''}
-                        onClick={() => setAuthMode('login')}
+                        className={authMode === "login" ? "selected" : ""}
+                        onClick={() => setAuthMode("login")}
                       >
                         <LogIn size={16} />
                         Login
                       </button>
                       <button
                         type="button"
-                        className={authMode === 'register' ? 'selected' : ''}
-                        onClick={() => setAuthMode('register')}
+                        className={authMode === "register" ? "selected" : ""}
+                        onClick={() => setAuthMode("register")}
                       >
                         <UserPlus size={16} />
                         Sign up
                       </button>
                     </div>
                     <p className="helper-line auth-helper">
-                      {authMode === 'login'
-                        ? 'Use the same login for buyer history and admin verification.'
-                        : 'Create an account before checkout to keep this and future tickets in one place.'}
+                      {authMode === "login"
+                        ? "Use the same login for buyer history and admin verification."
+                        : "Create an account before checkout to keep this and future tickets in one place."}
                     </p>
-                    {authMode === 'register' && (
+                    {authMode === "register" && (
                       <label>
                         Name
                         <input
@@ -1090,7 +1156,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                       />
                     </label>
                     <button className="primary-action" type="submit">
-                      {authMode === 'login' ? 'Login' : 'Create account'}
+                      {authMode === "login" ? "Login" : "Create account"}
                     </button>
                   </form>
                 )}
@@ -1116,7 +1182,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                             </small>
                           </div>
                           <span className={`ticket-status ${ticket.status}`}>
-                            {ticket.status.replace('_', ' ')}
+                            {ticket.status.replace("_", " ")}
                           </span>
                         </article>
                       ))
@@ -1129,7 +1195,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
         </section>
       )}
 
-      {page === '/account' && (
+      {page === "/account" && (
         <section className="page-layout account-page">
           <div className="page-intro">
             <p className="section-kicker">Account</p>
@@ -1190,27 +1256,27 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                 >
                   <button
                     type="button"
-                    className={authMode === 'login' ? 'selected' : ''}
-                    onClick={() => setAuthMode('login')}
+                    className={authMode === "login" ? "selected" : ""}
+                    onClick={() => setAuthMode("login")}
                   >
                     <LogIn size={16} />
                     Login
                   </button>
                   <button
                     type="button"
-                    className={authMode === 'register' ? 'selected' : ''}
-                    onClick={() => setAuthMode('register')}
+                    className={authMode === "register" ? "selected" : ""}
+                    onClick={() => setAuthMode("register")}
                   >
                     <UserPlus size={16} />
                     Sign up
                   </button>
                 </div>
                 <p className="helper-line auth-helper">
-                  {authMode === 'login'
-                    ? 'Use the same login for buyer history and admin verification.'
-                    : 'Create an account before checkout to keep this and future tickets in one place.'}
+                  {authMode === "login"
+                    ? "Use the same login for buyer history and admin verification."
+                    : "Create an account before checkout to keep this and future tickets in one place."}
                 </p>
-                {authMode === 'register' && (
+                {authMode === "register" && (
                   <label>
                     Name
                     <input
@@ -1243,7 +1309,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                   />
                 </label>
                 <button className="primary-action" type="submit">
-                  {authMode === 'login' ? 'Login' : 'Create account'}
+                  {authMode === "login" ? "Login" : "Create account"}
                 </button>
               </form>
             )}
@@ -1269,7 +1335,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                         </small>
                       </div>
                       <span className={`ticket-status ${ticket.status}`}>
-                        {ticket.status.replace('_', ' ')}
+                        {ticket.status.replace("_", " ")}
                       </span>
                     </article>
                   ))
@@ -1280,7 +1346,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
         </section>
       )}
 
-      {page === '/admin' && (
+      {page === "/admin" && (
         <section className="admin-layout">
           <div className="admin-hero">
             <p className="section-kicker">Admin gate console</p>
@@ -1311,7 +1377,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                   <input
                     value={hostEvent.name}
                     onChange={(event) =>
-                      updateHostEvent('name', event.target.value)
+                      updateHostEvent("name", event.target.value)
                     }
                     placeholder="Kampala rooftop sessions"
                     required
@@ -1322,7 +1388,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                   <textarea
                     value={hostEvent.description}
                     onChange={(event) =>
-                      updateHostEvent('description', event.target.value)
+                      updateHostEvent("description", event.target.value)
                     }
                     placeholder="Short public summary"
                     required
@@ -1333,7 +1399,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                   <input
                     value={hostEvent.venue}
                     onChange={(event) =>
-                      updateHostEvent('venue', event.target.value)
+                      updateHostEvent("venue", event.target.value)
                     }
                     placeholder="Venue, city"
                     required
@@ -1346,7 +1412,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                       type="datetime-local"
                       value={hostEvent.startsAt}
                       onChange={(event) =>
-                        updateHostEvent('startsAt', event.target.value)
+                        updateHostEvent("startsAt", event.target.value)
                       }
                       required
                     />
@@ -1358,7 +1424,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                       type="number"
                       value={hostEvent.capacity}
                       onChange={(event) =>
-                        updateHostEvent('capacity', Number(event.target.value))
+                        updateHostEvent("capacity", Number(event.target.value))
                       }
                       required
                     />
@@ -1372,7 +1438,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                     value={hostEvent.priceCents / 100}
                     onChange={(event) =>
                       updateHostEvent(
-                        'priceCents',
+                        "priceCents",
                         Number(event.target.value) * 100,
                       )
                     }
@@ -1390,7 +1456,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                   />
                   <span>
                     <Upload size={17} />
-                    {hostThumbnailName || 'Optional image upload'}
+                    {hostThumbnailName || "Optional image upload"}
                   </span>
                 </label>
                 {hostEvent.thumbnailUrl && (
@@ -1444,14 +1510,14 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                   <video ref={videoRef} muted playsInline />
                 ) : (
                   <div
-                    className={`scanner-placeholder ${isAdmin ? 'ready' : 'locked'}`}
+                    className={`scanner-placeholder ${isAdmin ? "ready" : "locked"}`}
                   >
                     {isAdmin ? (
                       <ShieldCheck size={54} />
                     ) : (
                       <LockKeyhole size={54} />
                     )}
-                    <span>{isAdmin ? 'Ready to scan' : 'Admin only'}</span>
+                    <span>{isAdmin ? "Ready to scan" : "Admin only"}</span>
                   </div>
                 )}
               </div>
@@ -1463,7 +1529,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                   disabled={!isAdmin}
                 >
                   <ScanLine size={18} />
-                  {cameraEnabled ? 'Stop camera' : 'Start camera'}
+                  {cameraEnabled ? "Stop camera" : "Start camera"}
                 </button>
                 <input
                   placeholder="Paste or type ticket code"
@@ -1482,13 +1548,13 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
               {scanState && <p className="state-line">{scanState}</p>}
               {gateResult && (
                 <div className={`gate-result ${gateResult.result}`}>
-                  {gateResult.result === 'accepted' ? (
+                  {gateResult.result === "accepted" ? (
                     <CheckCircle2 size={28} />
                   ) : (
                     <XCircle size={28} />
                   )}
                   <div>
-                    <strong>{gateResult.result.replace('_', ' ')}</strong>
+                    <strong>{gateResult.result.replace("_", " ")}</strong>
                     <span>
                       {gateResult.ticket?.buyerName ?? gateResult.message}
                     </span>
