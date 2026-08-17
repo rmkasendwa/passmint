@@ -23,12 +23,13 @@ pnpm run dev
 
 Set `ADMIN_EMAILS` in `.env` to a comma-separated list of admin email addresses. Users register and log in the same way; matching admin emails receive verifier access.
 
-Event thumbnails upload through the API. Local development needs no object-store setup: files are written to `uploads/` and served from `/uploads`. To use S3-compatible storage, set `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, and optionally `S3_ENDPOINT`, `S3_FORCE_PATH_STYLE`, and `S3_PUBLIC_BASE_URL` for R2 or MinIO.
+Event thumbnails upload through the API into MinIO during local development. `pnpm run dev` starts MinIO, creates the `passmint-event-images` bucket, and makes uploaded event images readable at `http://localhost:${MINIO_API_PORT}/passmint-event-images/...`. The MinIO console runs at `http://localhost:${MINIO_CONSOLE_PORT}`. To use production object storage, set `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, and optionally `S3_ENDPOINT`, `S3_FORCE_PATH_STYLE`, and `S3_PUBLIC_BASE_URL` for S3-compatible providers such as R2 or MinIO.
 
 Then open:
 
 - Web app: http://localhost:8088
 - API health: http://localhost:3000/health
+- MinIO console: http://localhost:9001
 
 The default local setup uses Docker only for PostgreSQL. The API and web app run as independent local workspaces.
 

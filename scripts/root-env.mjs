@@ -37,6 +37,17 @@ export function loadRootEnv() {
   process.env.POSTGRES_DB ??= 'passmint';
   process.env.POSTGRES_USER ??= 'passmint';
   process.env.POSTGRES_PASSWORD ??= 'passmint';
+  process.env.MINIO_API_PORT ??= '9000';
+  process.env.MINIO_CONSOLE_PORT ??= '9001';
+  process.env.MINIO_ROOT_USER ??= 'passmint';
+  process.env.MINIO_ROOT_PASSWORD ??= 'passmint-dev-secret';
+  process.env.S3_BUCKET ??= 'passmint-event-images';
+  process.env.S3_REGION ??= 'us-east-1';
+  process.env.S3_ACCESS_KEY_ID ??= process.env.MINIO_ROOT_USER;
+  process.env.S3_SECRET_ACCESS_KEY ??= process.env.MINIO_ROOT_PASSWORD;
+  process.env.S3_ENDPOINT ??= `http://localhost:${process.env.MINIO_API_PORT}`;
+  process.env.S3_FORCE_PATH_STYLE ??= 'true';
+  process.env.S3_PUBLIC_BASE_URL ??= `http://localhost:${process.env.MINIO_API_PORT}/${process.env.S3_BUCKET}`;
   process.env.DATABASE_URL ??=
     `postgres://${process.env.POSTGRES_USER}:${process.env.POSTGRES_PASSWORD}` +
     `@${process.env.POSTGRES_HOST}:${process.env.POSTGRES_PORT}/${process.env.POSTGRES_DB}`;
