@@ -1,7 +1,8 @@
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
-import { json, urlencoded } from 'express';
+import { json, static as serveStatic, urlencoded } from 'express';
+import { join } from 'path';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -13,8 +14,14 @@ async function bootstrap() {
   app.enableCors({
     origin: config.get<string>('CORS_ORIGIN') ?? `http://localhost:${webPort}`,
   });
-  app.use(json({ limit: '3mb' }));
-  app.use(urlencoded({ extended: true, limit: '3mb' }));
+  app.use(
+    '/uploads',
+    serveStatic(
+      config.get<string>('LOCAL_UPLOAD_DIR') ?? join(process.cwd(), 'uploads'),
+    ),
+  );
+  app.use(json({ limit: '7mb' }));
+  app.use(urlencoded({ extended: true, limit: '7mb' }));
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

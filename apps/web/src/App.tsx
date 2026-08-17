@@ -80,16 +80,19 @@ const demoEvents: Event[] = [
     startsAt: daysFromNow(5, 11),
     capacity: 800,
     priceCents: 8500000,
+    thumbnailUrl:
+      'https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=1200&q=80',
   },
   {
     id: 'demo-kampala-js',
     name: 'JavaScript Builders Meetup',
-    description:
-      'Talks, demos, and community networking for product builders.',
+    description: 'Talks, demos, and community networking for product builders.',
     venue: 'Village Underground, London',
     startsAt: daysFromNow(8, 15),
     capacity: 220,
     priceCents: 0,
+    thumbnailUrl:
+      'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80',
   },
   {
     id: 'demo-nec-vipers',
@@ -99,6 +102,8 @@ const demoEvents: Event[] = [
     startsAt: daysFromNow(12, 13),
     capacity: 4500,
     priceCents: 3000000,
+    thumbnailUrl:
+      'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=1200&q=80',
   },
   {
     id: 'demo-vibes-valour',
@@ -109,6 +114,8 @@ const demoEvents: Event[] = [
     startsAt: daysFromNow(17, 16),
     capacity: 180,
     priceCents: 5000000,
+    thumbnailUrl:
+      'https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=1200&q=80',
   },
   {
     id: 'demo-campus-pitch',
@@ -119,6 +126,8 @@ const demoEvents: Event[] = [
     startsAt: daysFromNow(24, 9),
     capacity: 600,
     priceCents: 2000000,
+    thumbnailUrl:
+      'https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&w=1200&q=80',
   },
   {
     id: 'demo-basketball',
@@ -129,6 +138,8 @@ const demoEvents: Event[] = [
     startsAt: daysFromNow(31, 17),
     capacity: 1200,
     priceCents: 2500000,
+    thumbnailUrl:
+      'https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=1200&q=80',
   },
 ];
 
@@ -180,7 +191,9 @@ function EventThumbnail({
 }) {
   const date = new Date(event.startsAt);
   const day = new Intl.DateTimeFormat('en-UG', { day: 'numeric' }).format(date);
-  const month = new Intl.DateTimeFormat('en-UG', { month: 'short' }).format(date);
+  const month = new Intl.DateTimeFormat('en-UG', { month: 'short' }).format(
+    date,
+  );
 
   return (
     <span
@@ -240,6 +253,10 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
   const [authState, setAuthState] = useState('');
   const [hostEvent, setHostEvent] = useState(emptyHostEvent);
   const [hostThumbnailName, setHostThumbnailName] = useState('');
+  const [hostThumbnailFile, setHostThumbnailFile] = useState<{
+    fileName: string;
+    contentType: string;
+  } | null>(null);
   const [hostState, setHostState] = useState('');
   const [ticketHistory, setTicketHistory] = useState<Ticket[]>([]);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -446,6 +463,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
   function selectThumbnail(file: File | null) {
     if (!file) {
       setHostThumbnailName('');
+      setHostThumbnailFile(null);
       updateHostEvent('thumbnailUrl', '');
       return;
     }
@@ -459,6 +477,10 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
     reader.onload = () => {
       updateHostEvent('thumbnailUrl', String(reader.result ?? ''));
       setHostThumbnailName(file.name);
+      setHostThumbnailFile({
+        fileName: file.name,
+        contentType: file.type,
+      });
       setHostState('');
     };
     reader.onerror = () => {
@@ -475,20 +497,41 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
       return;
     }
 
+    const adminToken = session?.token;
+    if (!adminToken) {
+      setHostState('Admin login required to publish events.');
+      return;
+    }
+
     setHostState('Publishing event...');
 
     try {
-      const created = await api.createEvent({
-        name: hostEvent.name,
-        description: hostEvent.description,
-        venue: hostEvent.venue,
-        startsAt: new Date(hostEvent.startsAt).toISOString(),
-        capacity: hostEvent.capacity,
-        priceCents: hostEvent.priceCents,
-        ...(hostEvent.thumbnailUrl
-          ? { thumbnailUrl: hostEvent.thumbnailUrl }
-          : {}),
-      });
+      let thumbnailUrl = hostEvent.thumbnailUrl || '';
+
+      if (thumbnailUrl.startsWith('data:') && hostThumbnailFile) {
+        setHostState('Uploading thumbnail...');
+        const upload = await api.uploadEventImage(
+          {
+            ...hostThumbnailFile,
+            dataUrl: thumbnailUrl,
+          },
+          adminToken,
+        );
+        thumbnailUrl = upload.url;
+      }
+
+      const created = await api.createEvent(
+        {
+          name: hostEvent.name,
+          description: hostEvent.description,
+          venue: hostEvent.venue,
+          startsAt: new Date(hostEvent.startsAt).toISOString(),
+          capacity: hostEvent.capacity,
+          priceCents: hostEvent.priceCents,
+          ...(thumbnailUrl ? { thumbnailUrl } : {}),
+        },
+        adminToken,
+      );
       setEvents((current) =>
         [...current, created].sort(
           (left, right) =>
@@ -499,6 +542,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
       setSelectedEventId(created.id);
       setHostEvent(emptyHostEvent);
       setHostThumbnailName('');
+      setHostThumbnailFile(null);
       setHostState('Event published with ticket thumbnail ready.');
     } catch (error) {
       const fallback = error as { message?: string };
@@ -670,7 +714,10 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
             </div>
           </section>
 
-          <section className="market-layout public-market home-feed" aria-label="Ticket marketplace">
+          <section
+            className="market-layout public-market home-feed"
+            aria-label="Ticket marketplace"
+          >
             <div className="main-column">
               {featuredEvent && (
                 <section className="featured-event">
@@ -756,7 +803,10 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
       )}
 
       {page === '/tickets' && (
-        <section className="page-layout tickets-page" aria-label="Ticket checkout">
+        <section
+          className="page-layout tickets-page"
+          aria-label="Ticket checkout"
+        >
           <div className="page-intro">
             <p className="section-kicker">Tickets</p>
             <h1>Choose your event and check out.</h1>
@@ -773,7 +823,9 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                   <p className="section-kicker">Available now</p>
                   <h2>Pick an event</h2>
                 </div>
-                <span>{loading ? 'Loading...' : `${visibleEvents.length} live`}</span>
+                <span>
+                  {loading ? 'Loading...' : `${visibleEvents.length} live`}
+                </span>
               </div>
               <div className="event-grid compact-events">
                 {visibleEvents.map((event, index) => (
@@ -807,265 +859,271 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
             </section>
 
             <aside className="checkout-stack">
-          <section
-            className={`identity-panel ${session ? 'signed-in' : 'anonymous'}`}
-          >
-            <div>
-              <p className="section-kicker">
-                {session ? 'Signed in checkout' : 'Guest checkout'}
-              </p>
-              <h2>
-                {session
-                  ? `Buying as ${session.user.name}`
-                  : 'Buy now, login when it matters.'}
-              </h2>
-            </div>
-            {session ? (
-              <span className={`role-pill ${session.user.role}`}>
-                {session.user.role}
-              </span>
-            ) : (
-              <div className="inline-actions">
-                <button
-                  type="button"
-                  className="secondary-action"
-                  onClick={() => openAuth('login')}
-                >
-                  <LogIn size={17} />
-                  Login
-                </button>
-                <button
-                  type="button"
-                  className="primary-action"
-                  onClick={() => openAuth('register')}
-                >
-                  <UserPlus size={17} />
-                  Sign up
-                </button>
-              </div>
-            )}
-          </section>
-
-          <section className="checkout-panel">
-            <div className="panel-heading">
-              <TicketIcon size={22} />
-              <h2>Checkout</h2>
-            </div>
-            {selectedEvent && (
-              <div className="event-summary">
-                <strong>{selectedEvent.name}</strong>
-                <span>{dateTime.format(new Date(selectedEvent.startsAt))}</span>
-                <span>{selectedEvent.venue}</span>
-              </div>
-            )}
-            <form onSubmit={buyTickets} className="form-grid">
-              <label>
-                Buyer name
-                <input
-                  value={buyerName}
-                  onChange={(event) => setBuyerName(event.target.value)}
-                  placeholder={session?.user.name ?? 'Anonymous buyer name'}
-                  required
-                />
-              </label>
-              <label>
-                Buyer email
-                <input
-                  type="email"
-                  value={buyerEmail}
-                  onChange={(event) => setBuyerEmail(event.target.value)}
-                  placeholder={
-                    session?.user.email ?? 'Email for ticket delivery'
-                  }
-                  required
-                />
-              </label>
-              <label>
-                Quantity
-                <input
-                  min={1}
-                  max={10}
-                  type="number"
-                  value={quantity}
-                  onChange={(event) => setQuantity(Number(event.target.value))}
-                  required
-                />
-              </label>
-              <button
-                className="primary-action"
-                type="submit"
-                disabled={!selectedEventId}
+              <section
+                className={`identity-panel ${session ? 'signed-in' : 'anonymous'}`}
               >
-                <CircleDollarSign size={18} />
-                Buy ticket
-              </button>
-            </form>
-            <p className="helper-line">
-              Checkout works anonymously. Login first if you want this order
-              saved to your history.
-            </p>
-            {purchaseState && <p className="state-line">{purchaseState}</p>}
-          </section>
-
-          <section className="tickets-panel">
-            <div className="panel-heading">
-              <QrCode size={22} />
-              <h2>Issued tickets</h2>
-            </div>
-            {tickets.length === 0 ? (
-              <p className="muted">
-                Purchased tickets will appear here with scannable QR codes.
-              </p>
-            ) : (
-              <div className="ticket-list">
-                {tickets.map((ticket) => (
-                  <article className="ticket-card" key={ticket.id}>
-                    <img
-                      src={ticket.qrCodeDataUrl}
-                      alt={`QR code for ${ticket.buyerName}`}
-                    />
-                    <div>
-                      <h3>{ticket.buyerName}</h3>
-                      <p>{ticket.event.name}</p>
-                      <code>{ticket.code}</code>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section className="account-panel" id="account">
-            <div className="panel-heading">
-              <Users size={22} />
-              <h2>Account access</h2>
-            </div>
-            {session ? (
-              <div className="account-summary signed-in-summary">
-                <div className="profile-row">
-                  <span className="profile-avatar">
-                    {initials(session.user.name)}
+                <div>
+                  <p className="section-kicker">
+                    {session ? 'Signed in checkout' : 'Guest checkout'}
+                  </p>
+                  <h2>
+                    {session
+                      ? `Buying as ${session.user.name}`
+                      : 'Buy now, login when it matters.'}
+                  </h2>
+                </div>
+                {session ? (
+                  <span className={`role-pill ${session.user.role}`}>
+                    {session.user.role}
                   </span>
-                  <div>
-                    <strong>{session.user.name}</strong>
-                    <span>{session.user.email}</span>
+                ) : (
+                  <div className="inline-actions">
+                    <button
+                      type="button"
+                      className="secondary-action"
+                      onClick={() => openAuth('login')}
+                    >
+                      <LogIn size={17} />
+                      Login
+                    </button>
+                    <button
+                      type="button"
+                      className="primary-action"
+                      onClick={() => openAuth('register')}
+                    >
+                      <UserPlus size={17} />
+                      Sign up
+                    </button>
                   </div>
+                )}
+              </section>
+
+              <section className="checkout-panel">
+                <div className="panel-heading">
+                  <TicketIcon size={22} />
+                  <h2>Checkout</h2>
                 </div>
-                <div className="account-stats">
-                  <span>
-                    <strong>{ticketHistory.length}</strong>
-                    saved tickets
-                  </span>
-                  <span>
-                    <strong>{session.user.role}</strong>
-                    access
-                  </span>
-                </div>
-                <button
-                  className="secondary-action"
-                  type="button"
-                  onClick={logout}
-                >
-                  <LogOut size={17} />
-                  Logout
-                </button>
-              </div>
-            ) : (
-              <form className="form-grid" onSubmit={submitAuth}>
-                <div
-                  className="auth-tabs"
-                  role="tablist"
-                  aria-label="Account mode"
-                >
-                  <button
-                    type="button"
-                    className={authMode === 'login' ? 'selected' : ''}
-                    onClick={() => setAuthMode('login')}
-                  >
-                    <LogIn size={16} />
-                    Login
-                  </button>
-                  <button
-                    type="button"
-                    className={authMode === 'register' ? 'selected' : ''}
-                    onClick={() => setAuthMode('register')}
-                  >
-                    <UserPlus size={16} />
-                    Sign up
-                  </button>
-                </div>
-                <p className="helper-line auth-helper">
-                  {authMode === 'login'
-                    ? 'Use the same login for buyer history and admin verification.'
-                    : 'Create an account before checkout to keep this and future tickets in one place.'}
-                </p>
-                {authMode === 'register' && (
+                {selectedEvent && (
+                  <div className="event-summary">
+                    <strong>{selectedEvent.name}</strong>
+                    <span>
+                      {dateTime.format(new Date(selectedEvent.startsAt))}
+                    </span>
+                    <span>{selectedEvent.venue}</span>
+                  </div>
+                )}
+                <form onSubmit={buyTickets} className="form-grid">
                   <label>
-                    Name
+                    Buyer name
                     <input
-                      value={authName}
-                      onChange={(event) => setAuthName(event.target.value)}
-                      placeholder="Full name"
+                      value={buyerName}
+                      onChange={(event) => setBuyerName(event.target.value)}
+                      placeholder={session?.user.name ?? 'Anonymous buyer name'}
                       required
                     />
                   </label>
-                )}
-                <label>
-                  Email
-                  <input
-                    type="email"
-                    value={authEmail}
-                    onChange={(event) => setAuthEmail(event.target.value)}
-                    placeholder="you@example.com"
-                    required
-                  />
-                </label>
-                <label>
-                  Password
-                  <input
-                    type="password"
-                    minLength={8}
-                    value={authPassword}
-                    onChange={(event) => setAuthPassword(event.target.value)}
-                    placeholder="At least 8 characters"
-                    required
-                  />
-                </label>
-                <button className="primary-action" type="submit">
-                  {authMode === 'login' ? 'Login' : 'Create account'}
-                </button>
-              </form>
-            )}
-            {authState && <p className="state-line">{authState}</p>}
+                  <label>
+                    Buyer email
+                    <input
+                      type="email"
+                      value={buyerEmail}
+                      onChange={(event) => setBuyerEmail(event.target.value)}
+                      placeholder={
+                        session?.user.email ?? 'Email for ticket delivery'
+                      }
+                      required
+                    />
+                  </label>
+                  <label>
+                    Quantity
+                    <input
+                      min={1}
+                      max={10}
+                      type="number"
+                      value={quantity}
+                      onChange={(event) =>
+                        setQuantity(Number(event.target.value))
+                      }
+                      required
+                    />
+                  </label>
+                  <button
+                    className="primary-action"
+                    type="submit"
+                    disabled={!selectedEventId}
+                  >
+                    <CircleDollarSign size={18} />
+                    Buy ticket
+                  </button>
+                </form>
+                <p className="helper-line">
+                  Checkout works anonymously. Login first if you want this order
+                  saved to your history.
+                </p>
+                {purchaseState && <p className="state-line">{purchaseState}</p>}
+              </section>
 
-            {session && (
-              <div className="history-list">
-                <div className="history-heading">
-                  <h3>Ticket history</h3>
-                  <History size={18} />
+              <section className="tickets-panel">
+                <div className="panel-heading">
+                  <QrCode size={22} />
+                  <h2>Issued tickets</h2>
                 </div>
-                {ticketHistory.length === 0 ? (
+                {tickets.length === 0 ? (
                   <p className="muted">
-                    Tickets bought while logged in will show here.
+                    Purchased tickets will appear here with scannable QR codes.
                   </p>
                 ) : (
-                  ticketHistory.map((ticket) => (
-                    <article className="history-card" key={ticket.id}>
-                      <div>
-                        <strong>{ticket.event.name}</strong>
-                        <small>
-                          {dateTime.format(new Date(ticket.event.startsAt))}
-                        </small>
-                      </div>
-                      <span className={`ticket-status ${ticket.status}`}>
-                        {ticket.status.replace('_', ' ')}
-                      </span>
-                    </article>
-                  ))
+                  <div className="ticket-list">
+                    {tickets.map((ticket) => (
+                      <article className="ticket-card" key={ticket.id}>
+                        <img
+                          src={ticket.qrCodeDataUrl}
+                          alt={`QR code for ${ticket.buyerName}`}
+                        />
+                        <div>
+                          <h3>{ticket.buyerName}</h3>
+                          <p>{ticket.event.name}</p>
+                          <code>{ticket.code}</code>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
                 )}
-              </div>
-            )}
-          </section>
+              </section>
+
+              <section className="account-panel" id="account">
+                <div className="panel-heading">
+                  <Users size={22} />
+                  <h2>Account access</h2>
+                </div>
+                {session ? (
+                  <div className="account-summary signed-in-summary">
+                    <div className="profile-row">
+                      <span className="profile-avatar">
+                        {initials(session.user.name)}
+                      </span>
+                      <div>
+                        <strong>{session.user.name}</strong>
+                        <span>{session.user.email}</span>
+                      </div>
+                    </div>
+                    <div className="account-stats">
+                      <span>
+                        <strong>{ticketHistory.length}</strong>
+                        saved tickets
+                      </span>
+                      <span>
+                        <strong>{session.user.role}</strong>
+                        access
+                      </span>
+                    </div>
+                    <button
+                      className="secondary-action"
+                      type="button"
+                      onClick={logout}
+                    >
+                      <LogOut size={17} />
+                      Logout
+                    </button>
+                  </div>
+                ) : (
+                  <form className="form-grid" onSubmit={submitAuth}>
+                    <div
+                      className="auth-tabs"
+                      role="tablist"
+                      aria-label="Account mode"
+                    >
+                      <button
+                        type="button"
+                        className={authMode === 'login' ? 'selected' : ''}
+                        onClick={() => setAuthMode('login')}
+                      >
+                        <LogIn size={16} />
+                        Login
+                      </button>
+                      <button
+                        type="button"
+                        className={authMode === 'register' ? 'selected' : ''}
+                        onClick={() => setAuthMode('register')}
+                      >
+                        <UserPlus size={16} />
+                        Sign up
+                      </button>
+                    </div>
+                    <p className="helper-line auth-helper">
+                      {authMode === 'login'
+                        ? 'Use the same login for buyer history and admin verification.'
+                        : 'Create an account before checkout to keep this and future tickets in one place.'}
+                    </p>
+                    {authMode === 'register' && (
+                      <label>
+                        Name
+                        <input
+                          value={authName}
+                          onChange={(event) => setAuthName(event.target.value)}
+                          placeholder="Full name"
+                          required
+                        />
+                      </label>
+                    )}
+                    <label>
+                      Email
+                      <input
+                        type="email"
+                        value={authEmail}
+                        onChange={(event) => setAuthEmail(event.target.value)}
+                        placeholder="you@example.com"
+                        required
+                      />
+                    </label>
+                    <label>
+                      Password
+                      <input
+                        type="password"
+                        minLength={8}
+                        value={authPassword}
+                        onChange={(event) =>
+                          setAuthPassword(event.target.value)
+                        }
+                        placeholder="At least 8 characters"
+                        required
+                      />
+                    </label>
+                    <button className="primary-action" type="submit">
+                      {authMode === 'login' ? 'Login' : 'Create account'}
+                    </button>
+                  </form>
+                )}
+                {authState && <p className="state-line">{authState}</p>}
+
+                {session && (
+                  <div className="history-list">
+                    <div className="history-heading">
+                      <h3>Ticket history</h3>
+                      <History size={18} />
+                    </div>
+                    {ticketHistory.length === 0 ? (
+                      <p className="muted">
+                        Tickets bought while logged in will show here.
+                      </p>
+                    ) : (
+                      ticketHistory.map((ticket) => (
+                        <article className="history-card" key={ticket.id}>
+                          <div>
+                            <strong>{ticket.event.name}</strong>
+                            <small>
+                              {dateTime.format(new Date(ticket.event.startsAt))}
+                            </small>
+                          </div>
+                          <span className={`ticket-status ${ticket.status}`}>
+                            {ticket.status.replace('_', ' ')}
+                          </span>
+                        </article>
+                      ))
+                    )}
+                  </div>
+                )}
+              </section>
             </aside>
           </div>
         </section>
@@ -1360,78 +1418,84 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
               {hostState && <p className="state-line">{hostState}</p>}
             </section>
 
-          <section className="gate-panel">
-        <div>
-          <div className="panel-heading">
-            <ScanLine size={22} />
-            <h2>Verification app</h2>
-          </div>
-          <p>
-            Admins use this separate gate surface to verify QR tickets. Accepted
-            tickets are marked entered and cannot be reused.
-          </p>
-          {isAdmin ? (
-            <div className="verifier-access granted">
-              <ShieldCheck size={18} />
-              {session.user.name} has verifier access.
-            </div>
-          ) : (
-            <p className="locked-note">
-              Login with an admin account to use ticket verification.
-            </p>
-          )}
-        </div>
-        <div className="scanner-box">
-          {cameraEnabled ? (
-            <video ref={videoRef} muted playsInline />
-          ) : (
-            <div
-              className={`scanner-placeholder ${isAdmin ? 'ready' : 'locked'}`}
-            >
-              {isAdmin ? <ShieldCheck size={54} /> : <LockKeyhole size={54} />}
-              <span>{isAdmin ? 'Ready to scan' : 'Admin only'}</span>
-            </div>
-          )}
-        </div>
-        <div className="gate-actions">
-          <button
-            type="button"
-            className="secondary-action"
-            onClick={() => setCameraEnabled((value) => !value)}
-            disabled={!isAdmin}
-          >
-            <ScanLine size={18} />
-            {cameraEnabled ? 'Stop camera' : 'Start camera'}
-          </button>
-          <input
-            placeholder="Paste or type ticket code"
-            value={gateCode}
-            onChange={(event) => setGateCode(event.target.value)}
-          />
-          <button
-            type="button"
-            className="primary-action"
-            onClick={() => void scan()}
-            disabled={!isAdmin}
-          >
-            Validate
-          </button>
-        </div>
-        {scanState && <p className="state-line">{scanState}</p>}
-        {gateResult && (
-          <div className={`gate-result ${gateResult.result}`}>
-            {gateResult.result === 'accepted' ? (
-              <CheckCircle2 size={28} />
-            ) : (
-              <XCircle size={28} />
-            )}
-            <div>
-              <strong>{gateResult.result.replace('_', ' ')}</strong>
-              <span>{gateResult.ticket?.buyerName ?? gateResult.message}</span>
-            </div>
-          </div>
-        )}
-          </section>
+            <section className="gate-panel">
+              <div>
+                <div className="panel-heading">
+                  <ScanLine size={22} />
+                  <h2>Verification app</h2>
+                </div>
+                <p>
+                  Admins use this separate gate surface to verify QR tickets.
+                  Accepted tickets are marked entered and cannot be reused.
+                </p>
+                {isAdmin ? (
+                  <div className="verifier-access granted">
+                    <ShieldCheck size={18} />
+                    {session.user.name} has verifier access.
+                  </div>
+                ) : (
+                  <p className="locked-note">
+                    Login with an admin account to use ticket verification.
+                  </p>
+                )}
+              </div>
+              <div className="scanner-box">
+                {cameraEnabled ? (
+                  <video ref={videoRef} muted playsInline />
+                ) : (
+                  <div
+                    className={`scanner-placeholder ${isAdmin ? 'ready' : 'locked'}`}
+                  >
+                    {isAdmin ? (
+                      <ShieldCheck size={54} />
+                    ) : (
+                      <LockKeyhole size={54} />
+                    )}
+                    <span>{isAdmin ? 'Ready to scan' : 'Admin only'}</span>
+                  </div>
+                )}
+              </div>
+              <div className="gate-actions">
+                <button
+                  type="button"
+                  className="secondary-action"
+                  onClick={() => setCameraEnabled((value) => !value)}
+                  disabled={!isAdmin}
+                >
+                  <ScanLine size={18} />
+                  {cameraEnabled ? 'Stop camera' : 'Start camera'}
+                </button>
+                <input
+                  placeholder="Paste or type ticket code"
+                  value={gateCode}
+                  onChange={(event) => setGateCode(event.target.value)}
+                />
+                <button
+                  type="button"
+                  className="primary-action"
+                  onClick={() => void scan()}
+                  disabled={!isAdmin}
+                >
+                  Validate
+                </button>
+              </div>
+              {scanState && <p className="state-line">{scanState}</p>}
+              {gateResult && (
+                <div className={`gate-result ${gateResult.result}`}>
+                  {gateResult.result === 'accepted' ? (
+                    <CheckCircle2 size={28} />
+                  ) : (
+                    <XCircle size={28} />
+                  )}
+                  <div>
+                    <strong>{gateResult.result.replace('_', ' ')}</strong>
+                    <span>
+                      {gateResult.ticket?.buyerName ?? gateResult.message}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </section>
           </div>
         </section>
       )}

@@ -73,19 +73,38 @@ async function request<T>(
 
 export const api = {
   listEvents: () => request<Event[]>('/events'),
-  createEvent: (payload: {
-    name: string;
-    description: string;
-    venue: string;
-    startsAt: string;
-    capacity: number;
-    priceCents: number;
-    thumbnailUrl?: string;
-  }) =>
-    request<Event>('/events', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+  createEvent: (
+    payload: {
+      name: string;
+      description: string;
+      venue: string;
+      startsAt: string;
+      capacity: number;
+      priceCents: number;
+      thumbnailUrl?: string;
+    },
+    token: string,
+  ) =>
+    request<Event>(
+      '/events',
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      },
+      token,
+    ),
+  uploadEventImage: (
+    payload: { fileName: string; contentType: string; dataUrl: string },
+    token: string,
+  ) =>
+    request<{ url: string }>(
+      '/events/uploads',
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      },
+      token,
+    ),
   buyTickets: (
     payload: {
       eventId: string;

@@ -23,6 +23,8 @@ pnpm run dev
 
 Set `ADMIN_EMAILS` in `.env` to a comma-separated list of admin email addresses. Users register and log in the same way; matching admin emails receive verifier access.
 
+Event thumbnails upload through the API. Local development needs no object-store setup: files are written to `uploads/` and served from `/uploads`. To use S3-compatible storage, set `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, and optionally `S3_ENDPOINT`, `S3_FORCE_PATH_STYLE`, and `S3_PUBLIC_BASE_URL` for R2 or MinIO.
+
 Then open:
 
 - Web app: http://localhost:8088
