@@ -17,11 +17,14 @@ import {
   MapPin,
   Martini,
   Mic2,
+  Monitor,
   Music2,
   QrCode,
   ScanLine,
   Search,
   ShieldCheck,
+  Moon,
+  Sun,
   Ticket as TicketIcon,
   Trophy,
   Upload,
@@ -70,6 +73,10 @@ const categories = [
 ];
 
 const SESSION_KEY = "passmint-session";
+const THEME_KEY = "passmint-theme";
+
+type ThemePreference = "light" | "dark" | "system";
+type ResolvedTheme = "light" | "dark";
 
 function daysFromNow(days: number, hour: number) {
   const date = new Date();
@@ -179,6 +186,22 @@ function readSavedSession() {
   }
 }
 
+function readSavedTheme(): ThemePreference {
+  if (typeof window === "undefined") return "dark";
+
+  const saved = window.localStorage.getItem(THEME_KEY);
+  return saved === "light" || saved === "system" ? saved : "dark";
+}
+
+function resolveThemePreference(preference: ThemePreference): ResolvedTheme {
+  if (preference !== "system") return preference;
+  if (typeof window === "undefined") return "dark";
+
+  return window.matchMedia("(prefers-color-scheme: light)").matches
+    ? "light"
+    : "dark";
+}
+
 function initials(name: string) {
   return name
     .split(" ")
@@ -282,6 +305,9 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
   const [cameraEnabled, setCameraEnabled] = useState(false);
   const [query, setQuery] = useState("");
   const [dateFilter, setDateFilter] = useState("");
+  const [themePreference, setThemePreference] =
+    useState<ThemePreference>("dark");
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("dark");
   const [session, setSession] = useState<AuthSession | null>(null);
   const [sessionLoaded, setSessionLoaded] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
@@ -321,8 +347,28 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
 
   useEffect(() => {
     setSession(readSavedSession());
+    const savedTheme = readSavedTheme();
+    setThemePreference(savedTheme);
+    setResolvedTheme(resolveThemePreference(savedTheme));
     setSessionLoaded(true);
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!sessionLoaded) return;
+
+    window.localStorage.setItem(THEME_KEY, themePreference);
+    setResolvedTheme(resolveThemePreference(themePreference));
+
+    if (themePreference !== "system") return;
+
+    const media = window.matchMedia("(prefers-color-scheme: light)");
+    const updateResolvedTheme = () =>
+      setResolvedTheme(media.matches ? "light" : "dark");
+
+    media.addEventListener("change", updateResolvedTheme);
+    return () => media.removeEventListener("change", updateResolvedTheme);
+  }, [sessionLoaded, themePreference]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -634,7 +680,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
   const page = pathname === "/verify" ? "/admin" : pathname;
 
   return (
-    <main className="app-shell">
+    <main className={`app-shell theme-${resolvedTheme}`}>
       <header className="site-header">
         <div className="site-header-inner">
           <Link className="brand" href="/" aria-label="Passmint home">
@@ -649,6 +695,35 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
           </nav>
           {session ? (
             <div className="header-account">
+              <div className="theme-toggle" aria-label="Color theme">
+                <button
+                  type="button"
+                  className={themePreference === "light" ? "selected" : ""}
+                  onClick={() => setThemePreference("light")}
+                  aria-label="Use light mode"
+                  title="Light mode"
+                >
+                  <Sun size={16} />
+                </button>
+                <button
+                  type="button"
+                  className={themePreference === "dark" ? "selected" : ""}
+                  onClick={() => setThemePreference("dark")}
+                  aria-label="Use dark mode"
+                  title="Dark mode"
+                >
+                  <Moon size={16} />
+                </button>
+                <button
+                  type="button"
+                  className={themePreference === "system" ? "selected" : ""}
+                  onClick={() => setThemePreference("system")}
+                  aria-label="Use system theme"
+                  title="System theme"
+                >
+                  <Monitor size={16} />
+                </button>
+              </div>
               <Link
                 className="account-chip"
                 href={isAdmin ? "/admin" : "/account"}
@@ -668,6 +743,35 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
             </div>
           ) : (
             <div className="header-actions">
+              <div className="theme-toggle" aria-label="Color theme">
+                <button
+                  type="button"
+                  className={themePreference === "light" ? "selected" : ""}
+                  onClick={() => setThemePreference("light")}
+                  aria-label="Use light mode"
+                  title="Light mode"
+                >
+                  <Sun size={16} />
+                </button>
+                <button
+                  type="button"
+                  className={themePreference === "dark" ? "selected" : ""}
+                  onClick={() => setThemePreference("dark")}
+                  aria-label="Use dark mode"
+                  title="Dark mode"
+                >
+                  <Moon size={16} />
+                </button>
+                <button
+                  type="button"
+                  className={themePreference === "system" ? "selected" : ""}
+                  onClick={() => setThemePreference("system")}
+                  aria-label="Use system theme"
+                  title="System theme"
+                >
+                  <Monitor size={16} />
+                </button>
+              </div>
               <button
                 type="button"
                 className="secondary-action compact-action"
