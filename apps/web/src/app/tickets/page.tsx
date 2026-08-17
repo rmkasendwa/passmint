@@ -1,5 +1,10 @@
 import { App } from '../../App';
+import { listEventsForPage } from '../../server-events';
 
-export default function TicketsPage() {
-  return <App />;
+export const dynamic = 'force-dynamic';
+
+export default async function TicketsPage() {
+  const initialEvents = await listEventsForPage();
+
+  return <App initialEvents={initialEvents} />;
 }

@@ -46,6 +46,12 @@ const dateTime = new Intl.DateTimeFormat('en-UG', {
   timeStyle: 'short',
 });
 
+const shortDate = new Intl.DateTimeFormat('en-UG', {
+  weekday: 'short',
+  month: 'short',
+  day: 'numeric',
+});
+
 const categories = [
   { label: 'Music', detail: 'Live shows', icon: Music2 },
   { label: 'Sports', detail: 'Games & matches', icon: Trophy },
@@ -67,6 +73,13 @@ const countries = [
 ];
 const SESSION_KEY = 'passmint-session';
 
+function daysFromNow(days: number, hour: number) {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  date.setHours(hour, 0, 0, 0);
+  return date.toISOString();
+}
+
 const demoEvents: Event[] = [
   {
     id: 'demo-citrus-brunch',
@@ -74,7 +87,7 @@ const demoEvents: Event[] = [
     description:
       'A sunny food, music, and lifestyle ticket for weekend crowds.',
     venue: 'The Line, Los Angeles',
-    startsAt: '2026-05-29T11:00:00.000Z',
+    startsAt: daysFromNow(5, 11),
     capacity: 800,
     priceCents: 8500000,
   },
@@ -84,7 +97,7 @@ const demoEvents: Event[] = [
     description:
       'Talks, demos, and community networking for product builders.',
     venue: 'Village Underground, London',
-    startsAt: '2026-06-04T15:00:00.000Z',
+    startsAt: daysFromNow(8, 15),
     capacity: 220,
     priceCents: 0,
   },
@@ -93,7 +106,7 @@ const demoEvents: Event[] = [
     name: 'City FC vs United FC',
     description: 'Matchday tickets with fast QR entry for football fans.',
     venue: 'National Stadium, Singapore',
-    startsAt: '2026-06-13T13:00:00.000Z',
+    startsAt: daysFromNow(12, 13),
     capacity: 4500,
     priceCents: 3000000,
   },
@@ -103,7 +116,7 @@ const demoEvents: Event[] = [
     description:
       'A live conversation and social evening for the next generation of leaders.',
     venue: 'House of Yes, Brooklyn',
-    startsAt: '2026-06-20T16:30:00.000Z',
+    startsAt: daysFromNow(17, 16),
     capacity: 180,
     priceCents: 5000000,
   },
@@ -113,7 +126,7 @@ const demoEvents: Event[] = [
     description:
       'Student founders, investors, product demos, and campus energy.',
     venue: 'TU Berlin, Germany',
-    startsAt: '2026-07-02T09:00:00.000Z',
+    startsAt: daysFromNow(24, 9),
     capacity: 600,
     priceCents: 2000000,
   },
@@ -123,7 +136,7 @@ const demoEvents: Event[] = [
     description:
       'Courtside tickets for the first night of the city league season.',
     venue: 'Ginásio do Ibirapuera, São Paulo',
-    startsAt: '2026-07-10T17:00:00.000Z',
+    startsAt: daysFromNow(31, 17),
     capacity: 1200,
     priceCents: 2500000,
   },
@@ -209,18 +222,20 @@ function EventThumbnail({
   );
 }
 
-export function App() {
+export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [events, setEvents] = useState<Event[]>([]);
-  const [selectedEventId, setSelectedEventId] = useState('');
+  const [events, setEvents] = useState<Event[]>(() => initialEvents);
+  const [selectedEventId, setSelectedEventId] = useState(
+    () => initialEvents[0]?.id ?? '',
+  );
   const [buyerName, setBuyerName] = useState('');
   const [buyerEmail, setBuyerEmail] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [gateCode, setGateCode] = useState('');
   const [gateResult, setGateResult] = useState<GateResult | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(initialEvents.length === 0);
   const [purchaseState, setPurchaseState] = useState('');
   const [scanState, setScanState] = useState('');
   const [cameraEnabled, setCameraEnabled] = useState(false);
@@ -241,6 +256,8 @@ export function App() {
   const controlsRef = useRef<IScannerControls | null>(null);
 
   useEffect(() => {
+    if (initialEvents.length > 0) return;
+
     api
       .listEvents()
       .then((data) => {
@@ -255,7 +272,7 @@ export function App() {
         );
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [initialEvents.length]);
 
   useEffect(() => {
     setSession(readSavedSession());
@@ -723,8 +740,20 @@ export function App() {
                     <EventThumbnail event={event} tone={eventTone(index)} />
                     <span className="event-card-copy">
                       <strong>{event.name}</strong>
-                      <small>{event.venue}</small>
-                      <span>{money.format(event.priceCents / 100)}</span>
+                      <small>{event.description}</small>
+                      <span className="event-card-meta">
+                        <span>
+                          <CalendarDays size={15} />
+                          {shortDate.format(new Date(event.startsAt))}
+                        </span>
+                        <span>
+                          <MapPin size={15} />
+                          {event.venue}
+                        </span>
+                      </span>
+                      <span className="event-card-price">
+                        {money.format(event.priceCents / 100)}
+                      </span>
                     </span>
                   </button>
                 ))}
@@ -790,8 +819,20 @@ export function App() {
                     <EventThumbnail event={event} tone={eventTone(index)} />
                     <span className="event-card-copy">
                       <strong>{event.name}</strong>
-                      <small>{event.venue}</small>
-                      <span>{money.format(event.priceCents / 100)}</span>
+                      <small>{event.description}</small>
+                      <span className="event-card-meta">
+                        <span>
+                          <CalendarDays size={15} />
+                          {shortDate.format(new Date(event.startsAt))}
+                        </span>
+                        <span>
+                          <MapPin size={15} />
+                          {event.venue}
+                        </span>
+                      </span>
+                      <span className="event-card-price">
+                        {money.format(event.priceCents / 100)}
+                      </span>
                     </span>
                   </button>
                 ))}

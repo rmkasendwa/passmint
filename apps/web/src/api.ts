@@ -42,6 +42,10 @@ export type AuthSession = {
   user: User;
 };
 
+export function getApiUrl() {
+  return API_URL;
+}
+
 async function request<T>(
   path: string,
   init?: RequestInit,

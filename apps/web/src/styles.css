@@ -708,25 +708,54 @@ textarea:focus {
   min-height: 340px;
 }
 
+.event-thumbnail-featured .thumbnail-title {
+  right: 132px;
+}
+
 .event-thumbnail-featured .thumbnail-title strong {
+  display: -webkit-box;
+  overflow: hidden;
   font-size: clamp(1.9rem, 3vw, 3.2rem);
+  line-height: 0.98;
+  text-overflow: clip;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.event-thumbnail-featured .thumbnail-title small {
+  display: -webkit-box;
+  overflow: hidden;
+  text-overflow: clip;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .event-thumbnail-card {
-  min-height: 156px;
+  min-height: 190px;
 }
 
 .event-thumbnail-card .thumbnail-badge small {
   display: none;
 }
 
-.event-thumbnail-card .thumbnail-title {
-  right: 90px;
-  bottom: 18px;
+.event-thumbnail-card .thumbnail-frame {
+  inset: 14px;
 }
 
-.event-thumbnail-card .thumbnail-title strong {
-  font-size: 1.05rem;
+.event-thumbnail-card .thumbnail-initials {
+  left: 20px;
+  color: rgb(255 255 255 / 18%);
+  font-size: clamp(4.8rem, 10vw, 7.6rem);
+}
+
+.event-thumbnail-card .thumbnail-title {
+  display: none;
+}
+
+.event-thumbnail-card::before {
+  transform: scale(1.02);
 }
 
 .event-thumbnail-card .thumbnail-date {
@@ -792,15 +821,19 @@ textarea:focus {
 
 .event-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.event-grid.compact-events {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .event-card {
   display: grid;
-  grid-template-rows: 156px 1fr;
+  grid-template-rows: 190px 1fr;
   min-width: 0;
-  min-height: 286px;
+  min-height: 390px;
   overflow: hidden;
   border: 1px solid #e7e9ed;
   border-radius: 8px;
@@ -818,23 +851,57 @@ textarea:focus {
 
 .event-card-copy {
   display: grid;
-  gap: 8px;
+  gap: 10px;
   align-content: start;
-  padding: 16px;
+  min-width: 0;
+  padding: 18px;
 }
 
 .event-card-copy strong {
-  font-size: 1.05rem;
-  line-height: 1.18;
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 1.18rem;
+  line-height: 1.16;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .event-card-copy small {
+  display: -webkit-box;
+  overflow: hidden;
   color: #706b63;
+  font-size: 0.92rem;
+  line-height: 1.42;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
-.event-card-copy span {
+.event-card-price {
   color: #167d77;
+  font-size: 1.08rem;
   font-weight: 950;
+}
+
+.event-card-meta {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.event-card-meta span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  color: #555b64;
+  font-size: 0.86rem;
+  font-weight: 850;
+  line-height: 1.22;
+}
+
+.event-card-meta svg {
+  flex: 0 0 auto;
+  color: #fa5b2d;
 }
 
 .tone-1 {
