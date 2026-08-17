@@ -986,35 +986,6 @@ textarea:focus {
     linear-gradient(135deg, #101010, #577caa);
 }
 
-.country-grid {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.country-grid button {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 3px 10px;
-  align-items: center;
-  min-height: 76px;
-  border: 1px solid #e7e9ed;
-  border-radius: 8px;
-  padding: 12px;
-  background: #ffffff;
-  color: #171717;
-  text-align: left;
-}
-
-.country-grid button:hover {
-  border-color: #167d77;
-}
-
-.country-grid small {
-  grid-column: 2;
-  color: #7c766d;
-}
-
 .checkout-panel,
 .tickets-panel,
 .identity-panel,
@@ -1586,7 +1557,6 @@ code {
   }
 
   .compact-events,
-  .country-grid,
   .split-fields,
   .gate-actions {
     grid-template-columns: 1fr;

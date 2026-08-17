@@ -8,10 +8,8 @@ import {
   Clapperboard,
   Drama,
   Dumbbell,
-  Globe2,
   History,
   ImagePlus,
-  Landmark,
   LockKeyhole,
   LogIn,
   LogOut,
@@ -63,14 +61,6 @@ const categories = [
   { label: 'Community', detail: 'Meetups', icon: Users },
 ];
 
-const countries = [
-  'United States',
-  'United Kingdom',
-  'Uganda',
-  'Singapore',
-  'Brazil',
-  'Germany',
-];
 const SESSION_KEY = 'passmint-session';
 
 function daysFromNow(days: number, hour: number) {
@@ -715,74 +705,51 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                 </section>
               )}
 
-          <section>
-            <div className="section-heading">
-              <div>
-                <p className="section-kicker">Latest published events</p>
-                <h2>Tickets selling now</h2>
-              </div>
-              <span>
-                {loading ? 'Loading...' : `${visibleEvents.length} live`}
-              </span>
-            </div>
+              <section>
+                <div className="section-heading">
+                  <div>
+                    <p className="section-kicker">Latest published events</p>
+                    <h2>Tickets selling now</h2>
+                  </div>
+                  <span>
+                    {loading ? 'Loading...' : `${visibleEvents.length} live`}
+                  </span>
+                </div>
 
-            {loading ? (
-              <p className="muted">Loading events...</p>
-            ) : (
-              <div className="event-grid">
-                {visibleEvents.map((event, index) => (
-                  <button
-                    className={`event-card ${eventTone(index)} ${event.id === selectedEventId ? 'selected' : ''}`}
-                    key={event.id}
-                    onClick={() => chooseEvent(event.id)}
-                    type="button"
-                  >
-                    <EventThumbnail event={event} tone={eventTone(index)} />
-                    <span className="event-card-copy">
-                      <strong>{event.name}</strong>
-                      <small>{event.description}</small>
-                      <span className="event-card-meta">
-                        <span>
-                          <CalendarDays size={15} />
-                          {shortDate.format(new Date(event.startsAt))}
+                {loading ? (
+                  <p className="muted">Loading events...</p>
+                ) : (
+                  <div className="event-grid">
+                    {visibleEvents.map((event, index) => (
+                      <button
+                        className={`event-card ${eventTone(index)} ${event.id === selectedEventId ? 'selected' : ''}`}
+                        key={event.id}
+                        onClick={() => chooseEvent(event.id)}
+                        type="button"
+                      >
+                        <EventThumbnail event={event} tone={eventTone(index)} />
+                        <span className="event-card-copy">
+                          <strong>{event.name}</strong>
+                          <small>{event.description}</small>
+                          <span className="event-card-meta">
+                            <span>
+                              <CalendarDays size={15} />
+                              {shortDate.format(new Date(event.startsAt))}
+                            </span>
+                            <span>
+                              <MapPin size={15} />
+                              {event.venue}
+                            </span>
+                          </span>
+                          <span className="event-card-price">
+                            {money.format(event.priceCents / 100)}
+                          </span>
                         </span>
-                        <span>
-                          <MapPin size={15} />
-                          {event.venue}
-                        </span>
-                      </span>
-                      <span className="event-card-price">
-                        {money.format(event.priceCents / 100)}
-                      </span>
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section>
-            <div className="section-heading">
-              <div>
-                <p className="section-kicker">Discover by market</p>
-                <h2>Explore events worldwide</h2>
-              </div>
-              <Globe2 size={22} />
-            </div>
-            <div className="country-grid">
-              {countries.map((country) => (
-                <button
-                  type="button"
-                  key={country}
-                  onClick={() => setQuery(country)}
-                >
-                  <Landmark size={18} />
-                  <span>{country}</span>
-                  <small>Global events</small>
-                </button>
-              ))}
-            </div>
-          </section>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </section>
             </div>
           </section>
         </>
