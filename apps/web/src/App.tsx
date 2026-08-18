@@ -2,6 +2,7 @@
 
 import type { IScannerControls } from "@zxing/browser";
 import {
+  ArrowRight,
   CalendarDays,
   CheckCircle2,
   CircleDollarSign,
@@ -919,10 +920,8 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                       >
                         <EventThumbnail event={event} tone={eventTone(index)} />
                         <span className="event-card-copy">
-                          <span className="ticket-badges compact">
-                            <span>
-                              {chipDate.format(new Date(event.startsAt))}
-                            </span>
+                          <span className="event-card-topline">
+                            <span>{eventCategory(event)}</span>
                             <span>{eventStatus(event)}</span>
                           </span>
                           <strong>{event.name}</strong>
@@ -937,8 +936,13 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                               {event.venue}
                             </span>
                           </span>
-                          <span className="event-card-price">
-                            {money.format(event.priceCents / 100)}
+                          <span className="event-card-foot">
+                            <span className="event-card-price">
+                              {money.format(event.priceCents / 100)}
+                            </span>
+                            <span className="event-card-affordance">
+                              <ArrowRight size={16} />
+                            </span>
                           </span>
                         </span>
                       </button>
@@ -952,10 +956,19 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                   <div>
                     <p className="section-kicker">Next ticket to buy</p>
                     <h2>{nextTicketDrop.name}</h2>
-                    <p>
-                      {dateTime.format(new Date(nextTicketDrop.startsAt))} at{" "}
-                      {nextTicketDrop.venue}
-                    </p>
+                    <div className="ticket-cta-meta">
+                      <span>
+                        <CalendarDays size={17} />
+                        {dateTime.format(new Date(nextTicketDrop.startsAt))}
+                      </span>
+                      <span>
+                        <MapPin size={17} />
+                        {nextTicketDrop.venue}
+                      </span>
+                      <strong>
+                        {money.format(nextTicketDrop.priceCents / 100)}
+                      </strong>
+                    </div>
                   </div>
                   <Link
                     className="primary-action"
