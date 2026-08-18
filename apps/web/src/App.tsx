@@ -6,6 +6,8 @@ import {
   CalendarDays,
   CheckCircle2,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   CircleDollarSign,
   Clapperboard,
   Compass,
@@ -85,7 +87,6 @@ const THEME_KEY = "passmint-theme";
 
 type ThemePreference = "light" | "dark" | "system";
 type ResolvedTheme = "light" | "dark";
-type DateFilterMode = "single" | "range";
 
 function daysFromNow(days: number, hour: number) {
   const date = new Date();
@@ -250,21 +251,42 @@ function eventCategory(event: Event) {
   return "Event";
 }
 
-function parseDateInput(value: string) {
+function toDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function parseDateKey(value: string) {
   if (!value) return null;
 
-  const date = new Date(`${value}T00:00:00`);
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-function dateFilterLabel(mode: DateFilterMode, start: string, end: string) {
-  const startDate = parseDateInput(start);
-  const endDate = parseDateInput(end);
+function dateFilterLabel(start: string, end: string) {
+  const startDate = parseDateKey(start);
+  const endDate = parseDateKey(end);
 
   if (!startDate) return "Any date";
-  if (mode === "single" || !endDate) return filterDate.format(startDate);
+  if (!endDate || start === end) return filterDate.format(startDate);
 
   return `${filterDate.format(startDate)} - ${filterDate.format(endDate)}`;
+}
+
+function calendarDays(month: Date) {
+  const firstOfMonth = new Date(month.getFullYear(), month.getMonth(), 1);
+  const start = new Date(firstOfMonth);
+  start.setDate(firstOfMonth.getDate() - firstOfMonth.getDay());
+
+  return Array.from({ length: 42 }, (_, index) => {
+    const date = new Date(start);
+    date.setDate(start.getDate() + index);
+    return date;
+  });
 }
 
 function EventThumbnail({
@@ -330,10 +352,10 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
   const [scanState, setScanState] = useState("");
   const [cameraEnabled, setCameraEnabled] = useState(false);
   const [query, setQuery] = useState("");
-  const [dateMode, setDateMode] = useState<DateFilterMode>("single");
   const [dateStart, setDateStart] = useState("");
   const [dateEnd, setDateEnd] = useState("");
   const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(() => new Date());
   const [themePreference, setThemePreference] =
     useState<ThemePreference>("dark");
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("dark");
@@ -476,7 +498,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
   const filteredEvents = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     const activeStart = dateStart;
-    const activeEnd = dateMode === "range" && dateEnd ? dateEnd : dateStart;
+    const activeEnd = dateEnd || dateStart;
     const rangeStart = activeStart <= activeEnd ? activeStart : activeEnd;
     const rangeEnd = activeStart <= activeEnd ? activeEnd : activeStart;
 
@@ -493,7 +515,21 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
 
       return matchesQuery && matchesDate;
     });
-  }, [dateEnd, dateMode, dateStart, events, query]);
+  }, [dateEnd, dateStart, events, query]);
+
+  const visibleCalendarDays = useMemo(
+    () => calendarDays(calendarMonth),
+    [calendarMonth],
+  );
+
+  const calendarMonthLabel = useMemo(
+    () =>
+      new Intl.DateTimeFormat("en-UG", {
+        month: "long",
+        year: "numeric",
+      }).format(calendarMonth),
+    [calendarMonth],
+  );
 
   const selectedEvent = useMemo(
     () => events.find((event) => event.id === selectedEventId),
@@ -598,6 +634,25 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
     value: string | number,
   ) {
     setHostEvent((current) => ({ ...current, [key]: value }));
+  }
+
+  function chooseCalendarDate(dateKey: string) {
+    if (!dateStart || dateEnd) {
+      setDateStart(dateKey);
+      setDateEnd("");
+      return;
+    }
+
+    if (dateKey < dateStart) {
+      setDateEnd(dateStart);
+      setDateStart(dateKey);
+    } else if (dateKey === dateStart) {
+      setDateEnd("");
+    } else {
+      setDateEnd(dateKey);
+    }
+
+    setDatePickerOpen(false);
   }
 
   function selectThumbnail(file: File | null) {
@@ -875,55 +930,90 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                     onClick={() => setDatePickerOpen((open) => !open)}
                   >
                     <CalendarDays size={18} />
-                    <span>
-                      {dateFilterLabel(dateMode, dateStart, dateEnd)}
-                    </span>
+                    <span>{dateFilterLabel(dateStart, dateEnd)}</span>
                     <ChevronDown size={16} />
                   </button>
 
                   {datePickerOpen && (
                     <div className="date-popover" role="dialog">
-                      <div className="date-mode-toggle" aria-label="Date mode">
+                      <div className="calendar-head">
                         <button
                           type="button"
-                          className={dateMode === "single" ? "selected" : ""}
-                          onClick={() => setDateMode("single")}
+                          aria-label="Previous month"
+                          onClick={() =>
+                            setCalendarMonth(
+                              (current) =>
+                                new Date(
+                                  current.getFullYear(),
+                                  current.getMonth() - 1,
+                                  1,
+                                ),
+                            )
+                          }
                         >
-                          Single
+                          <ChevronLeft size={17} />
                         </button>
+                        <strong>{calendarMonthLabel}</strong>
                         <button
                           type="button"
-                          className={dateMode === "range" ? "selected" : ""}
-                          onClick={() => setDateMode("range")}
+                          aria-label="Next month"
+                          onClick={() =>
+                            setCalendarMonth(
+                              (current) =>
+                                new Date(
+                                  current.getFullYear(),
+                                  current.getMonth() + 1,
+                                  1,
+                                ),
+                            )
+                          }
                         >
-                          Range
+                          <ChevronRight size={17} />
                         </button>
                       </div>
 
-                      <div className="date-fields">
-                        <label>
-                          <span>{dateMode === "range" ? "From" : "Date"}</span>
-                          <input
-                            aria-label={
-                              dateMode === "range" ? "Start date" : "Date"
-                            }
-                            type="date"
-                            value={dateStart}
-                            onChange={(event) => setDateStart(event.target.value)}
-                          />
-                        </label>
+                      <div className="calendar-grid" aria-label="Choose date">
+                        {["S", "M", "T", "W", "T", "F", "S"].map((day, index) => (
+                          <span key={`${day}-${index}`}>{day}</span>
+                        ))}
+                        {visibleCalendarDays.map((date) => {
+                          const dateKey = toDateKey(date);
+                          const rangeStart =
+                            dateStart && dateEnd && dateEnd < dateStart
+                              ? dateEnd
+                              : dateStart;
+                          const rangeEnd =
+                            dateStart && dateEnd && dateEnd < dateStart
+                              ? dateStart
+                              : dateEnd;
+                          const isStart = dateKey === dateStart;
+                          const isEnd = dateKey === dateEnd;
+                          const isInRange =
+                            rangeStart &&
+                            rangeEnd &&
+                            dateKey > rangeStart &&
+                            dateKey < rangeEnd;
 
-                        {dateMode === "range" && (
-                          <label>
-                            <span>To</span>
-                            <input
-                              aria-label="End date"
-                              type="date"
-                              value={dateEnd}
-                              onChange={(event) => setDateEnd(event.target.value)}
-                            />
-                          </label>
-                        )}
+                          return (
+                            <button
+                              type="button"
+                              key={dateKey}
+                              className={[
+                                date.getMonth() === calendarMonth.getMonth()
+                                  ? ""
+                                  : "muted-day",
+                                isStart ? "range-start" : "",
+                                isEnd ? "range-end" : "",
+                                isInRange ? "in-range" : "",
+                              ]
+                                .filter(Boolean)
+                                .join(" ")}
+                              onClick={() => chooseCalendarDate(dateKey)}
+                            >
+                              {date.getDate()}
+                            </button>
+                          );
+                        })}
                       </div>
 
                       <div className="date-actions">
@@ -932,17 +1022,10 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                           onClick={() => {
                             setDateStart("");
                             setDateEnd("");
-                            setDateMode("single");
                           }}
                         >
                           <X size={15} />
                           Clear
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDatePickerOpen(false)}
-                        >
-                          Apply
                         </button>
                       </div>
                     </div>

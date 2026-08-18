@@ -1613,11 +1613,12 @@ code {
 }
 
 .discovery-bar > * {
-  width: min(1120px, calc(100% - (var(--content-gutter) * 2)));
+  width: min(var(--content-max), calc(100% - (var(--content-gutter) * 2)));
   margin-inline: auto;
 }
 
 .discovery-bar .search-panel {
+  width: min(1120px, calc(100% - (var(--content-gutter) * 2)));
   grid-template-columns: minmax(300px, 1fr) minmax(250px, 320px) auto;
   align-items: end;
   gap: 14px;
@@ -1746,80 +1747,113 @@ code {
   right: 0;
   z-index: 50;
   display: grid;
-  gap: 14px;
-  width: min(360px, calc(100vw - 32px));
+  gap: 12px;
+  width: min(330px, calc(100vw - 32px));
   border: 1px solid var(--border);
   border-radius: 18px;
-  padding: 14px;
+  padding: 12px;
   background: color-mix(in srgb, var(--surface-raised) 96%, #000000 4%);
   box-shadow: 0 24px 70px rgb(0 0 0 / 42%);
 }
 
-.date-mode-toggle {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  padding: 4px;
-  border-radius: 999px;
-  background: var(--surface-muted);
+.calendar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
-.date-mode-toggle button,
+.calendar-head strong {
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: var(--weight-semibold);
+}
+
+.calendar-head button,
 .date-actions button {
-  min-height: 36px;
+  display: inline-grid;
+  place-items: center;
+  min-width: 34px;
+  min-height: 34px;
   border: 0;
   border-radius: 999px;
-  background: transparent;
+  background: var(--surface-muted);
   color: var(--text-muted);
   font-size: 0.88rem;
   font-weight: var(--weight-semibold);
 }
 
-.date-mode-toggle button.selected {
+.calendar-head button:hover,
+.date-actions button:hover {
   background: var(--button-bg);
   color: var(--button-text);
 }
 
-.date-fields {
+.calendar-grid {
   display: grid;
-  gap: 10px;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
 }
 
-.date-fields label {
-  gap: 6px;
+.calendar-grid span {
+  display: grid;
+  place-items: center;
+  height: 24px;
   color: var(--text-soft);
+  font-size: 0.68rem;
+  font-weight: var(--weight-semibold);
 }
 
-.date-fields input {
-  min-height: 42px;
-  border-color: var(--border);
-  border-radius: 12px;
+.calendar-grid button {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  min-width: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  font-weight: var(--weight-medium);
+}
+
+.calendar-grid button:hover {
   background: var(--surface-muted);
   color: var(--text);
-  color-scheme: dark;
 }
 
-.theme-light .date-fields input {
-  color-scheme: light;
+.calendar-grid button.muted-day {
+  color: var(--text-soft);
+  opacity: 0.42;
+}
+
+.calendar-grid button.in-range {
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.calendar-grid button.range-start,
+.calendar-grid button.range-end {
+  background: var(--button-bg);
+  color: var(--button-text);
 }
 
 .date-actions {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 8px;
+  min-height: 34px;
 }
 
 .date-actions button {
-  display: inline-flex;
+  display: inline-grid;
+  grid-auto-flow: column;
   align-items: center;
   justify-content: center;
   gap: 7px;
+  min-width: auto;
   padding: 0 13px;
-}
-
-.date-actions button:last-child {
-  background: var(--button-bg);
-  color: var(--button-text);
 }
 
 .market-layout.public-market {
