@@ -5,6 +5,7 @@ import {
   ArrowRight,
   CalendarDays,
   CheckCircle2,
+  ChevronDown,
   CircleDollarSign,
   Clapperboard,
   Compass,
@@ -31,6 +32,7 @@ import {
   Upload,
   UserPlus,
   Users,
+  X,
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
@@ -61,6 +63,11 @@ const chipDate = new Intl.DateTimeFormat("en-UG", {
   year: "numeric",
 });
 
+const filterDate = new Intl.DateTimeFormat("en-UG", {
+  month: "short",
+  day: "numeric",
+});
+
 const categories = [
   { label: "For you", query: "", icon: Compass },
   { label: "Concerts", query: "music", icon: Music2 },
@@ -78,6 +85,7 @@ const THEME_KEY = "passmint-theme";
 
 type ThemePreference = "light" | "dark" | "system";
 type ResolvedTheme = "light" | "dark";
+type DateFilterMode = "single" | "range";
 
 function daysFromNow(days: number, hour: number) {
   const date = new Date();
@@ -242,6 +250,23 @@ function eventCategory(event: Event) {
   return "Event";
 }
 
+function parseDateInput(value: string) {
+  if (!value) return null;
+
+  const date = new Date(`${value}T00:00:00`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function dateFilterLabel(mode: DateFilterMode, start: string, end: string) {
+  const startDate = parseDateInput(start);
+  const endDate = parseDateInput(end);
+
+  if (!startDate) return "Any date";
+  if (mode === "single" || !endDate) return filterDate.format(startDate);
+
+  return `${filterDate.format(startDate)} - ${filterDate.format(endDate)}`;
+}
+
 function EventThumbnail({
   event,
   tone,
@@ -305,7 +330,10 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
   const [scanState, setScanState] = useState("");
   const [cameraEnabled, setCameraEnabled] = useState(false);
   const [query, setQuery] = useState("");
-  const [dateFilter, setDateFilter] = useState("");
+  const [dateMode, setDateMode] = useState<DateFilterMode>("single");
+  const [dateStart, setDateStart] = useState("");
+  const [dateEnd, setDateEnd] = useState("");
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [themePreference, setThemePreference] =
     useState<ThemePreference>("dark");
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("dark");
@@ -326,6 +354,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
   const [ticketHistory, setTicketHistory] = useState<Ticket[]>([]);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const controlsRef = useRef<IScannerControls | null>(null);
+  const dateWidgetRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (initialEvents.length > 0) return;
@@ -427,8 +456,29 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
     setCameraEnabled(false);
   }, [pathname]);
 
+  useEffect(() => {
+    if (!datePickerOpen) return;
+
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (
+        dateWidgetRef.current &&
+        event.target instanceof Node &&
+        !dateWidgetRef.current.contains(event.target)
+      ) {
+        setDatePickerOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", closeOnOutsideClick);
+    return () => document.removeEventListener("mousedown", closeOnOutsideClick);
+  }, [datePickerOpen]);
+
   const filteredEvents = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
+    const activeStart = dateStart;
+    const activeEnd = dateMode === "range" && dateEnd ? dateEnd : dateStart;
+    const rangeStart = activeStart <= activeEnd ? activeStart : activeEnd;
+    const rangeEnd = activeStart <= activeEnd ? activeEnd : activeStart;
 
     return events.filter((event) => {
       const haystack =
@@ -436,13 +486,14 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
       const matchesQuery = normalizedQuery
         ? haystack.includes(normalizedQuery)
         : true;
-      const matchesDate = dateFilter
-        ? event.startsAt.slice(0, 10) === dateFilter
+      const eventDate = event.startsAt.slice(0, 10);
+      const matchesDate = dateStart
+        ? eventDate >= rangeStart && eventDate <= rangeEnd
         : true;
 
       return matchesQuery && matchesDate;
     });
-  }, [dateFilter, events, query]);
+  }, [dateEnd, dateMode, dateStart, events, query]);
 
   const selectedEvent = useMemo(
     () => events.find((event) => event.id === selectedEventId),
@@ -815,14 +866,87 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
               </label>
               <label>
                 <span>When</span>
-                <div className="input-shell">
-                  <CalendarDays size={18} />
-                  <input
-                    aria-label="Filter by date"
-                    type="date"
-                    value={dateFilter}
-                    onChange={(event) => setDateFilter(event.target.value)}
-                  />
+                <div className="date-widget" ref={dateWidgetRef}>
+                  <button
+                    className={`date-trigger ${dateStart ? "has-value" : ""}`}
+                    type="button"
+                    aria-expanded={datePickerOpen}
+                    aria-haspopup="dialog"
+                    onClick={() => setDatePickerOpen((open) => !open)}
+                  >
+                    <CalendarDays size={18} />
+                    <span>
+                      {dateFilterLabel(dateMode, dateStart, dateEnd)}
+                    </span>
+                    <ChevronDown size={16} />
+                  </button>
+
+                  {datePickerOpen && (
+                    <div className="date-popover" role="dialog">
+                      <div className="date-mode-toggle" aria-label="Date mode">
+                        <button
+                          type="button"
+                          className={dateMode === "single" ? "selected" : ""}
+                          onClick={() => setDateMode("single")}
+                        >
+                          Single
+                        </button>
+                        <button
+                          type="button"
+                          className={dateMode === "range" ? "selected" : ""}
+                          onClick={() => setDateMode("range")}
+                        >
+                          Range
+                        </button>
+                      </div>
+
+                      <div className="date-fields">
+                        <label>
+                          <span>{dateMode === "range" ? "From" : "Date"}</span>
+                          <input
+                            aria-label={
+                              dateMode === "range" ? "Start date" : "Date"
+                            }
+                            type="date"
+                            value={dateStart}
+                            onChange={(event) => setDateStart(event.target.value)}
+                          />
+                        </label>
+
+                        {dateMode === "range" && (
+                          <label>
+                            <span>To</span>
+                            <input
+                              aria-label="End date"
+                              type="date"
+                              value={dateEnd}
+                              onChange={(event) => setDateEnd(event.target.value)}
+                            />
+                          </label>
+                        )}
+                      </div>
+
+                      <div className="date-actions">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDateStart("");
+                            setDateEnd("");
+                            setDateMode("single");
+                          }}
+                        >
+                          <X size={15} />
+                          Clear
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDatePickerOpen(false)}
+                        >
+                          Apply
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </label>
               <button

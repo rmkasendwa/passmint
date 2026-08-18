@@ -1604,21 +1604,23 @@ code {
   top: 72px;
   z-index: 24;
   display: grid;
-  gap: 12px;
-  padding: 18px 0 16px;
+  justify-items: center;
+  gap: 14px;
+  padding: 16px 0 14px;
   border-bottom: 1px solid var(--border);
   background: color-mix(in srgb, var(--surface-raised) 90%, transparent);
   backdrop-filter: blur(18px);
 }
 
 .discovery-bar > * {
-  width: min(var(--content-max), calc(100% - (var(--content-gutter) * 2)));
+  width: min(1120px, calc(100% - (var(--content-gutter) * 2)));
   margin-inline: auto;
 }
 
 .discovery-bar .search-panel {
-  grid-template-columns: minmax(280px, 1fr) minmax(220px, 0.32fr) auto;
+  grid-template-columns: minmax(300px, 1fr) minmax(250px, 320px) auto;
   align-items: end;
+  gap: 14px;
   padding: 0;
   border: 0;
   border-radius: 0;
@@ -1628,13 +1630,14 @@ code {
 
 .discovery-bar label {
   color: var(--text-muted);
+  font-size: 0.76rem;
 }
 
 .discovery-bar .input-shell {
-  min-height: 52px;
+  min-height: 48px;
   border-color: var(--border);
   border-radius: 999px;
-  padding: 0 16px;
+  padding: 0 15px;
   background: var(--control-bg);
   color: var(--text-muted);
 }
@@ -1649,11 +1652,12 @@ code {
 }
 
 .discovery-bar .search-button {
-  min-height: 52px;
+  min-height: 48px;
   border-radius: 999px;
-  padding: 0 26px;
+  padding: 0 22px;
   background: var(--button-bg);
   color: var(--button-text);
+  font-size: 0.95rem;
   white-space: nowrap;
 }
 
@@ -1663,27 +1667,33 @@ code {
 }
 
 .discovery-bar .category-strip {
-  gap: 10px;
+  justify-content: center;
+  gap: 8px;
   padding: 0 0 2px;
 }
 
 .discovery-bar .category-strip button {
   min-width: auto;
-  min-height: 46px;
+  min-height: 38px;
   border-color: var(--border);
   border-radius: 999px;
-  padding: 0 16px 0 10px;
+  padding: 0 13px 0 8px;
   background: var(--surface-muted);
   color: var(--text-muted);
   box-shadow: none;
 }
 
 .discovery-bar .category-strip button svg {
-  width: 30px;
-  height: 30px;
-  padding: 7px;
+  width: 25px;
+  height: 25px;
+  padding: 6px;
   border-radius: 999px;
   background: color-mix(in srgb, var(--text) 10%, transparent);
+}
+
+.discovery-bar .category-strip strong {
+  font-size: 0.88rem;
+  font-weight: var(--weight-medium);
 }
 
 .discovery-bar .category-strip button.selected,
@@ -1691,6 +1701,125 @@ code {
   background: var(--button-bg);
   color: var(--button-text);
   transform: none;
+}
+
+.date-widget {
+  position: relative;
+}
+
+.date-trigger {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0 15px;
+  background: var(--control-bg);
+  color: var(--text-soft);
+  text-align: left;
+}
+
+.date-trigger span {
+  overflow: hidden;
+  color: var(--text-soft);
+  font-size: 0.96rem;
+  font-weight: var(--weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.date-trigger.has-value span {
+  color: var(--text);
+}
+
+.date-trigger:hover,
+.date-trigger[aria-expanded="true"] {
+  border-color: var(--border-strong);
+}
+
+.date-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 50;
+  display: grid;
+  gap: 14px;
+  width: min(360px, calc(100vw - 32px));
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 14px;
+  background: color-mix(in srgb, var(--surface-raised) 96%, #000000 4%);
+  box-shadow: 0 24px 70px rgb(0 0 0 / 42%);
+}
+
+.date-mode-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+}
+
+.date-mode-toggle button,
+.date-actions button {
+  min-height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  font-weight: var(--weight-semibold);
+}
+
+.date-mode-toggle button.selected {
+  background: var(--button-bg);
+  color: var(--button-text);
+}
+
+.date-fields {
+  display: grid;
+  gap: 10px;
+}
+
+.date-fields label {
+  gap: 6px;
+  color: var(--text-soft);
+}
+
+.date-fields input {
+  min-height: 42px;
+  border-color: var(--border);
+  border-radius: 12px;
+  background: var(--surface-muted);
+  color: var(--text);
+  color-scheme: dark;
+}
+
+.theme-light .date-fields input {
+  color-scheme: light;
+}
+
+.date-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.date-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 13px;
+}
+
+.date-actions button:last-child {
+  background: var(--button-bg);
+  color: var(--button-text);
 }
 
 .market-layout.public-market {
@@ -2149,6 +2278,17 @@ code {
   }
 
   .discovery-bar .search-panel {
+    width: 100%;
+  }
+
+  .discovery-bar .category-strip {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .date-popover {
+    right: auto;
+    left: 0;
     width: 100%;
   }
 
