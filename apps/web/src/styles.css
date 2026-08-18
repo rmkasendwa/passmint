@@ -78,6 +78,11 @@ p {
   --price: #f8c868;
   --button-bg: #f6f6f8;
   --button-text: #101116;
+  --weight-regular: 450;
+  --weight-medium: 560;
+  --weight-semibold: 650;
+  --weight-bold: 720;
+  --weight-heavy: 820;
   min-height: 100vh;
   padding: 0;
   background: var(--page-bg);
@@ -148,7 +153,7 @@ p {
   gap: 10px;
   color: var(--text);
   font-size: 1.08rem;
-  font-weight: 900;
+  font-weight: var(--weight-bold);
 }
 
 .brand-mark {
@@ -176,7 +181,7 @@ p {
   padding: 0 14px;
   color: var(--text-muted);
   font-size: 0.9rem;
-  font-weight: 800;
+  font-weight: var(--weight-semibold);
 }
 
 .site-header nav a:hover {
@@ -214,7 +219,7 @@ p {
   background: #101010;
   color: #ffffff;
   font-size: 0.82rem;
-  font-weight: 950;
+  font-weight: var(--weight-bold);
 }
 
 .account-chip strong,
@@ -235,7 +240,7 @@ p {
 .account-chip small {
   color: var(--accent);
   font-size: 0.72rem;
-  font-weight: 950;
+  font-weight: var(--weight-semibold);
   text-transform: uppercase;
 }
 
@@ -310,9 +315,9 @@ p {
   margin: 0 0 8px;
   color: #fa5b2d;
   font-size: 0.78rem;
-  font-weight: 900;
+  font-weight: var(--weight-semibold);
   text-transform: uppercase;
-  letter-spacing: 0;
+  letter-spacing: 0.08em;
 }
 
 h1 {
@@ -320,6 +325,7 @@ h1 {
   margin-bottom: 12px;
   font-size: clamp(3.4rem, 8vw, 7.5rem);
   line-height: 0.96;
+  font-weight: var(--weight-bold);
   letter-spacing: 0;
 }
 
@@ -328,6 +334,7 @@ h2 {
   color: #171717;
   font-size: clamp(1.35rem, 2vw, 2rem);
   line-height: 1.05;
+  font-weight: var(--weight-bold);
   letter-spacing: 0;
 }
 
@@ -461,7 +468,7 @@ h3 {
   background: rgb(255 255 255 / 12%);
   color: rgb(255 255 255 / 88%);
   font-size: 0.84rem;
-  font-weight: 850;
+  font-weight: var(--weight-medium);
 }
 
 .search-panel {
@@ -483,7 +490,7 @@ label {
   gap: 7px;
   color: #5d5b56;
   font-size: 0.82rem;
-  font-weight: 900;
+  font-weight: var(--weight-semibold);
 }
 
 .input-shell {
@@ -548,7 +555,7 @@ textarea:focus {
   border-radius: 8px;
   padding: 0 16px;
   border: 1px solid transparent;
-  font-weight: 900;
+  font-weight: var(--weight-bold);
   white-space: nowrap;
 }
 
@@ -605,9 +612,14 @@ textarea:focus {
   display: block;
 }
 
+.category-strip strong {
+  font-weight: var(--weight-semibold);
+}
+
 .category-strip small {
   color: #6f6a62;
   font-size: 0.76rem;
+  font-weight: var(--weight-regular);
 }
 
 .market-layout {
@@ -729,7 +741,7 @@ textarea:focus {
   padding: 0 10px;
   background: rgb(8 13 20 / 46%);
   font-size: 0.72rem;
-  font-weight: 950;
+  font-weight: var(--weight-semibold);
   text-transform: uppercase;
   backdrop-filter: blur(12px);
 }
@@ -740,7 +752,7 @@ textarea:focus {
   z-index: 2;
   color: rgb(255 255 255 / 14%);
   font-size: clamp(4rem, 10vw, 8rem);
-  font-weight: 950;
+  font-weight: var(--weight-bold);
   line-height: 0.8;
   transform: translateY(-50%);
 }
@@ -761,12 +773,13 @@ textarea:focus {
 
 .thumbnail-date strong {
   font-size: 2.15rem;
+  font-weight: var(--weight-bold);
   line-height: 0.9;
 }
 
 .thumbnail-date small,
 .thumbnail-title small {
-  font-weight: 900;
+  font-weight: var(--weight-semibold);
   text-transform: uppercase;
 }
 
@@ -782,6 +795,7 @@ textarea:focus {
 .thumbnail-title strong {
   overflow: hidden;
   font-size: 1.35rem;
+  font-weight: var(--weight-bold);
   line-height: 1;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -893,7 +907,7 @@ textarea:focus {
   background: #f3f5f7;
   color: #38352f;
   font-size: 0.86rem;
-  font-weight: 800;
+  font-weight: var(--weight-medium);
 }
 
 .section-heading {
@@ -907,7 +921,7 @@ textarea:focus {
 .section-heading > span {
   color: #777169;
   font-size: 0.9rem;
-  font-weight: 900;
+  font-weight: var(--weight-semibold);
 }
 
 .event-grid {
@@ -952,6 +966,7 @@ textarea:focus {
   display: -webkit-box;
   overflow: hidden;
   font-size: 1.18rem;
+  font-weight: var(--weight-semibold);
   line-height: 1.16;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -962,6 +977,7 @@ textarea:focus {
   overflow: hidden;
   color: #706b63;
   font-size: 0.92rem;
+  font-weight: var(--weight-regular);
   line-height: 1.42;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -970,7 +986,7 @@ textarea:focus {
 .event-card-price {
   color: #167d77;
   font-size: 1.08rem;
-  font-weight: 950;
+  font-weight: var(--weight-bold);
 }
 
 .event-card-meta {
@@ -986,7 +1002,7 @@ textarea:focus {
   min-width: 0;
   color: #555b64;
   font-size: 0.86rem;
-  font-weight: 850;
+  font-weight: var(--weight-medium);
   line-height: 1.22;
 }
 
@@ -1168,7 +1184,7 @@ textarea:focus {
 .state-line {
   margin: 14px 0 0;
   color: #167d77;
-  font-weight: 900;
+  font-weight: var(--weight-semibold);
 }
 
 .helper-line {
@@ -1227,7 +1243,7 @@ textarea:focus {
   background: #fbfaf7;
   color: #6d6860;
   font-size: 0.78rem;
-  font-weight: 850;
+  font-weight: var(--weight-medium);
 }
 
 .account-stats strong {
@@ -1248,7 +1264,7 @@ textarea:focus {
   background: #f4f0e9;
   color: #171717;
   font-size: 0.78rem;
-  font-weight: 950;
+  font-weight: var(--weight-semibold);
   text-transform: uppercase;
 }
 
@@ -1276,7 +1292,7 @@ textarea:focus {
   border-radius: 6px;
   background: transparent;
   color: #5f5a52;
-  font-weight: 900;
+  font-weight: var(--weight-semibold);
 }
 
 .auth-tabs button.selected {
@@ -1329,7 +1345,7 @@ textarea:focus {
   background: #e8f7f4;
   color: #167d77;
   font-size: 0.82rem;
-  font-weight: 900;
+  font-weight: var(--weight-semibold);
   text-transform: capitalize;
 }
 
@@ -1426,7 +1442,7 @@ code {
   padding: 0 12px;
   background: #f7fafb;
   color: #2f5f5b;
-  font-weight: 900;
+  font-weight: var(--weight-semibold);
 }
 
 .gate-panel {
@@ -1455,7 +1471,7 @@ code {
 .locked-note {
   margin-top: 14px;
   color: #ffd5c7 !important;
-  font-weight: 900;
+  font-weight: var(--weight-semibold);
 }
 
 .verifier-access {
@@ -1466,7 +1482,7 @@ code {
   margin-top: 16px;
   border-radius: 8px;
   padding: 0 11px;
-  font-weight: 900;
+  font-weight: var(--weight-semibold);
 }
 
 .verifier-access.granted {
@@ -1501,7 +1517,7 @@ code {
 
 .scanner-placeholder span {
   color: rgb(255 255 255 / 78%);
-  font-weight: 900;
+  font-weight: var(--weight-medium);
 }
 
 .scanner-placeholder.locked {
@@ -1576,7 +1592,7 @@ code {
 .site-footer nav a {
   color: var(--text-muted);
   font-size: 0.88rem;
-  font-weight: 800;
+  font-weight: var(--weight-medium);
 }
 
 .site-footer nav a:hover {
@@ -1732,11 +1748,13 @@ code {
   color: #ffffff;
   font-size: clamp(3.2rem, 7vw, 6.2rem);
   line-height: 0.93;
+  font-weight: var(--weight-bold);
 }
 
 .hero-ticket .featured-copy p:not(.section-kicker) {
   color: rgb(255 255 255 / 78%);
   font-size: 1.08rem;
+  font-weight: var(--weight-regular);
 }
 
 .hero-ticket .section-kicker,
@@ -1761,7 +1779,7 @@ code {
   background: rgb(0 0 0 / 38%);
   color: #ffffff;
   font-size: 0.82rem;
-  font-weight: 950;
+  font-weight: var(--weight-semibold);
   text-transform: uppercase;
 }
 
@@ -1801,13 +1819,14 @@ code {
   color: var(--text);
   font-size: clamp(2rem, 3vw, 3.15rem);
   line-height: 1;
+  font-weight: var(--weight-bold);
 }
 
 .section-heading > span,
 .section-heading > a {
   color: var(--text-muted);
   font-size: 1rem;
-  font-weight: 900;
+  font-weight: var(--weight-semibold);
 }
 
 .section-heading > a::after {
@@ -1875,11 +1894,13 @@ code {
   color: var(--text);
   font-size: clamp(1.95rem, 2.4vw, 3rem);
   line-height: 1.04;
+  font-weight: var(--weight-bold);
 }
 
 .event-card-copy small {
   color: var(--text-muted);
   font-size: 1.02rem;
+  font-weight: var(--weight-regular);
   line-height: 1.55;
 }
 
@@ -1898,7 +1919,7 @@ code {
   border-radius: 999px;
   color: var(--text-soft);
   font-size: 0.76rem;
-  font-weight: 950;
+  font-weight: var(--weight-medium);
   text-transform: uppercase;
 }
 
@@ -1906,6 +1927,7 @@ code {
   padding: 0 12px;
   background: var(--accent-soft);
   color: var(--accent);
+  font-weight: var(--weight-semibold);
 }
 
 .event-card-topline span:last-child {
@@ -1915,6 +1937,7 @@ code {
 .event-card-meta span {
   color: var(--text-muted);
   font-size: 0.94rem;
+  font-weight: var(--weight-medium);
   line-height: 1.34;
 }
 
@@ -1926,6 +1949,7 @@ code {
   align-self: center;
   color: var(--price);
   font-size: 1.4rem;
+  font-weight: var(--weight-bold);
 }
 
 .event-card-foot {
@@ -1989,6 +2013,7 @@ code {
   color: var(--text);
   font-size: clamp(2.4rem, 4.8vw, 4.4rem);
   line-height: 0.98;
+  font-weight: var(--weight-bold);
 }
 
 .ticket-cta p {
@@ -2019,7 +2044,7 @@ code {
   background: var(--surface-muted);
   color: var(--text-muted);
   font-size: 0.95rem;
-  font-weight: 850;
+  font-weight: var(--weight-medium);
 }
 
 .ticket-cta-meta svg {
@@ -2029,6 +2054,7 @@ code {
 .ticket-cta-meta strong {
   background: rgb(248 200 104 / 14%);
   color: var(--price);
+  font-weight: var(--weight-semibold);
 }
 
 .page-layout,
