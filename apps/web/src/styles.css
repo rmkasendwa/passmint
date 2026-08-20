@@ -965,6 +965,7 @@ textarea:focus {
 .event-card-copy strong {
   display: -webkit-box;
   overflow: hidden;
+  min-height: 2.32em;
   font-size: 1.18rem;
   font-weight: var(--weight-semibold);
   line-height: 1.16;
@@ -975,6 +976,7 @@ textarea:focus {
 .event-card-copy small {
   display: -webkit-box;
   overflow: hidden;
+  min-height: 2.84em;
   color: #706b63;
   font-size: 0.92rem;
   font-weight: var(--weight-regular);
@@ -2055,6 +2057,7 @@ code {
 
 .event-card-copy strong {
   color: var(--text);
+  min-height: 2.08em;
   font-size: clamp(1.95rem, 2.4vw, 3rem);
   line-height: 1.04;
   font-weight: var(--weight-bold);
@@ -2062,6 +2065,7 @@ code {
 
 .event-card-copy small {
   color: var(--text-muted);
+  min-height: 3.1em;
   font-size: 1.02rem;
   font-weight: var(--weight-regular);
   line-height: 1.55;

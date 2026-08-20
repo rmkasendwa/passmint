@@ -541,14 +541,14 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
   const upcomingEvents = visibleEvents.filter(
     (event) => eventStatus(event) === "Upcoming",
   );
-  const nextTicketDrop = upcomingEvents[0] ?? visibleEvents[0];
+  const nextEvent = upcomingEvents[0] ?? visibleEvents[0];
   const isAdmin = session?.user.role === "admin";
   const hostPreviewEvent: Event = {
     id: "host-preview",
-    name: hostEvent.name || "Fresh ticket drop",
+    name: hostEvent.name || "Fresh event",
     description:
       hostEvent.description ||
-      "Upload a photo or let Passmint design the thumbnail.",
+      "Upload a photo or let Passmint design the event artwork.",
     venue: hostEvent.venue || "Venue to be announced",
     startsAt: hostEvent.startsAt
       ? new Date(hostEvent.startsAt).toISOString()
@@ -664,7 +664,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
     }
 
     if (!file.type.startsWith("image/")) {
-      setHostState("Choose an image file for the ticket thumbnail.");
+      setHostState("Choose an image file for the event artwork.");
       return;
     }
 
@@ -704,7 +704,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
       let thumbnailUrl = hostEvent.thumbnailUrl || "";
 
       if (thumbnailUrl.startsWith("data:") && hostThumbnailFile) {
-        setHostState("Uploading thumbnail...");
+        setHostState("Uploading event artwork...");
         const upload = await api.uploadEventImage(
           {
             ...hostThumbnailFile,
@@ -738,7 +738,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
       setHostEvent(emptyHostEvent);
       setHostThumbnailName("");
       setHostThumbnailFile(null);
-      setHostState("Event published with ticket thumbnail ready.");
+      setHostState("Event published with artwork ready.");
     } catch (error) {
       const fallback = error as { message?: string };
       setHostState(fallback.message ?? "Event could not be published.");
@@ -1059,7 +1059,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
 
           <section
             className="market-layout public-market home-feed"
-            aria-label="Ticket marketplace"
+            aria-label="Event marketplace"
           >
             <div className="main-column">
               {featuredEvent && (
@@ -1076,7 +1076,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                         {chipDate.format(new Date(featuredEvent.startsAt))}
                       </span>
                     </div>
-                    <p className="section-kicker">Featured ticket</p>
+                    <p className="section-kicker">Featured event</p>
                     <h2>{featuredEvent.name}</h2>
                     <p>{featuredEvent.description}</p>
                     <div className="event-meta">
@@ -1109,7 +1109,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                 <div className="section-heading">
                   <div>
                     <p className="section-kicker">Fresh from the platform</p>
-                    <h2>Latest ticket drops</h2>
+                    <h2>Latest events</h2>
                   </div>
                   <Link href="/tickets">See everything</Link>
                 </div>
@@ -1158,29 +1158,29 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                 )}
               </section>
 
-              {nextTicketDrop && (
+              {nextEvent && (
                 <section className="ticket-cta">
                   <div>
-                    <p className="section-kicker">Next ticket to buy</p>
-                    <h2>{nextTicketDrop.name}</h2>
+                    <p className="section-kicker">Next event</p>
+                    <h2>{nextEvent.name}</h2>
                     <div className="ticket-cta-meta">
                       <span>
                         <CalendarDays size={17} />
-                        {dateTime.format(new Date(nextTicketDrop.startsAt))}
+                        {dateTime.format(new Date(nextEvent.startsAt))}
                       </span>
                       <span>
                         <MapPin size={17} />
-                        {nextTicketDrop.venue}
+                        {nextEvent.venue}
                       </span>
                       <strong>
-                        {money.format(nextTicketDrop.priceCents / 100)}
+                        {money.format(nextEvent.priceCents / 100)}
                       </strong>
                     </div>
                   </div>
                   <Link
                     className="primary-action"
                     href="/tickets"
-                    onClick={() => chooseEvent(nextTicketDrop.id)}
+                    onClick={() => chooseEvent(nextEvent.id)}
                   >
                     <TicketIcon size={18} />
                     Reserve spot
@@ -1770,7 +1770,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                   />
                 </label>
                 <label className="upload-field">
-                  <span>Ticket thumbnail photo</span>
+                  <span>Event artwork photo</span>
                   <input
                     type="file"
                     accept="image/*"
@@ -1803,7 +1803,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
               </form>
               <p className="helper-line">
                 Photos are optional. Without one, Passmint creates a branded
-                ticket thumbnail automatically.
+                event artwork automatically.
               </p>
               {hostState && <p className="state-line">{hostState}</p>}
             </section>
