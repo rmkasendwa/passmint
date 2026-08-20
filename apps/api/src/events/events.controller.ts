@@ -1,12 +1,20 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
-import { AdminGuard } from '../auth/admin.guard';
-import { AuthGuard } from '../auth/auth.guard';
-import { CreateEventDto } from './dto/create-event.dto';
-import { UploadEventImageDto } from './dto/upload-event-image.dto';
-import { EventsService } from './events.service';
-import { ImageStorageService } from './image-storage.service';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from "@nestjs/common";
+import { AuthGuard } from "../auth/auth.guard";
+import { AuthenticatedRequest } from "../auth/auth.types";
+import { CreateEventDto } from "./dto/create-event.dto";
+import { UploadEventImageDto } from "./dto/upload-event-image.dto";
+import { EventsService } from "./events.service";
+import { ImageStorageService } from "./image-storage.service";
 
-@Controller('events')
+@Controller("events")
 export class EventsController {
   constructor(
     private readonly eventsService: EventsService,
@@ -18,20 +26,20 @@ export class EventsController {
     return this.eventsService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
+  @Get(":id")
+  findOne(@Param("id") id: string) {
     return this.eventsService.findOne(id);
   }
 
-  @Post('uploads')
-  @UseGuards(AuthGuard, AdminGuard)
+  @Post("uploads")
+  @UseGuards(AuthGuard)
   uploadImage(@Body() body: UploadEventImageDto) {
     return this.imageStorage.uploadImage(body);
   }
 
   @Post()
-  @UseGuards(AuthGuard, AdminGuard)
-  create(@Body() dto: CreateEventDto) {
-    return this.eventsService.create(dto);
+  @UseGuards(AuthGuard)
+  create(@Body() dto: CreateEventDto, @Req() request: AuthenticatedRequest) {
+    return this.eventsService.create(dto, request.user!);
   }
 }

@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
 export type Event = {
   id: string;
@@ -16,7 +16,7 @@ export type Ticket = {
   code: string;
   buyerName: string;
   buyerEmail: string;
-  status: 'issued' | 'checked_in' | 'cancelled';
+  status: "issued" | "checked_in" | "cancelled";
   checkedInAt: string | null;
   qrPayload: string;
   qrCodeDataUrl: string;
@@ -24,7 +24,7 @@ export type Ticket = {
 };
 
 export type GateResult = {
-  result: 'accepted' | 'duplicate' | 'cancelled' | 'invalid';
+  result: "accepted" | "duplicate" | "cancelled" | "invalid" | "forbidden";
   message: string;
   checkedInAt?: string;
   ticket?: Ticket;
@@ -34,7 +34,7 @@ export type User = {
   id: string;
   name: string;
   email: string;
-  role: 'user' | 'admin';
+  role: "user" | "admin";
 };
 
 export type AuthSession = {
@@ -53,7 +53,7 @@ async function request<T>(
 ): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...init?.headers,
     },
@@ -64,7 +64,7 @@ async function request<T>(
 
   if (!response.ok) {
     const payload =
-      data?.message && typeof data.message === 'object' ? data.message : data;
+      data?.message && typeof data.message === "object" ? data.message : data;
     throw payload;
   }
 
@@ -72,7 +72,7 @@ async function request<T>(
 }
 
 export const api = {
-  listEvents: () => request<Event[]>('/events'),
+  listEvents: () => request<Event[]>("/events"),
   createEvent: (
     payload: {
       name: string;
@@ -86,9 +86,9 @@ export const api = {
     token: string,
   ) =>
     request<Event>(
-      '/events',
+      "/events",
       {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify(payload),
       },
       token,
@@ -98,9 +98,9 @@ export const api = {
     token: string,
   ) =>
     request<{ url: string }>(
-      '/events/uploads',
+      "/events/uploads",
       {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify(payload),
       },
       token,
@@ -111,37 +111,39 @@ export const api = {
       buyerName: string;
       buyerEmail: string;
       quantity: number;
+      mobileMoneyNumber?: string;
+      confirmAdditional?: boolean;
     },
     token?: string,
   ) =>
     request<Ticket[]>(
-      '/tickets',
+      "/tickets",
       {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify(payload),
       },
       token,
     ),
   myTickets: (token: string) =>
-    request<Ticket[]>('/tickets/mine', undefined, token),
+    request<Ticket[]>("/tickets/mine", undefined, token),
   scanTicket: (code: string, token: string) =>
     request<GateResult>(
-      '/gate/scan',
+      "/gate/scan",
       {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify({ code }),
       },
       token,
     ),
   register: (payload: { name: string; email: string; password: string }) =>
-    request<AuthSession>('/auth/register', {
-      method: 'POST',
+    request<AuthSession>("/auth/register", {
+      method: "POST",
       body: JSON.stringify(payload),
     }),
   login: (payload: { email: string; password: string }) =>
-    request<AuthSession>('/auth/login', {
-      method: 'POST',
+    request<AuthSession>("/auth/login", {
+      method: "POST",
       body: JSON.stringify(payload),
     }),
-  me: (token: string) => request<User>('/auth/me', undefined, token),
+  me: (token: string) => request<User>("/auth/me", undefined, token),
 };

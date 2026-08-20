@@ -1,8 +1,18 @@
-import { Type } from 'class-transformer';
-import { IsEmail, IsInt, IsNotEmpty, IsOptional, IsPositive, IsString, IsUUID, Max } from 'class-validator';
+import { Type } from "class-transformer";
+import {
+  IsBoolean,
+  IsEmail,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsPositive,
+  IsString,
+  Max,
+} from "class-validator";
 
 export class CreateTicketDto {
-  @IsUUID()
+  @IsString()
+  @IsNotEmpty()
   eventId: string;
 
   @IsString()
@@ -18,4 +28,13 @@ export class CreateTicketDto {
   @IsPositive()
   @Max(10)
   quantity?: number;
+
+  @IsOptional()
+  @IsString()
+  mobileMoneyNumber?: string;
+
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  confirmAdditional?: boolean;
 }

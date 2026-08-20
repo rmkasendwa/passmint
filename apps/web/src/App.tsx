@@ -339,6 +339,7 @@ export function App({
   );
   const [buyerName, setBuyerName] = useState("");
   const [buyerEmail, setBuyerEmail] = useState("");
+  const [mobileMoneyNumber, setMobileMoneyNumber] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [gateCode, setGateCode] = useState("");
@@ -540,6 +541,8 @@ export function App({
   );
   const nextEvent = upcomingEvents[0] ?? visibleEvents[0];
   const isAdmin = session?.user.role === "admin";
+  const canPublishEvents = Boolean(session);
+  const canVerifyTickets = Boolean(session);
   const hostPreviewEvent: Event = {
     id: "host-preview",
     name: hostEvent.name || "Fresh event",
@@ -563,33 +566,73 @@ export function App({
     }
   }
 
+  async function submitTicketPurchase(confirmAdditional = false) {
+    const selected = selectedEvent;
+    setPurchaseState(
+      selected?.priceCents === 0
+        ? "Creating ticket..."
+        : "Processing mobile money ticket...",
+    );
+
+    const created = await api.buyTickets(
+      {
+        eventId: selectedEventId,
+        buyerName,
+        buyerEmail,
+        quantity,
+        ...(mobileMoneyNumber ? { mobileMoneyNumber } : {}),
+        ...(confirmAdditional ? { confirmAdditional: true } : {}),
+      },
+      session?.token,
+    );
+    setTickets(created);
+    if (session) {
+      await loadHistory(session.token);
+    }
+    setPurchaseState(
+      session
+        ? "Ticket purchase complete and saved to your history."
+        : "Ticket purchase complete. Register to track this and future tickets.",
+    );
+  }
+
   async function buyTickets(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setPurchaseState("Creating ticket...");
 
     try {
-      const created = await api.buyTickets(
-        {
-          eventId: selectedEventId,
-          buyerName,
-          buyerEmail,
-          quantity,
-        },
-        session?.token,
-      );
-      setTickets(created);
-      if (session) {
-        await loadHistory(session.token);
-      }
-      setPurchaseState(
-        session
-          ? "Ticket purchase complete and saved to your history."
-          : "Ticket purchase complete.",
-      );
+      await submitTicketPurchase();
     } catch (error) {
+      const fallback = error as {
+        result?: string;
+        message?: string;
+        existingTicketCount?: number;
+        totalAfterPurchase?: number;
+      };
+      if (fallback.result === "additional_confirmation_required") {
+        const confirmed = window.confirm(
+          `${fallback.message} This email already has ${fallback.existingTicketCount} ticket(s) for this event. Confirming will bring the total to ${fallback.totalAfterPurchase}.`,
+        );
+
+        if (confirmed) {
+          try {
+            await submitTicketPurchase(true);
+            return;
+          } catch (confirmedError) {
+            const confirmedFallback = confirmedError as { message?: string };
+            setPurchaseState(
+              confirmedFallback.message ?? "Ticket purchase failed.",
+            );
+            return;
+          }
+        }
+
+        setPurchaseState("Additional ticket request cancelled.");
+        return;
+      }
+
       const message =
         error instanceof Error ? error.message : "Ticket purchase failed.";
-      setPurchaseState(message);
+      setPurchaseState(fallback.message ?? message);
     }
   }
 
@@ -600,8 +643,8 @@ export function App({
     setScanState("Checking ticket...");
     setGateResult(null);
 
-    if (!session || !isAdmin) {
-      setScanState("Admin login required to verify tickets.");
+    if (!session) {
+      setScanState("Login required to verify tickets.");
       return;
     }
 
@@ -684,16 +727,12 @@ export function App({
   async function publishEvent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!isAdmin) {
-      setHostState("Admin login required to publish events.");
+    if (!session) {
+      setHostState("Login required to publish events.");
       return;
     }
 
-    const adminToken = session?.token;
-    if (!adminToken) {
-      setHostState("Admin login required to publish events.");
-      return;
-    }
+    const publisherToken = session.token;
 
     setHostState("Publishing event...");
 
@@ -707,7 +746,7 @@ export function App({
             ...hostThumbnailFile,
             dataUrl: thumbnailUrl,
           },
-          adminToken,
+          publisherToken,
         );
         thumbnailUrl = upload.url;
       }
@@ -722,7 +761,7 @@ export function App({
           priceCents: hostEvent.priceCents,
           ...(thumbnailUrl ? { thumbnailUrl } : {}),
         },
-        adminToken,
+        publisherToken,
       );
       setEvents((current) =>
         [...current, created].sort(
@@ -735,7 +774,7 @@ export function App({
       setHostEvent(emptyHostEvent);
       setHostThumbnailName("");
       setHostThumbnailFile(null);
-      setHostState("Event published with artwork ready.");
+      setHostState("Event published. You can validate tickets for this event.");
     } catch (error) {
       const fallback = error as { message?: string };
       setHostState(fallback.message ?? "Event could not be published.");
@@ -828,13 +867,10 @@ export function App({
                   <Monitor size={16} />
                 </button>
               </div>
-              <Link
-                className="account-chip"
-                href={isAdmin ? "/admin" : "/account"}
-              >
+              <Link className="account-chip" href="/account">
                 <span>{initials(session.user.name)}</span>
                 <strong>{session.user.name}</strong>
-                <small>{isAdmin ? "gate access" : session.user.role}</small>
+                <small>{session.user.role}</small>
               </Link>
               <button
                 type="button"
@@ -968,9 +1004,11 @@ export function App({
                       </div>
 
                       <div className="calendar-grid" aria-label="Choose date">
-                        {["S", "M", "T", "W", "T", "F", "S"].map((day, index) => (
-                          <span key={`${day}-${index}`}>{day}</span>
-                        ))}
+                        {["S", "M", "T", "W", "T", "F", "S"].map(
+                          (day, index) => (
+                            <span key={`${day}-${index}`}>{day}</span>
+                          ),
+                        )}
                         {visibleCalendarDays.map((date) => {
                           const dateKey = toDateKey(date);
                           const rangeStart =
@@ -1332,18 +1370,34 @@ export function App({
                       required
                     />
                   </label>
+                  {selectedEvent && selectedEvent.priceCents > 0 && (
+                    <label>
+                      Mobile money number
+                      <input
+                        value={mobileMoneyNumber}
+                        onChange={(event) =>
+                          setMobileMoneyNumber(event.target.value)
+                        }
+                        placeholder="256..."
+                        required
+                      />
+                    </label>
+                  )}
                   <button
                     className="primary-action"
                     type="submit"
                     disabled={!selectedEventId}
                   >
                     <CircleDollarSign size={18} />
-                    Buy ticket
+                    {selectedEvent?.priceCents === 0
+                      ? "Get ticket"
+                      : "Pay with mobile money"}
                   </button>
                 </form>
                 <p className="helper-line">
-                  Checkout works anonymously. Sign in first if you want this order
-                  saved to your history.
+                  Checkout works anonymously with an email address. Register
+                  after checkout to track attendance, tickets, and payment
+                  methods.
                 </p>
                 {purchaseState && <p className="state-line">{purchaseState}</p>}
               </section>
@@ -1437,7 +1491,7 @@ export function App({
                     </div>
                     <p className="helper-line auth-helper">
                       {authMode === "login"
-                        ? "Use the same sign in for buyer history and admin verification."
+                        ? "Use the same sign in for buyer history, event publishing, and verification."
                         : "Create an account before checkout to keep this and future tickets in one place."}
                     </p>
                     {authMode === "register" && (
@@ -1520,8 +1574,8 @@ export function App({
             <p className="section-kicker">Account</p>
             <h1>Your tickets, profile, and access.</h1>
             <p>
-              Sign in to save buyer history. Admin users also unlock the
-              protected scanning console.
+              Sign in to save buyer history, publish events, configure payment
+              details, and verify tickets for events you create.
             </p>
           </div>
 
@@ -1551,12 +1605,10 @@ export function App({
                     access
                   </span>
                 </div>
-                {isAdmin && (
-                  <Link className="primary-action" href="/admin">
-                    <ShieldCheck size={17} />
-                    Open admin console
-                  </Link>
-                )}
+                <Link className="primary-action" href="/admin">
+                  <ShieldCheck size={17} />
+                  Open host console
+                </Link>
                 <button
                   className="secondary-action"
                   type="button"
@@ -1592,7 +1644,7 @@ export function App({
                 </div>
                 <p className="helper-line auth-helper">
                   {authMode === "login"
-                    ? "Use the same sign in for buyer history and admin verification."
+                    ? "Use the same sign in for buyer history, event publishing, and verification."
                     : "Create an account before checkout to keep this and future tickets in one place."}
                 </p>
                 {authMode === "register" && (
@@ -1668,12 +1720,12 @@ export function App({
       {page === "/admin" && (
         <section className="admin-layout">
           <div className="admin-hero">
-            <p className="section-kicker">Admin gate console</p>
-            <h1>Scan tickets without slowing the line.</h1>
+            <p className="section-kicker">Host console</p>
+            <h1>Publish events and scan your tickets.</h1>
             <p>
-              A dedicated verification surface for event admins and authorised
-              users. Admin authentication is required before a QR code can be
-              validated.
+              Any registered user can publish events. Hosts can validate tickets
+              for their own events, while platform admins can help across the
+              whole marketplace.
             </p>
           </div>
 
@@ -1790,7 +1842,7 @@ export function App({
                 <button
                   className="primary-action"
                   type="submit"
-                  disabled={!isAdmin}
+                  disabled={!canPublishEvents}
                 >
                   <ImagePlus size={18} />
                   Publish event
@@ -1810,17 +1862,17 @@ export function App({
                   <h2>Verification app</h2>
                 </div>
                 <p>
-                  Admins use this separate gate surface to verify QR tickets.
+                  Hosts use this separate gate surface to verify QR tickets.
                   Accepted tickets are marked entered and cannot be reused.
                 </p>
-                {isAdmin ? (
+                {canVerifyTickets ? (
                   <div className="verifier-access granted">
                     <ShieldCheck size={18} />
-                    {session.user.name} has verifier access.
+                    {session?.user.name} can verify owned-event tickets.
                   </div>
                 ) : (
                   <p className="locked-note">
-                    Sign in with an admin account to use ticket verification.
+                    Sign in to use ticket verification.
                   </p>
                 )}
               </div>
@@ -1829,14 +1881,16 @@ export function App({
                   <video ref={videoRef} muted playsInline />
                 ) : (
                   <div
-                    className={`scanner-placeholder ${isAdmin ? "ready" : "locked"}`}
+                    className={`scanner-placeholder ${canVerifyTickets ? "ready" : "locked"}`}
                   >
-                    {isAdmin ? (
+                    {canVerifyTickets ? (
                       <ShieldCheck size={54} />
                     ) : (
                       <LockKeyhole size={54} />
                     )}
-                    <span>{isAdmin ? "Ready to scan" : "Admin only"}</span>
+                    <span>
+                      {canVerifyTickets ? "Ready to scan" : "Login required"}
+                    </span>
                   </div>
                 )}
               </div>
@@ -1845,7 +1899,7 @@ export function App({
                   type="button"
                   className="secondary-action"
                   onClick={() => setCameraEnabled((value) => !value)}
-                  disabled={!isAdmin}
+                  disabled={!canVerifyTickets}
                 >
                   <ScanLine size={18} />
                   {cameraEnabled ? "Stop camera" : "Start camera"}
@@ -1859,7 +1913,7 @@ export function App({
                   type="button"
                   className="primary-action"
                   onClick={() => void scan()}
-                  disabled={!isAdmin}
+                  disabled={!canVerifyTickets}
                 >
                   Validate
                 </button>

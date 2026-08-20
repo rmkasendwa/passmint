@@ -7,12 +7,13 @@ import {
   OneToMany,
   PrimaryColumn,
   UpdateDateColumn,
-} from 'typeorm';
-import { prefixedId } from '../common/prefixed-id';
-import { Ticket } from '../tickets/ticket.entity';
-import { UserRole } from './user-role.enum';
+} from "typeorm";
+import { prefixedId } from "../common/prefixed-id";
+import { Event } from "../events/event.entity";
+import { Ticket } from "../tickets/ticket.entity";
+import { UserRole } from "./user-role.enum";
 
-@Entity({ name: 'users' })
+@Entity({ name: "users" })
 export class User {
   @PrimaryColumn()
   id: string;
@@ -27,11 +28,14 @@ export class User {
   @Column()
   passwordHash: string;
 
-  @Column({ type: 'enum', enum: UserRole, default: UserRole.User })
+  @Column({ type: "enum", enum: UserRole, default: UserRole.User })
   role: UserRole;
 
   @OneToMany(() => Ticket, (ticket) => ticket.owner)
   tickets: Ticket[];
+
+  @OneToMany(() => Event, (event) => event.owner)
+  events: Event[];
 
   @CreateDateColumn()
   createdAt: Date;
@@ -41,6 +45,6 @@ export class User {
 
   @BeforeInsert()
   assignId() {
-    this.id ??= prefixedId('usr');
+    this.id ??= prefixedId("usr");
   }
 }

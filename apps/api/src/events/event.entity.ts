@@ -3,14 +3,17 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   OneToMany,
   PrimaryColumn,
   UpdateDateColumn,
-} from 'typeorm';
-import { prefixedId } from '../common/prefixed-id';
-import { Ticket } from '../tickets/ticket.entity';
+} from "typeorm";
+import { prefixedId } from "../common/prefixed-id";
+import { Ticket } from "../tickets/ticket.entity";
+import { User } from "../users/user.entity";
 
-@Entity({ name: 'events' })
+@Entity({ name: "events" })
 export class Event {
   @PrimaryColumn()
   id: string;
@@ -18,26 +21,33 @@ export class Event {
   @Column()
   name: string;
 
-  @Column({ type: 'text' })
+  @Column({ type: "text" })
   description: string;
 
   @Column()
   venue: string;
 
-  @Column({ type: 'timestamptz' })
+  @Column({ type: "timestamptz" })
   startsAt: Date;
 
-  @Column({ type: 'int' })
+  @Column({ type: "int" })
   capacity: number;
 
-  @Column({ type: 'int' })
+  @Column({ type: "int" })
   priceCents: number;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: "text", nullable: true })
   thumbnailUrl?: string | null;
 
   @OneToMany(() => Ticket, (ticket) => ticket.event)
   tickets: Ticket[];
+
+  @ManyToOne(() => User, (user) => user.events, {
+    nullable: true,
+    onDelete: "SET NULL",
+  })
+  @JoinColumn()
+  owner: User | null;
 
   @CreateDateColumn()
   createdAt: Date;
@@ -47,6 +57,6 @@ export class Event {
 
   @BeforeInsert()
   assignId() {
-    this.id ??= prefixedId('evt');
+    this.id ??= prefixedId("evt");
   }
 }
