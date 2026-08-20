@@ -41,6 +41,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { api, AuthSession, Event, GateResult, Ticket } from "./api";
+import { ResolvedTheme, THEME_KEY, ThemePreference } from "./theme";
 
 const money = new Intl.NumberFormat("en-UG", {
   style: "currency",
@@ -83,10 +84,6 @@ const categories = [
 ];
 
 const SESSION_KEY = "passmint-session";
-const THEME_KEY = "passmint-theme";
-
-type ThemePreference = "light" | "dark" | "system";
-type ResolvedTheme = "light" | "dark";
 
 function daysFromNow(days: number, hour: number) {
   const date = new Date();
@@ -194,13 +191,6 @@ function readSavedSession() {
     window.localStorage.removeItem(SESSION_KEY);
     return null;
   }
-}
-
-function readSavedTheme(): ThemePreference {
-  if (typeof window === "undefined") return "dark";
-
-  const saved = window.localStorage.getItem(THEME_KEY);
-  return saved === "light" || saved === "system" ? saved : "dark";
 }
 
 function resolveThemePreference(preference: ThemePreference): ResolvedTheme {
@@ -334,7 +324,13 @@ function EventThumbnail({
   );
 }
 
-export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
+export function App({
+  initialEvents = [],
+  initialThemePreference = "dark",
+}: {
+  initialEvents?: Event[];
+  initialThemePreference?: ThemePreference;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const [events, setEvents] = useState<Event[]>(() => initialEvents);
@@ -356,9 +352,12 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
   const [dateEnd, setDateEnd] = useState("");
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(() => new Date());
-  const [themePreference, setThemePreference] =
-    useState<ThemePreference>("dark");
-  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("dark");
+  const [themePreference, setThemePreference] = useState<ThemePreference>(
+    initialThemePreference,
+  );
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() =>
+    resolveThemePreference(initialThemePreference),
+  );
   const [session, setSession] = useState<AuthSession | null>(null);
   const [sessionLoaded, setSessionLoaded] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
@@ -399,9 +398,6 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
 
   useEffect(() => {
     setSession(readSavedSession());
-    const savedTheme = readSavedTheme();
-    setThemePreference(savedTheme);
-    setResolvedTheme(resolveThemePreference(savedTheme));
     setSessionLoaded(true);
   }, []);
 
@@ -410,6 +406,7 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
     if (!sessionLoaded) return;
 
     window.localStorage.setItem(THEME_KEY, themePreference);
+    document.cookie = `${THEME_KEY}=${themePreference}; Path=/; Max-Age=31536000; SameSite=Lax`;
     setResolvedTheme(resolveThemePreference(themePreference));
 
     if (themePreference !== "system") return;
@@ -908,7 +905,6 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
               onSubmit={(event) => event.preventDefault()}
             >
               <label>
-                <span>Search</span>
                 <div className="input-shell">
                   <Search size={18} />
                   <input
@@ -920,11 +916,11 @@ export function App({ initialEvents = [] }: { initialEvents?: Event[] }) {
                 </div>
               </label>
               <label>
-                <span>When</span>
                 <div className="date-widget" ref={dateWidgetRef}>
                   <button
                     className={`date-trigger ${dateStart ? "has-value" : ""}`}
                     type="button"
+                    aria-label="Choose event date"
                     aria-expanded={datePickerOpen}
                     aria-haspopup="dialog"
                     onClick={() => setDatePickerOpen((open) => !open)}
