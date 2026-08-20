@@ -878,19 +878,18 @@ export function App({
               </div>
               <button
                 type="button"
-                className="secondary-action compact-action"
-                onClick={() => openAuth("login")}
+                className="host-action"
+                onClick={() => router.push("/admin")}
               >
-                <LogIn size={17} />
-                Login
+                Host events
               </button>
               <button
                 type="button"
-                className="primary-action compact-action"
-                onClick={() => openAuth("register")}
+                className="secondary-action compact-action"
+                onClick={() => openAuth("login")}
               >
-                <UserPlus size={17} />
-                Sign up
+                <LogIn size={16} />
+                Sign in
               </button>
             </div>
           )}
@@ -1034,7 +1033,7 @@ export function App({
                 aria-label="Search events"
               >
                 <Search size={19} />
-                Find tickets
+                Search events
               </button>
             </form>
 
@@ -1255,7 +1254,7 @@ export function App({
                   <h2>
                     {session
                       ? `Buying as ${session.user.name}`
-                      : "Buy now, login when it matters."}
+                      : "Buy now, sign in when it matters."}
                   </h2>
                 </div>
                 {session ? (
@@ -1270,7 +1269,7 @@ export function App({
                       onClick={() => openAuth("login")}
                     >
                       <LogIn size={17} />
-                      Login
+                      Sign in
                     </button>
                     <button
                       type="button"
@@ -1278,7 +1277,7 @@ export function App({
                       onClick={() => openAuth("register")}
                     >
                       <UserPlus size={17} />
-                      Sign up
+                      Register
                     </button>
                   </div>
                 )}
@@ -1343,7 +1342,7 @@ export function App({
                   </button>
                 </form>
                 <p className="helper-line">
-                  Checkout works anonymously. Login first if you want this order
+                  Checkout works anonymously. Sign in first if you want this order
                   saved to your history.
                 </p>
                 {purchaseState && <p className="state-line">{purchaseState}</p>}
@@ -1425,7 +1424,7 @@ export function App({
                         onClick={() => setAuthMode("login")}
                       >
                         <LogIn size={16} />
-                        Login
+                        Sign in
                       </button>
                       <button
                         type="button"
@@ -1433,12 +1432,12 @@ export function App({
                         onClick={() => setAuthMode("register")}
                       >
                         <UserPlus size={16} />
-                        Sign up
+                        Register
                       </button>
                     </div>
                     <p className="helper-line auth-helper">
                       {authMode === "login"
-                        ? "Use the same login for buyer history and admin verification."
+                        ? "Use the same sign in for buyer history and admin verification."
                         : "Create an account before checkout to keep this and future tickets in one place."}
                     </p>
                     {authMode === "register" && (
@@ -1476,7 +1475,7 @@ export function App({
                       />
                     </label>
                     <button className="primary-action" type="submit">
-                      {authMode === "login" ? "Login" : "Create account"}
+                      {authMode === "login" ? "Sign in" : "Create account"}
                     </button>
                   </form>
                 )}
@@ -1580,7 +1579,7 @@ export function App({
                     onClick={() => setAuthMode("login")}
                   >
                     <LogIn size={16} />
-                    Login
+                    Sign in
                   </button>
                   <button
                     type="button"
@@ -1588,12 +1587,12 @@ export function App({
                     onClick={() => setAuthMode("register")}
                   >
                     <UserPlus size={16} />
-                    Sign up
+                    Register
                   </button>
                 </div>
                 <p className="helper-line auth-helper">
                   {authMode === "login"
-                    ? "Use the same login for buyer history and admin verification."
+                    ? "Use the same sign in for buyer history and admin verification."
                     : "Create an account before checkout to keep this and future tickets in one place."}
                 </p>
                 {authMode === "register" && (
@@ -1629,7 +1628,7 @@ export function App({
                   />
                 </label>
                 <button className="primary-action" type="submit">
-                  {authMode === "login" ? "Login" : "Create account"}
+                  {authMode === "login" ? "Sign in" : "Create account"}
                 </button>
               </form>
             )}
@@ -1821,7 +1820,7 @@ export function App({
                   </div>
                 ) : (
                   <p className="locked-note">
-                    Login with an admin account to use ticket verification.
+                    Sign in with an admin account to use ticket verification.
                   </p>
                 )}
               </div>

@@ -25,9 +25,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at 18% -10%, rgb(67 82 111 / 32%), transparent 28%),
-    linear-gradient(180deg, #08090e 0%, #0c0d13 48%, #08090e 100%);
+  background: #08090e;
 }
 
 button,
@@ -121,7 +119,7 @@ p {
   top: 0;
   z-index: 30;
   width: 100%;
-  min-height: 72px;
+  min-height: 64px;
   border-bottom: 1px solid var(--border);
   background: color-mix(in srgb, var(--surface-raised) 92%, transparent);
   backdrop-filter: blur(18px);
@@ -133,7 +131,7 @@ p {
   align-items: center;
   gap: 22px;
   width: min(var(--content-max), calc(100% - (var(--content-gutter) * 2)));
-  min-height: 72px;
+  min-height: 64px;
   margin: 0 auto;
 }
 
@@ -150,17 +148,17 @@ p {
 }
 
 .brand {
-  gap: 10px;
+  gap: 9px;
   color: var(--text);
-  font-size: 1.08rem;
+  font-size: 1.02rem;
   font-weight: var(--weight-bold);
 }
 
 .brand-mark {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   border-radius: 999px;
   background: #000000;
   color: #ffffff;
@@ -176,9 +174,9 @@ p {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
+  min-height: 36px;
   border-radius: 999px;
-  padding: 0 14px;
+  padding: 0 12px;
   color: var(--text-muted);
   font-size: 0.9rem;
   font-weight: var(--weight-semibold);
@@ -196,8 +194,40 @@ p {
 }
 
 .compact-action {
-  min-height: 40px;
-  padding: 0 12px;
+  min-height: 38px;
+  padding: 0 13px;
+}
+
+.site-header .compact-action {
+  border-color: var(--border);
+  border-radius: 999px;
+  background: var(--surface-muted);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: var(--weight-semibold);
+}
+
+.site-header .compact-action:hover {
+  border-color: var(--border-strong);
+  background: var(--button-bg);
+  color: var(--button-text);
+}
+
+.host-action {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: var(--weight-semibold);
+}
+
+.host-action:hover {
+  color: var(--text);
 }
 
 .account-chip {
@@ -260,22 +290,22 @@ p {
 
 .theme-toggle {
   display: inline-grid;
-  grid-template-columns: repeat(3, 34px);
-  gap: 3px;
+  grid-template-columns: repeat(3, 30px);
+  gap: 2px;
   align-items: center;
   flex: 0 0 auto;
-  min-height: 40px;
+  min-height: 34px;
   border: 1px solid var(--border);
   border-radius: 999px;
-  padding: 3px;
+  padding: 2px;
   background: var(--surface-muted);
 }
 
 .theme-toggle button {
   display: inline-grid;
   place-items: center;
-  width: 34px;
-  height: 32px;
+  width: 30px;
+  height: 28px;
   border: 0;
   border-radius: 999px;
   background: transparent;
@@ -289,7 +319,7 @@ p {
 .theme-toggle button.selected {
   background: var(--button-bg);
   color: var(--button-text);
-  box-shadow: 0 8px 18px rgb(0 0 0 / 12%);
+  box-shadow: 0 6px 14px rgb(0 0 0 / 10%);
 }
 
 .hero-section {
@@ -1603,12 +1633,12 @@ code {
 
 .discovery-bar {
   position: sticky;
-  top: 72px;
+  top: 64px;
   z-index: 24;
   display: grid;
   justify-items: center;
-  gap: 14px;
-  padding: 16px 0 14px;
+  gap: 10px;
+  padding: 12px 0;
   border-bottom: 1px solid var(--border);
   background: color-mix(in srgb, var(--surface-raised) 90%, transparent);
   backdrop-filter: blur(18px);
@@ -1620,10 +1650,10 @@ code {
 }
 
 .discovery-bar .search-panel {
-  width: min(1120px, calc(100% - (var(--content-gutter) * 2)));
-  grid-template-columns: minmax(300px, 1fr) minmax(250px, 320px) auto;
+  width: min(1040px, calc(100% - (var(--content-gutter) * 2)));
+  grid-template-columns: minmax(280px, 1fr) minmax(230px, 286px) auto;
   align-items: end;
-  gap: 14px;
+  gap: 12px;
   padding: 0;
   border: 0;
   border-radius: 0;
@@ -1637,7 +1667,7 @@ code {
 }
 
 .discovery-bar .input-shell {
-  min-height: 48px;
+  min-height: 44px;
   border-color: var(--border);
   border-radius: 999px;
   padding: 0 15px;
@@ -1655,9 +1685,9 @@ code {
 }
 
 .discovery-bar .search-button {
-  min-height: 48px;
+  min-height: 44px;
   border-radius: 999px;
-  padding: 0 22px;
+  padding: 0 20px;
   background: var(--button-bg);
   color: var(--button-text);
   font-size: 0.95rem;
@@ -1671,31 +1701,31 @@ code {
 
 .discovery-bar .category-strip {
   justify-content: center;
-  gap: 8px;
+  gap: 7px;
   padding: 0 0 2px;
 }
 
 .discovery-bar .category-strip button {
   min-width: auto;
-  min-height: 38px;
+  min-height: 34px;
   border-color: var(--border);
   border-radius: 999px;
-  padding: 0 13px 0 8px;
+  padding: 0 12px 0 7px;
   background: var(--surface-muted);
   color: var(--text-muted);
   box-shadow: none;
 }
 
 .discovery-bar .category-strip button svg {
-  width: 25px;
-  height: 25px;
-  padding: 6px;
+  width: 23px;
+  height: 23px;
+  padding: 5px;
   border-radius: 999px;
   background: color-mix(in srgb, var(--text) 10%, transparent);
 }
 
 .discovery-bar .category-strip strong {
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   font-weight: var(--weight-medium);
 }
 
@@ -1716,7 +1746,7 @@ code {
   gap: 10px;
   align-items: center;
   width: 100%;
-  min-height: 48px;
+  min-height: 44px;
   border: 1px solid var(--border);
   border-radius: 999px;
   padding: 0 15px;
@@ -1728,7 +1758,7 @@ code {
 .date-trigger span {
   overflow: hidden;
   color: var(--text-soft);
-  font-size: 0.96rem;
+  font-size: 0.92rem;
   font-weight: var(--weight-medium);
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1861,7 +1891,7 @@ code {
 .market-layout.public-market {
   width: min(var(--content-max), calc(100% - (var(--content-gutter) * 2)));
   max-width: var(--content-max);
-  margin-top: 34px;
+  margin-top: 26px;
 }
 
 .home-feed .main-column {
@@ -2310,7 +2340,7 @@ code {
   }
 
   .discovery-bar {
-    top: 123px;
+    top: 113px;
     padding-right: 16px;
     padding-left: 16px;
   }
@@ -2342,7 +2372,8 @@ code {
   }
 
   .header-actions .primary-action,
-  .header-actions .secondary-action {
+  .header-actions .secondary-action,
+  .header-actions .host-action {
     flex: 1;
   }
 
