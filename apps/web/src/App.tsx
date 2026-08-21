@@ -15,9 +15,11 @@ import {
   Dumbbell,
   History,
   ImagePlus,
+  KeyRound,
   LockKeyhole,
   LogIn,
   LogOut,
+  Mail,
   MapPin,
   Martini,
   Mic2,
@@ -27,6 +29,7 @@ import {
   ScanLine,
   Search,
   ShieldCheck,
+  Sparkles,
   Moon,
   Sun,
   Ticket as TicketIcon,
@@ -361,11 +364,14 @@ export function App({
   );
   const [session, setSession] = useState<AuthSession | null>(null);
   const [sessionLoaded, setSessionLoaded] = useState(false);
-  const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [authName, setAuthName] = useState("");
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
   const [authState, setAuthState] = useState("");
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetConfirmPassword, setResetConfirmPassword] = useState("");
+  const [resetState, setResetState] = useState("");
   const [hostEvent, setHostEvent] = useState(emptyHostEvent);
   const [hostThumbnailName, setHostThumbnailName] = useState("");
   const [hostThumbnailFile, setHostThumbnailFile] = useState<{
@@ -477,6 +483,11 @@ export function App({
   }, [pathname]);
 
   useEffect(() => {
+    setAuthState("");
+    setResetState("");
+  }, [pathname]);
+
+  useEffect(() => {
     if (!datePickerOpen) return;
 
     const closeOnOutsideClick = (event: MouseEvent) => {
@@ -543,6 +554,8 @@ export function App({
   const isAdmin = session?.user.role === "admin";
   const canPublishEvents = Boolean(session);
   const canVerifyTickets = Boolean(session);
+  const page = pathname === "/verify" ? "/admin" : pathname;
+  const authMode = page === "/register" ? "register" : "login";
   const hostPreviewEvent: Event = {
     id: "host-preview",
     name: hostEvent.name || "Fresh event",
@@ -782,8 +795,7 @@ export function App({
   }
 
   function openAuth(mode: "login" | "register") {
-    setAuthMode(mode);
-    router.push("/account");
+    router.push(mode === "login" ? "/login" : "/register");
   }
 
   async function submitAuth(event: FormEvent<HTMLFormElement>) {
@@ -808,6 +820,8 @@ export function App({
       setAuthState(`Logged in as ${nextSession.user.role}.`);
       if (nextSession.user.role === "admin") {
         router.push("/admin");
+      } else {
+        router.push("/tickets");
       }
     } catch (error) {
       const fallback = error as { message?: string };
@@ -815,12 +829,30 @@ export function App({
     }
   }
 
+  function submitForgotPassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setResetState(
+      "If that email matches a Passmint account, a reset link will be sent when email delivery is connected.",
+    );
+  }
+
+  function submitResetPassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (resetPassword !== resetConfirmPassword) {
+      setResetState("Passwords do not match.");
+      return;
+    }
+
+    setResetState(
+      "Password reset is ready for the backend reset-token endpoint.",
+    );
+  }
+
   function logout() {
     setSession(null);
     setAuthState("Logged out.");
   }
-
-  const page = pathname === "/verify" ? "/admin" : pathname;
 
   return (
     <main className={`app-shell theme-${resolvedTheme}`}>
@@ -867,7 +899,7 @@ export function App({
                   <Monitor size={16} />
                 </button>
               </div>
-              <Link className="account-chip" href="/account">
+              <Link className="account-chip" href="/tickets">
                 <span>{initials(session.user.name)}</span>
                 <strong>{session.user.name}</strong>
                 <small>{session.user.role}</small>
@@ -931,6 +963,219 @@ export function App({
           )}
         </div>
       </header>
+
+      {(page === "/login" ||
+        page === "/register" ||
+        page === "/forgot-password" ||
+        page === "/reset-password") && (
+        <section className={`auth-stage ${page.slice(1)}`}>
+          <div className="auth-media" aria-hidden="true">
+            <img
+              src="https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=1800&q=85"
+              alt=""
+            />
+            <div className="auth-event-card">
+              <span>
+                <Sparkles size={17} />
+                Tonight
+              </span>
+              <strong>Velvet Room Live</strong>
+              <small>941 guests checked in with Passmint</small>
+            </div>
+          </div>
+
+          <section className="auth-card" aria-label="Account access">
+            <Link className="auth-back-link" href="/">
+              <ChevronLeft size={17} />
+              Discover events
+            </Link>
+
+            <div className="auth-heading">
+              <p className="section-kicker">
+                {page === "/register"
+                  ? "Create access"
+                  : page === "/forgot-password"
+                    ? "Recover access"
+                    : page === "/reset-password"
+                      ? "Set new password"
+                      : "Welcome back"}
+              </p>
+              <h1>
+                {page === "/register"
+                  ? "Join the guest list."
+                  : page === "/forgot-password"
+                    ? "Get a fresh link."
+                    : page === "/reset-password"
+                      ? "Choose a new pass."
+                      : "Step back inside."}
+              </h1>
+              <p>
+                {page === "/register"
+                  ? "Save tickets, publish events, and move from checkout to the door without losing the thread."
+                  : page === "/forgot-password"
+                    ? "Enter the email you used for Passmint and we will prepare the next step."
+                    : page === "/reset-password"
+                      ? "Use a strong password so your tickets and host tools stay protected."
+                      : "Sign in for saved tickets, faster checkout, event publishing, and gate verification."}
+              </p>
+            </div>
+
+            {(page === "/login" || page === "/register") && (
+              <form className="auth-form" onSubmit={submitAuth}>
+                {page === "/register" && (
+                  <label>
+                    Name
+                    <input
+                      value={authName}
+                      onChange={(event) => setAuthName(event.target.value)}
+                      placeholder="Full name"
+                      autoComplete="name"
+                      required
+                    />
+                  </label>
+                )}
+                <label>
+                  Email
+                  <span className="auth-input">
+                    <Mail size={18} />
+                    <input
+                      type="email"
+                      value={authEmail}
+                      onChange={(event) => setAuthEmail(event.target.value)}
+                      placeholder="you@example.com"
+                      autoComplete="email"
+                      required
+                    />
+                  </span>
+                </label>
+                <label>
+                  Password
+                  <span className="auth-input">
+                    <KeyRound size={18} />
+                    <input
+                      type="password"
+                      minLength={8}
+                      value={authPassword}
+                      onChange={(event) => setAuthPassword(event.target.value)}
+                      placeholder="At least 8 characters"
+                      autoComplete={
+                        page === "/register"
+                          ? "new-password"
+                          : "current-password"
+                      }
+                      required
+                    />
+                  </span>
+                </label>
+                {page === "/login" && (
+                  <Link className="auth-text-link" href="/forgot-password">
+                    Forgot password?
+                  </Link>
+                )}
+                <button className="primary-action auth-submit" type="submit">
+                  {page === "/register" ? (
+                    <UserPlus size={18} />
+                  ) : (
+                    <LogIn size={18} />
+                  )}
+                  {page === "/register" ? "Create account" : "Sign in"}
+                </button>
+              </form>
+            )}
+
+            {page === "/forgot-password" && (
+              <form className="auth-form" onSubmit={submitForgotPassword}>
+                <label>
+                  Email
+                  <span className="auth-input">
+                    <Mail size={18} />
+                    <input
+                      type="email"
+                      value={resetEmail}
+                      onChange={(event) => setResetEmail(event.target.value)}
+                      placeholder="you@example.com"
+                      autoComplete="email"
+                      required
+                    />
+                  </span>
+                </label>
+                <button className="primary-action auth-submit" type="submit">
+                  <Mail size={18} />
+                  Send reset link
+                </button>
+              </form>
+            )}
+
+            {page === "/reset-password" && (
+              <form className="auth-form" onSubmit={submitResetPassword}>
+                <label>
+                  New password
+                  <span className="auth-input">
+                    <KeyRound size={18} />
+                    <input
+                      type="password"
+                      minLength={8}
+                      value={resetPassword}
+                      onChange={(event) => setResetPassword(event.target.value)}
+                      placeholder="At least 8 characters"
+                      autoComplete="new-password"
+                      required
+                    />
+                  </span>
+                </label>
+                <label>
+                  Confirm password
+                  <span className="auth-input">
+                    <LockKeyhole size={18} />
+                    <input
+                      type="password"
+                      minLength={8}
+                      value={resetConfirmPassword}
+                      onChange={(event) =>
+                        setResetConfirmPassword(event.target.value)
+                      }
+                      placeholder="Repeat new password"
+                      autoComplete="new-password"
+                      required
+                    />
+                  </span>
+                </label>
+                <button className="primary-action auth-submit" type="submit">
+                  <KeyRound size={18} />
+                  Reset password
+                </button>
+              </form>
+            )}
+
+            {(authState || resetState) && (
+              <p className="state-line auth-state">
+                {page === "/login" || page === "/register"
+                  ? authState
+                  : resetState}
+              </p>
+            )}
+
+            <div className="auth-switch">
+              {page === "/login" && (
+                <p>
+                  New to Passmint? <Link href="/register">Create account</Link>
+                </p>
+              )}
+              {page === "/register" && (
+                <p>
+                  Already on the list? <Link href="/login">Sign in</Link>
+                </p>
+              )}
+              {(page === "/forgot-password" ||
+                page === "/reset-password") && (
+                <p>
+                  Remembered it? <Link href="/login">Back to sign in</Link>
+                </p>
+              )}
+            </div>
+          </section>
+        </section>
+      )}
 
       {page === "/" && (
         <>
@@ -1430,117 +1675,13 @@ export function App({
                 )}
               </section>
 
-              <section className="account-panel" id="account">
-                <div className="panel-heading">
-                  <Users size={22} />
-                  <h2>Account access</h2>
-                </div>
-                {session ? (
-                  <div className="account-summary signed-in-summary">
-                    <div className="profile-row">
-                      <span className="profile-avatar">
-                        {initials(session.user.name)}
-                      </span>
-                      <div>
-                        <strong>{session.user.name}</strong>
-                        <span>{session.user.email}</span>
-                      </div>
-                    </div>
-                    <div className="account-stats">
-                      <span>
-                        <strong>{ticketHistory.length}</strong>
-                        saved tickets
-                      </span>
-                      <span>
-                        <strong>{session.user.role}</strong>
-                        access
-                      </span>
-                    </div>
-                    <button
-                      className="secondary-action"
-                      type="button"
-                      onClick={logout}
-                    >
-                      <LogOut size={17} />
-                      Logout
-                    </button>
+              {session && (
+                <section className="history-panel">
+                  <div className="panel-heading">
+                    <History size={22} />
+                    <h2>Saved tickets</h2>
                   </div>
-                ) : (
-                  <form className="form-grid" onSubmit={submitAuth}>
-                    <div
-                      className="auth-tabs"
-                      role="tablist"
-                      aria-label="Account mode"
-                    >
-                      <button
-                        type="button"
-                        className={authMode === "login" ? "selected" : ""}
-                        onClick={() => setAuthMode("login")}
-                      >
-                        <LogIn size={16} />
-                        Sign in
-                      </button>
-                      <button
-                        type="button"
-                        className={authMode === "register" ? "selected" : ""}
-                        onClick={() => setAuthMode("register")}
-                      >
-                        <UserPlus size={16} />
-                        Register
-                      </button>
-                    </div>
-                    <p className="helper-line auth-helper">
-                      {authMode === "login"
-                        ? "Use the same sign in for buyer history, event publishing, and verification."
-                        : "Create an account before checkout to keep this and future tickets in one place."}
-                    </p>
-                    {authMode === "register" && (
-                      <label>
-                        Name
-                        <input
-                          value={authName}
-                          onChange={(event) => setAuthName(event.target.value)}
-                          placeholder="Full name"
-                          required
-                        />
-                      </label>
-                    )}
-                    <label>
-                      Email
-                      <input
-                        type="email"
-                        value={authEmail}
-                        onChange={(event) => setAuthEmail(event.target.value)}
-                        placeholder="you@example.com"
-                        required
-                      />
-                    </label>
-                    <label>
-                      Password
-                      <input
-                        type="password"
-                        minLength={8}
-                        value={authPassword}
-                        onChange={(event) =>
-                          setAuthPassword(event.target.value)
-                        }
-                        placeholder="At least 8 characters"
-                        required
-                      />
-                    </label>
-                    <button className="primary-action" type="submit">
-                      {authMode === "login" ? "Sign in" : "Create account"}
-                    </button>
-                  </form>
-                )}
-                {authState && <p className="state-line">{authState}</p>}
-
-                {session && (
                   <div className="history-list">
-                    <div className="history-heading">
-                      <h3>Ticket history</h3>
-                      <History size={18} />
-                    </div>
                     {ticketHistory.length === 0 ? (
                       <p className="muted">
                         Tickets bought while logged in will show here.
@@ -1561,159 +1702,10 @@ export function App({
                       ))
                     )}
                   </div>
-                )}
-              </section>
+                </section>
+              )}
             </aside>
           </div>
-        </section>
-      )}
-
-      {page === "/account" && (
-        <section className="page-layout account-page">
-          <div className="page-intro">
-            <p className="section-kicker">Account</p>
-            <h1>Your tickets, profile, and access.</h1>
-            <p>
-              Sign in to save buyer history, publish events, configure payment
-              details, and verify tickets for events you create.
-            </p>
-          </div>
-
-          <section className="account-panel account-page-panel">
-            <div className="panel-heading">
-              <Users size={22} />
-              <h2>Account access</h2>
-            </div>
-            {session ? (
-              <div className="account-summary signed-in-summary">
-                <div className="profile-row">
-                  <span className="profile-avatar">
-                    {initials(session.user.name)}
-                  </span>
-                  <div>
-                    <strong>{session.user.name}</strong>
-                    <span>{session.user.email}</span>
-                  </div>
-                </div>
-                <div className="account-stats">
-                  <span>
-                    <strong>{ticketHistory.length}</strong>
-                    saved tickets
-                  </span>
-                  <span>
-                    <strong>{session.user.role}</strong>
-                    access
-                  </span>
-                </div>
-                <Link className="primary-action" href="/admin">
-                  <ShieldCheck size={17} />
-                  Open host console
-                </Link>
-                <button
-                  className="secondary-action"
-                  type="button"
-                  onClick={logout}
-                >
-                  <LogOut size={17} />
-                  Logout
-                </button>
-              </div>
-            ) : (
-              <form className="form-grid" onSubmit={submitAuth}>
-                <div
-                  className="auth-tabs"
-                  role="tablist"
-                  aria-label="Account mode"
-                >
-                  <button
-                    type="button"
-                    className={authMode === "login" ? "selected" : ""}
-                    onClick={() => setAuthMode("login")}
-                  >
-                    <LogIn size={16} />
-                    Sign in
-                  </button>
-                  <button
-                    type="button"
-                    className={authMode === "register" ? "selected" : ""}
-                    onClick={() => setAuthMode("register")}
-                  >
-                    <UserPlus size={16} />
-                    Register
-                  </button>
-                </div>
-                <p className="helper-line auth-helper">
-                  {authMode === "login"
-                    ? "Use the same sign in for buyer history, event publishing, and verification."
-                    : "Create an account before checkout to keep this and future tickets in one place."}
-                </p>
-                {authMode === "register" && (
-                  <label>
-                    Name
-                    <input
-                      value={authName}
-                      onChange={(event) => setAuthName(event.target.value)}
-                      placeholder="Full name"
-                      required
-                    />
-                  </label>
-                )}
-                <label>
-                  Email
-                  <input
-                    type="email"
-                    value={authEmail}
-                    onChange={(event) => setAuthEmail(event.target.value)}
-                    placeholder="you@example.com"
-                    required
-                  />
-                </label>
-                <label>
-                  Password
-                  <input
-                    type="password"
-                    minLength={8}
-                    value={authPassword}
-                    onChange={(event) => setAuthPassword(event.target.value)}
-                    placeholder="At least 8 characters"
-                    required
-                  />
-                </label>
-                <button className="primary-action" type="submit">
-                  {authMode === "login" ? "Sign in" : "Create account"}
-                </button>
-              </form>
-            )}
-            {authState && <p className="state-line">{authState}</p>}
-
-            {session && (
-              <div className="history-list">
-                <div className="history-heading">
-                  <h3>Ticket history</h3>
-                  <History size={18} />
-                </div>
-                {ticketHistory.length === 0 ? (
-                  <p className="muted">
-                    Tickets bought while logged in will show here.
-                  </p>
-                ) : (
-                  ticketHistory.map((ticket) => (
-                    <article className="history-card" key={ticket.id}>
-                      <div>
-                        <strong>{ticket.event.name}</strong>
-                        <small>
-                          {dateTime.format(new Date(ticket.event.startsAt))}
-                        </small>
-                      </div>
-                      <span className={`ticket-status ${ticket.status}`}>
-                        {ticket.status.replace("_", " ")}
-                      </span>
-                    </article>
-                  ))
-                )}
-              </div>
-            )}
-          </section>
         </section>
       )}
 
@@ -1951,7 +1943,7 @@ export function App({
           <nav aria-label="Footer navigation">
             <Link href="/">Discover</Link>
             <Link href="/tickets">Tickets</Link>
-            <Link href="/account">Account</Link>
+            <Link href="/login">Sign in</Link>
           </nav>
         </div>
       </footer>
