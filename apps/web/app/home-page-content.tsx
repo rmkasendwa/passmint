@@ -25,9 +25,9 @@ import {
   toDateKey,
 } from "../event-utils";
 import { chipDate, dateTime, money, shortDate } from "../formatters";
-import { usePassmint } from "../passmint-app";
+import { usePassmint } from "../components/passmint-app";
 
-export function HomeScreen() {
+export function HomePageContent() {
   const dateWidgetRef = useRef<HTMLDivElement | null>(null);
   const {
     calendarMonth,

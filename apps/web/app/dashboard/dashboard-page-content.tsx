@@ -11,17 +11,17 @@ import {
   Upload,
   XCircle,
 } from "lucide-react";
-import { EventThumbnail } from "../components/event-thumbnail";
+import { EventThumbnail } from "../../components/event-thumbnail";
 import {
   eventCategory,
   eventStatus,
   eventTone,
   initials,
-} from "../event-utils";
-import { dateTime, money } from "../formatters";
-import { usePassmint } from "../passmint-app";
+} from "../../event-utils";
+import { dateTime, money } from "../../formatters";
+import { usePassmint } from "../../components/passmint-app";
 
-export function DashboardScreen() {
+export function DashboardPageContent() {
   const {
     cameraEnabled,
     canPublishEvents,

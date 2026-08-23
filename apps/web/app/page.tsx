@@ -1,7 +1,7 @@
-import { PassmintApp } from "../features/passmint/passmint-app";
-import { HomeScreen } from "../features/passmint/screens/home-screen";
+import { PassmintApp } from "../components/passmint-app";
 import { listEventsForPage } from "../server-events";
 import { getInitialThemePreference } from "../server-theme";
+import { HomePageContent } from "./home-page-content";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +14,7 @@ export default async function HomePage() {
       initialEvents={initialEvents}
       initialThemePreference={initialThemePreference}
     >
-      <HomeScreen />
+      <HomePageContent />
     </PassmintApp>
   );
 }

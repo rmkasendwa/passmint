@@ -1,5 +1,5 @@
 import { Ticket as TicketIcon } from "lucide-react";
-import type { Event } from "../../../api";
+import type { Event } from "../api";
 import { eventCategory, initials } from "../event-utils";
 
 export function EventThumbnail({

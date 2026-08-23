@@ -1,11 +1,11 @@
-import { PassmintApp } from "../../features/passmint/passmint-app";
-import { DashboardScreen } from "../../features/passmint/screens/dashboard-screen";
+import { PassmintApp } from "../../components/passmint-app";
 import { listEventsForPage } from "../../server-events";
 import { getInitialThemePreference } from "../../server-theme";
+import { AuthPageContent } from "../auth-page-content";
 
 export const dynamic = "force-dynamic";
 
-export default async function DashboardPage() {
+export default async function RegisterPage() {
   const initialEvents = await listEventsForPage();
   const initialThemePreference = await getInitialThemePreference();
 
@@ -14,7 +14,7 @@ export default async function DashboardPage() {
       initialEvents={initialEvents}
       initialThemePreference={initialThemePreference}
     >
-      <DashboardScreen />
+      <AuthPageContent />
     </PassmintApp>
   );
 }

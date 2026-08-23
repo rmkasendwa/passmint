@@ -3,9 +3,9 @@
 import { QrCode, ShieldCheck, Ticket as TicketIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { usePassmint } from "../passmint-app";
+import { usePassmint } from "../components/passmint-app";
 
-export function AuthScreen() {
+export function AuthPageContent() {
   const page = usePathname();
   const {
     authEmail,

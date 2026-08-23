@@ -10,8 +10,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import type { AuthSession } from "../../../api";
-import type { ResolvedTheme, ThemePreference } from "../../../theme";
+import type { AuthSession } from "../api";
+import type { ResolvedTheme, ThemePreference } from "../theme";
 import { initials } from "../event-utils";
 
 export function AppShell({

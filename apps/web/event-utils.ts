@@ -9,7 +9,7 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
-import type { Event } from "../../api";
+import type { Event } from "./api";
 import { filterDate } from "./formatters";
 
 export const categories = [

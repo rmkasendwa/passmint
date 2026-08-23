@@ -17,19 +17,15 @@ import type {
   RefObject,
   SetStateAction,
 } from "react";
-import { api, AuthSession, Event, GateResult, Ticket } from "../../api";
-import { ResolvedTheme, THEME_KEY, ThemePreference } from "../../theme";
-import { AuthScreen } from "./screens/auth-screen";
-import { DashboardScreen } from "./screens/dashboard-screen";
-import { HomeScreen } from "./screens/home-screen";
-import { TicketsScreen } from "./screens/tickets-screen";
-import { AppShell } from "./components/app-shell";
+import { api, AuthSession, Event, GateResult, Ticket } from "../api";
+import { ResolvedTheme, THEME_KEY, ThemePreference } from "../theme";
+import { AppShell } from "./app-shell";
 import {
   calendarDays,
   demoEvents,
   emptyHostEvent,
   eventStatus,
-} from "./event-utils";
+} from "../event-utils";
 
 type HostEvent = typeof emptyHostEvent;
 
@@ -742,24 +738,4 @@ export function PassmintApp({
       </AppShell>
     </PassmintContext.Provider>
   );
-}
-
-export function RoutedPassmintApp(
-  props: Omit<Parameters<typeof PassmintApp>[0], "children">,
-) {
-  const pathname = usePathname();
-  const screen =
-    pathname === "/tickets" ? (
-      <TicketsScreen />
-    ) : pathname === "/dashboard" ? (
-      <DashboardScreen />
-    ) : ["/login", "/register", "/forgot-password", "/reset-password"].includes(
-        pathname,
-      ) ? (
-      <AuthScreen />
-    ) : (
-      <HomeScreen />
-    );
-
-  return <PassmintApp {...props}>{screen}</PassmintApp>;
 }
