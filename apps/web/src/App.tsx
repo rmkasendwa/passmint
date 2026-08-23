@@ -15,11 +15,9 @@ import {
   Dumbbell,
   History,
   ImagePlus,
-  KeyRound,
   LockKeyhole,
   LogIn,
   LogOut,
-  Mail,
   MapPin,
   Martini,
   Mic2,
@@ -29,7 +27,6 @@ import {
   ScanLine,
   Search,
   ShieldCheck,
-  Sparkles,
   Moon,
   Sun,
   Ticket as TicketIcon,
@@ -975,12 +972,9 @@ export function App({
               alt=""
             />
             <div className="auth-event-card">
-              <span>
-                <Sparkles size={17} />
-                Tonight
-              </span>
-              <strong>Velvet Room Live</strong>
-              <small>941 guests checked in with Passmint</small>
+              <span>Passmint</span>
+              <strong>One account for tickets, events, and the door.</strong>
+              <small>Checkout, hosting, and gate verification in one place.</small>
             </div>
           </div>
 
@@ -993,30 +987,30 @@ export function App({
             <div className="auth-heading">
               <p className="section-kicker">
                 {page === "/register"
-                  ? "Create access"
+                  ? "Create account"
                   : page === "/forgot-password"
-                    ? "Recover access"
+                    ? "Password reset"
                     : page === "/reset-password"
-                      ? "Set new password"
-                      : "Welcome back"}
+                      ? "New password"
+                      : "Sign in"}
               </p>
               <h1>
                 {page === "/register"
-                  ? "Join the guest list."
+                  ? "Create your account."
                   : page === "/forgot-password"
-                    ? "Get a fresh link."
+                    ? "Reset your password."
                     : page === "/reset-password"
-                      ? "Choose a new pass."
-                      : "Step back inside."}
+                      ? "Choose a new password."
+                      : "Welcome back."}
               </h1>
               <p>
                 {page === "/register"
-                  ? "Save tickets, publish events, and move from checkout to the door without losing the thread."
+                  ? "Save tickets, publish events, and move guests through the door with less friction."
                   : page === "/forgot-password"
-                    ? "Enter the email you used for Passmint and we will prepare the next step."
+                    ? "Enter the email you use for Passmint. We will prepare the next step."
                     : page === "/reset-password"
-                      ? "Use a strong password so your tickets and host tools stay protected."
-                      : "Sign in for saved tickets, faster checkout, event publishing, and gate verification."}
+                      ? "Use at least eight characters to keep your tickets and host tools protected."
+                      : "Access saved tickets, faster checkout, event publishing, and gate verification."}
               </p>
             </div>
 
@@ -1026,6 +1020,7 @@ export function App({
                   <label>
                     Name
                     <input
+                      className="auth-input"
                       value={authName}
                       onChange={(event) => setAuthName(event.target.value)}
                       placeholder="Full name"
@@ -1036,36 +1031,30 @@ export function App({
                 )}
                 <label>
                   Email
-                  <span className="auth-input">
-                    <Mail size={18} />
-                    <input
-                      type="email"
-                      value={authEmail}
-                      onChange={(event) => setAuthEmail(event.target.value)}
-                      placeholder="you@example.com"
-                      autoComplete="email"
-                      required
-                    />
-                  </span>
+                  <input
+                    className="auth-input"
+                    type="email"
+                    value={authEmail}
+                    onChange={(event) => setAuthEmail(event.target.value)}
+                    placeholder="you@example.com"
+                    autoComplete="email"
+                    required
+                  />
                 </label>
                 <label>
                   Password
-                  <span className="auth-input">
-                    <KeyRound size={18} />
-                    <input
-                      type="password"
-                      minLength={8}
-                      value={authPassword}
-                      onChange={(event) => setAuthPassword(event.target.value)}
-                      placeholder="At least 8 characters"
-                      autoComplete={
-                        page === "/register"
-                          ? "new-password"
-                          : "current-password"
-                      }
-                      required
-                    />
-                  </span>
+                  <input
+                    className="auth-input"
+                    type="password"
+                    minLength={8}
+                    value={authPassword}
+                    onChange={(event) => setAuthPassword(event.target.value)}
+                    placeholder="At least 8 characters"
+                    autoComplete={
+                      page === "/register" ? "new-password" : "current-password"
+                    }
+                    required
+                  />
                 </label>
                 {page === "/login" && (
                   <Link className="auth-text-link" href="/forgot-password">
@@ -1073,11 +1062,6 @@ export function App({
                   </Link>
                 )}
                 <button className="primary-action auth-submit" type="submit">
-                  {page === "/register" ? (
-                    <UserPlus size={18} />
-                  ) : (
-                    <LogIn size={18} />
-                  )}
                   {page === "/register" ? "Create account" : "Sign in"}
                 </button>
               </form>
@@ -1087,20 +1071,17 @@ export function App({
               <form className="auth-form" onSubmit={submitForgotPassword}>
                 <label>
                   Email
-                  <span className="auth-input">
-                    <Mail size={18} />
-                    <input
-                      type="email"
-                      value={resetEmail}
-                      onChange={(event) => setResetEmail(event.target.value)}
-                      placeholder="you@example.com"
-                      autoComplete="email"
-                      required
-                    />
-                  </span>
+                  <input
+                    className="auth-input"
+                    type="email"
+                    value={resetEmail}
+                    onChange={(event) => setResetEmail(event.target.value)}
+                    placeholder="you@example.com"
+                    autoComplete="email"
+                    required
+                  />
                 </label>
                 <button className="primary-action auth-submit" type="submit">
-                  <Mail size={18} />
                   Send reset link
                 </button>
               </form>
@@ -1110,38 +1091,33 @@ export function App({
               <form className="auth-form" onSubmit={submitResetPassword}>
                 <label>
                   New password
-                  <span className="auth-input">
-                    <KeyRound size={18} />
-                    <input
-                      type="password"
-                      minLength={8}
-                      value={resetPassword}
-                      onChange={(event) => setResetPassword(event.target.value)}
-                      placeholder="At least 8 characters"
-                      autoComplete="new-password"
-                      required
-                    />
-                  </span>
+                  <input
+                    className="auth-input"
+                    type="password"
+                    minLength={8}
+                    value={resetPassword}
+                    onChange={(event) => setResetPassword(event.target.value)}
+                    placeholder="At least 8 characters"
+                    autoComplete="new-password"
+                    required
+                  />
                 </label>
                 <label>
                   Confirm password
-                  <span className="auth-input">
-                    <LockKeyhole size={18} />
-                    <input
-                      type="password"
-                      minLength={8}
-                      value={resetConfirmPassword}
-                      onChange={(event) =>
-                        setResetConfirmPassword(event.target.value)
-                      }
-                      placeholder="Repeat new password"
-                      autoComplete="new-password"
-                      required
-                    />
-                  </span>
+                  <input
+                    className="auth-input"
+                    type="password"
+                    minLength={8}
+                    value={resetConfirmPassword}
+                    onChange={(event) =>
+                      setResetConfirmPassword(event.target.value)
+                    }
+                    placeholder="Repeat new password"
+                    autoComplete="new-password"
+                    required
+                  />
                 </label>
                 <button className="primary-action auth-submit" type="submit">
-                  <KeyRound size={18} />
                   Reset password
                 </button>
               </form>
