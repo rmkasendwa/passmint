@@ -10,7 +10,7 @@ export function AuthFrame({
 }: {
   children: ReactNode;
   description: string;
-  kicker: string;
+  kicker?: string;
   pageClass: string;
   title: string;
 }) {
@@ -30,7 +30,7 @@ export function AuthFrame({
 
       <section className="auth-card" aria-label="Account access">
         <div className="auth-heading">
-          <p className="section-kicker">{kicker}</p>
+          {kicker && <p className="section-kicker">{kicker}</p>}
           <h1>{title}</h1>
           <p>{description}</p>
         </div>

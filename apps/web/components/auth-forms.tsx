@@ -28,9 +28,15 @@ export function LoginForm() {
             required
           />
         </label>
-        <label>
-          Password
+        <label htmlFor="login-password">
+          <span className="auth-label-row">
+            Password
+            <Link className="auth-text-link" href="/forgot-password">
+              Forgot password?
+            </Link>
+          </span>
           <input
+            id="login-password"
             className="auth-input"
             type="password"
             minLength={8}
@@ -41,9 +47,6 @@ export function LoginForm() {
             required
           />
         </label>
-        <Link className="auth-text-link" href="/forgot-password">
-          Forgot password?
-        </Link>
         <button className="primary-action auth-submit" type="submit">
           Sign in
         </button>

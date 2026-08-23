@@ -1174,19 +1174,16 @@ textarea:focus {
 
 .auth-event-card {
   position: absolute;
-  left: 34px;
-  bottom: 34px;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 2;
   display: grid;
   gap: 10px;
-  width: min(410px, calc(100% - 84px));
-  border: 1px solid rgb(255 255 255 / 20%);
-  border-radius: 8px;
-  padding: 20px;
-  background: rgb(12 12 14 / 54%);
+  width: 100%;
+  padding: 34px;
+  background: linear-gradient(0deg, rgb(5 5 6 / 74%), rgb(5 5 6 / 0%));
   color: #ffffff;
-  box-shadow: 0 22px 70px rgb(0 0 0 / 28%);
-  backdrop-filter: blur(24px);
 }
 
 .auth-event-card span {
@@ -1287,9 +1284,18 @@ textarea:focus {
 }
 
 .auth-form label {
+  display: grid;
+  gap: 8px;
   color: rgb(255 255 255 / 66%);
   font-size: 0.78rem;
   font-weight: var(--weight-semibold);
+}
+
+.auth-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .auth-input {
@@ -1336,9 +1342,8 @@ textarea:focus {
 }
 
 .auth-text-link {
-  justify-self: end;
   color: rgb(255 255 255 / 72%);
-  font-size: 0.84rem;
+  font-size: 0.78rem;
 }
 
 .auth-state {
@@ -2787,10 +2792,11 @@ code {
   }
 
   .auth-event-card {
-    left: 16px;
-    bottom: 16px;
-    width: min(340px, calc(100% - 32px));
-    padding: 16px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    padding: 52px 18px 18px;
   }
 
   .auth-event-card strong {
