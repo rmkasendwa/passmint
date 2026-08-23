@@ -1,4 +1,5 @@
-import { App } from "../../App";
+import { PassmintApp } from "../../features/passmint/passmint-app";
+import { DashboardScreen } from "../../features/passmint/screens/dashboard-screen";
 import { listEventsForPage } from "../../server-events";
 import { getInitialThemePreference } from "../../server-theme";
 
@@ -9,9 +10,11 @@ export default async function DashboardPage() {
   const initialThemePreference = await getInitialThemePreference();
 
   return (
-    <App
+    <PassmintApp
       initialEvents={initialEvents}
       initialThemePreference={initialThemePreference}
-    />
+    >
+      <DashboardScreen />
+    </PassmintApp>
   );
 }
