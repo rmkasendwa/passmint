@@ -46,6 +46,11 @@ export function AppShell({
           <nav aria-label="Main navigation">
             <Link href="/">Discover</Link>
             <Link href="/tickets">Tickets</Link>
+            {!session && (
+              <button type="button" onClick={onHostEvents}>
+                Host events
+              </button>
+            )}
             {session && <Link href="/dashboard">Dashboard</Link>}
           </nav>
           {session ? (
@@ -74,13 +79,6 @@ export function AppShell({
                 preference={themePreference}
                 onChange={setThemePreference}
               />
-              <button
-                type="button"
-                className="host-action"
-                onClick={onHostEvents}
-              >
-                Host events
-              </button>
               <button
                 type="button"
                 className="secondary-action compact-action"

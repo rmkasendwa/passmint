@@ -170,19 +170,23 @@ p {
   gap: 4px;
 }
 
-.site-header nav a {
+.site-header nav a,
+.site-header nav button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 36px;
+  border: 0;
   border-radius: 999px;
   padding: 0 12px;
+  background: transparent;
   color: var(--text-muted);
   font-size: 0.9rem;
   font-weight: var(--weight-semibold);
 }
 
-.site-header nav a:hover {
+.site-header nav a:hover,
+.site-header nav button:hover {
   background: var(--surface-muted);
   color: var(--text);
 }
@@ -211,23 +215,6 @@ p {
   border-color: var(--border-strong);
   background: var(--button-bg);
   color: var(--button-text);
-}
-
-.host-action {
-  display: inline-flex;
-  align-items: center;
-  min-height: 38px;
-  border: 0;
-  border-radius: 999px;
-  padding: 0 8px;
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  font-weight: var(--weight-semibold);
-}
-
-.host-action:hover {
-  color: var(--text);
 }
 
 .account-chip {
@@ -1249,31 +1236,6 @@ textarea:focus {
   color: rgb(255 255 255 / 58%);
   font-size: 0.95rem;
   line-height: 1.55;
-}
-
-.auth-benefits {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  width: min(100%, 430px);
-}
-
-.auth-benefits span {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 34px;
-  border: 1px solid rgb(255 255 255 / 11%);
-  border-radius: 8px;
-  padding: 0 10px;
-  background: rgb(255 255 255 / 6%);
-  color: rgb(255 255 255 / 72%);
-  font-size: 0.78rem;
-  font-weight: var(--weight-semibold);
-}
-
-.auth-benefits svg {
-  color: #79e6d9;
 }
 
 .auth-form {
@@ -2870,8 +2832,7 @@ code {
   }
 
   .header-actions .primary-action,
-  .header-actions .secondary-action,
-  .header-actions .host-action {
+  .header-actions .secondary-action {
     flex: 1;
   }
 

@@ -1,4 +1,3 @@
-import { QrCode, ShieldCheck, Ticket as TicketIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 export function AuthFrame({
@@ -33,21 +32,6 @@ export function AuthFrame({
           {kicker && <p className="section-kicker">{kicker}</p>}
           <h1>{title}</h1>
           <p>{description}</p>
-        </div>
-
-        <div className="auth-benefits" aria-label="Account benefits">
-          <span>
-            <TicketIcon size={15} />
-            Saved tickets
-          </span>
-          <span>
-            <ShieldCheck size={15} />
-            Host tools
-          </span>
-          <span>
-            <QrCode size={15} />
-            Door scan
-          </span>
         </div>
 
         {children}
