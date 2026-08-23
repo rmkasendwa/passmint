@@ -1,5 +1,3 @@
-"use client";
-
 import {
   ArrowRight,
   CalendarDays,
@@ -10,10 +8,8 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import type { Event } from "../api";
 import { EventThumbnail } from "../components/event-thumbnail";
-import { useAppContext } from "../components/app-provider";
 import {
   categories,
   eventCategory,
@@ -21,13 +17,26 @@ import {
   eventTone,
 } from "../event-utils";
 import { chipDate, dateTime, money, shortDate } from "../formatters";
+import { listEventsForPage } from "../server-events";
 
-export default function HomePage() {
-  const searchParams = useSearchParams();
-  const { visibleEvents: events } = useAppContext();
-  const query = searchParams.get("q")?.trim() ?? "";
-  const dateStart = searchParams.get("start") ?? "";
-  const dateEnd = searchParams.get("end") ?? "";
+export const dynamic = "force-dynamic";
+
+function getParam(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const [params, events] = await Promise.all([
+    searchParams,
+    listEventsForPage(),
+  ]);
+  const query = getParam(params.q)?.trim() ?? "";
+  const dateStart = getParam(params.start) ?? "";
+  const dateEnd = getParam(params.end) ?? "";
   const visibleEvents = filterEvents(events, {
     q: query,
     start: dateStart,
