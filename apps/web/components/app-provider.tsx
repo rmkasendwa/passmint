@@ -29,7 +29,7 @@ import {
 
 type HostEvent = typeof emptyHostEvent;
 
-type PassmintContextValue = {
+type AppContextValue = {
   authEmail: string;
   authMode: "login" | "register";
   authName: string;
@@ -106,7 +106,7 @@ type PassmintContextValue = {
 };
 
 const SESSION_KEY = "passmint-session";
-const PassmintContext = createContext<PassmintContextValue | null>(null);
+const AppContext = createContext<AppContextValue | null>(null);
 
 function readSavedSession() {
   if (typeof window === "undefined") return null;
@@ -131,13 +131,13 @@ function resolveThemePreference(preference: ThemePreference): ResolvedTheme {
     : "dark";
 }
 
-export function usePassmint() {
-  const value = useContext(PassmintContext);
-  if (!value) throw new Error("usePassmint must be used inside PassmintApp");
+export function useAppContext() {
+  const value = useContext(AppContext);
+  if (!value) throw new Error("useAppContext must be used inside AppProvider");
   return value;
 }
 
-export function PassmintApp({
+export function AppProvider({
   children,
   initialEvents = [],
   initialThemePreference = "dark",
@@ -647,7 +647,7 @@ export function PassmintApp({
     setAuthState("Logged out.");
   }
 
-  const contextValue: PassmintContextValue = {
+  const contextValue: AppContextValue = {
     authEmail,
     authMode,
     authName,
@@ -724,7 +724,7 @@ export function PassmintApp({
   };
 
   return (
-    <PassmintContext.Provider value={contextValue}>
+    <AppContext.Provider value={contextValue}>
       <AppShell
         logout={logout}
         onHostEvents={() => router.push("/login")}
@@ -736,6 +736,6 @@ export function PassmintApp({
       >
         {children}
       </AppShell>
-    </PassmintContext.Provider>
+    </AppContext.Provider>
   );
 }
