@@ -1011,11 +1011,6 @@ export function App({
           </div>
 
           <section className="auth-card" aria-label="Account access">
-            <Link className="auth-back-link" href="/">
-              <ChevronLeft size={17} />
-              Discover events
-            </Link>
-
             <div className="auth-heading">
               <p className="section-kicker">
                 {page === "/register"
@@ -1044,6 +1039,21 @@ export function App({
                       ? "Use at least eight characters to keep your tickets and host tools protected."
                       : "Access saved tickets, faster checkout, event publishing, and gate verification."}
               </p>
+            </div>
+
+            <div className="auth-benefits" aria-label="Account benefits">
+              <span>
+                <TicketIcon size={15} />
+                Saved tickets
+              </span>
+              <span>
+                <ShieldCheck size={15} />
+                Host tools
+              </span>
+              <span>
+                <QrCode size={15} />
+                Door scan
+              </span>
             </div>
 
             {(page === "/login" || page === "/register") && (

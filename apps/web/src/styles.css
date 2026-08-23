@@ -1139,7 +1139,9 @@ textarea:focus {
   grid-template-columns: minmax(0, 1fr) minmax(420px, 0.78fr);
   gap: 0;
   min-height: calc(100vh - 64px);
-  background: #050506;
+  background:
+    linear-gradient(135deg, rgb(255 255 255 / 3%), transparent 28%),
+    #050506;
 }
 
 .auth-media {
@@ -1215,29 +1217,19 @@ textarea:focus {
 .auth-card {
   display: grid;
   align-content: center;
-  gap: 18px;
-  padding: 38px min(7vw, 76px);
+  gap: 20px;
+  padding: 48px min(7vw, 76px);
   border-left: 1px solid rgb(255 255 255 / 8%);
-  background: #0b0b0d;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 5%), transparent 31%),
+    #0b0b0d;
   color: #ffffff;
 }
 
-.auth-back-link,
 .auth-text-link,
 .auth-switch a {
   color: #ffffff;
   font-weight: var(--weight-semibold);
-}
-
-.auth-back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  width: max-content;
-  min-height: 34px;
-  margin-bottom: 4px;
-  color: rgb(255 255 255 / 56%);
-  font-size: 0.86rem;
 }
 
 .auth-heading {
@@ -1262,11 +1254,36 @@ textarea:focus {
   line-height: 1.55;
 }
 
+.auth-benefits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: min(100%, 430px);
+}
+
+.auth-benefits span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  border: 1px solid rgb(255 255 255 / 11%);
+  border-radius: 8px;
+  padding: 0 10px;
+  background: rgb(255 255 255 / 6%);
+  color: rgb(255 255 255 / 72%);
+  font-size: 0.78rem;
+  font-weight: var(--weight-semibold);
+}
+
+.auth-benefits svg {
+  color: #79e6d9;
+}
+
 .auth-form {
   display: grid;
   gap: 12px;
   width: min(100%, 410px);
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .auth-form label {
@@ -1342,6 +1359,10 @@ textarea:focus {
 
 .auth-switch p {
   margin-bottom: 0;
+}
+
+.auth-stage + .site-footer {
+  margin-top: 0;
 }
 
 .identity-panel {
