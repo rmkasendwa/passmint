@@ -114,7 +114,7 @@ export function AppShell({
               />
               <button
                 type="button"
-                className="secondary-action min-h-[38px] rounded-full px-[13px] text-[0.9rem] font-[var(--weight-semibold)] max-[820px]:flex-1"
+                className="inline-flex min-h-[38px] items-center justify-center gap-2 whitespace-nowrap rounded-full border border-[var(--border)] bg-[var(--surface-muted)] px-[13px] text-[0.9rem] font-[var(--weight-semibold)] text-[var(--text)] hover:border-[var(--border-strong)] hover:bg-[var(--button-bg)] hover:text-[var(--button-text)] max-[820px]:flex-1"
                 onClick={() => openAuth("login")}
               >
                 <LogIn size={16} />

@@ -3,6 +3,21 @@
 import Link from "next/link";
 import { useAppContext } from "./app-provider";
 
+const formClass = "grid w-full max-w-[430px] gap-4 max-[820px]:max-w-none";
+const labelClass =
+  "grid gap-[7px] text-[0.82rem] font-[var(--weight-semibold)] text-[var(--text-muted)]";
+const inputClass =
+  "min-h-[52px] w-full min-w-0 rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] px-3 text-[var(--text)] hover:border-[var(--border-strong)] focus:border-[var(--accent)] focus:outline-[3px_solid_rgb(22_125_119/18%)] placeholder:text-[var(--text-soft)]";
+const labelRowClass = "flex items-center justify-between gap-3";
+const textLinkClass =
+  "font-[var(--weight-semibold)] text-[var(--accent)] hover:text-[#fa5b2d]";
+const submitClass =
+  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-[var(--button-bg)] px-4 font-[var(--weight-bold)] text-[var(--button-text)] hover:bg-[#fa5b2d]";
+const stateClass =
+  "mb-0 w-full max-w-[430px] rounded-lg bg-[var(--accent-soft)] p-3 text-[0.92rem] font-[var(--weight-medium)] text-[var(--accent)] max-[820px]:max-w-none";
+const switchClass =
+  "w-full max-w-[430px] text-[0.96rem] text-[var(--text-muted)] max-[820px]:max-w-none [&_a]:font-[var(--weight-semibold)] [&_a]:text-[var(--accent)] [&_a:hover]:text-[#fa5b2d] [&_p]:mb-0";
+
 export function LoginForm() {
   const {
     authEmail,
@@ -15,11 +30,11 @@ export function LoginForm() {
 
   return (
     <>
-      <form className="auth-form" onSubmit={submitAuth}>
-        <label>
+      <form className={formClass} onSubmit={submitAuth}>
+        <label className={labelClass}>
           Email
           <input
-            className="auth-input"
+            className={inputClass}
             type="email"
             value={authEmail}
             onChange={(event) => setAuthEmail(event.target.value)}
@@ -28,16 +43,16 @@ export function LoginForm() {
             required
           />
         </label>
-        <label htmlFor="login-password">
-          <span className="auth-label-row">
+        <label className={labelClass} htmlFor="login-password">
+          <span className={labelRowClass}>
             Password
-            <Link className="auth-text-link" href="/forgot-password">
+            <Link className={textLinkClass} href="/forgot-password">
               Forgot password?
             </Link>
           </span>
           <input
             id="login-password"
-            className="auth-input"
+            className={inputClass}
             type="password"
             minLength={8}
             value={authPassword}
@@ -47,14 +62,14 @@ export function LoginForm() {
             required
           />
         </label>
-        <button className="primary-action auth-submit" type="submit">
+        <button className={submitClass} type="submit">
           Sign in
         </button>
       </form>
 
-      {authState && <p className="state-line auth-state">{authState}</p>}
+      {authState && <p className={stateClass}>{authState}</p>}
 
-      <div className="auth-switch">
+      <div className={switchClass}>
         <p>
           New to Passmint? <Link href="/register">Create account</Link>
         </p>
@@ -77,11 +92,11 @@ export function RegisterForm() {
 
   return (
     <>
-      <form className="auth-form" onSubmit={submitAuth}>
-        <label>
+      <form className={formClass} onSubmit={submitAuth}>
+        <label className={labelClass}>
           Name
           <input
-            className="auth-input"
+            className={inputClass}
             value={authName}
             onChange={(event) => setAuthName(event.target.value)}
             placeholder="Full name"
@@ -89,10 +104,10 @@ export function RegisterForm() {
             required
           />
         </label>
-        <label>
+        <label className={labelClass}>
           Email
           <input
-            className="auth-input"
+            className={inputClass}
             type="email"
             value={authEmail}
             onChange={(event) => setAuthEmail(event.target.value)}
@@ -101,10 +116,10 @@ export function RegisterForm() {
             required
           />
         </label>
-        <label>
+        <label className={labelClass}>
           Password
           <input
-            className="auth-input"
+            className={inputClass}
             type="password"
             minLength={8}
             value={authPassword}
@@ -114,14 +129,14 @@ export function RegisterForm() {
             required
           />
         </label>
-        <button className="primary-action auth-submit" type="submit">
+        <button className={submitClass} type="submit">
           Create account
         </button>
       </form>
 
-      {authState && <p className="state-line auth-state">{authState}</p>}
+      {authState && <p className={stateClass}>{authState}</p>}
 
-      <div className="auth-switch">
+      <div className={switchClass}>
         <p>
           Already on the list? <Link href="/login">Sign in</Link>
         </p>
@@ -136,11 +151,11 @@ export function ForgotPasswordForm() {
 
   return (
     <>
-      <form className="auth-form" onSubmit={submitForgotPassword}>
-        <label>
+      <form className={formClass} onSubmit={submitForgotPassword}>
+        <label className={labelClass}>
           Email
           <input
-            className="auth-input"
+            className={inputClass}
             type="email"
             value={resetEmail}
             onChange={(event) => setResetEmail(event.target.value)}
@@ -149,14 +164,14 @@ export function ForgotPasswordForm() {
             required
           />
         </label>
-        <button className="primary-action auth-submit" type="submit">
+        <button className={submitClass} type="submit">
           Send reset link
         </button>
       </form>
 
-      {resetState && <p className="state-line auth-state">{resetState}</p>}
+      {resetState && <p className={stateClass}>{resetState}</p>}
 
-      <div className="auth-switch">
+      <div className={switchClass}>
         <p>
           Remembered it? <Link href="/login">Back to sign in</Link>
         </p>
@@ -177,11 +192,11 @@ export function ResetPasswordForm() {
 
   return (
     <>
-      <form className="auth-form" onSubmit={submitResetPassword}>
-        <label>
+      <form className={formClass} onSubmit={submitResetPassword}>
+        <label className={labelClass}>
           New password
           <input
-            className="auth-input"
+            className={inputClass}
             type="password"
             minLength={8}
             value={resetPassword}
@@ -191,10 +206,10 @@ export function ResetPasswordForm() {
             required
           />
         </label>
-        <label>
+        <label className={labelClass}>
           Confirm password
           <input
-            className="auth-input"
+            className={inputClass}
             type="password"
             minLength={8}
             value={resetConfirmPassword}
@@ -204,14 +219,14 @@ export function ResetPasswordForm() {
             required
           />
         </label>
-        <button className="primary-action auth-submit" type="submit">
+        <button className={submitClass} type="submit">
           Reset password
         </button>
       </form>
 
-      {resetState && <p className="state-line auth-state">{resetState}</p>}
+      {resetState && <p className={stateClass}>{resetState}</p>}
 
-      <div className="auth-switch">
+      <div className={switchClass}>
         <p>
           Remembered it? <Link href="/login">Back to sign in</Link>
         </p>

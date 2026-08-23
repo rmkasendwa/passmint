@@ -11,15 +11,35 @@ import {
   Upload,
   XCircle,
 } from "lucide-react";
-import { useAppContext } from "./app-provider";
-import { EventThumbnail } from "./event-thumbnail";
+import { dateTime, money } from "../formatters";
 import {
   eventCategory,
   eventStatus,
   eventTone,
   initials,
 } from "../event-utils";
-import { dateTime, money } from "../formatters";
+import { useAppContext } from "./app-provider";
+import { EventThumbnail } from "./event-thumbnail";
+
+const sectionKicker =
+  "mb-2 text-[0.78rem] font-[var(--weight-semibold)] uppercase tracking-[0.08em] text-[#fa5b2d]";
+const panel =
+  "rounded-[20px] border border-[var(--border)] bg-[var(--surface-raised)] shadow-[0_18px_52px_rgb(0_0_0/15%)]";
+const panelHeading =
+  "mb-3 flex items-center gap-2.5 text-[var(--text)] [&_h2]:mb-0 [&_h2]:text-[1.55rem] [&_svg]:text-[var(--accent)]";
+const primaryAction =
+  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-[var(--button-bg)] px-4 font-[var(--weight-bold)] text-[var(--button-text)] hover:bg-[#fa5b2d]";
+const secondaryAction =
+  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] px-4 font-[var(--weight-bold)] text-[var(--text)]";
+const formGrid =
+  "grid gap-3 [&_label]:grid [&_label]:gap-[7px] [&_label]:text-[0.82rem] [&_label]:font-[var(--weight-semibold)] [&_label]:text-[var(--text-muted)] [&_input]:min-h-11 [&_input]:w-full [&_input]:min-w-0 [&_input]:rounded-lg [&_input]:border [&_input]:border-[var(--border)] [&_input]:bg-[var(--surface-elevated)] [&_input]:px-3 [&_input]:text-[var(--text)] [&_input]:focus:border-[var(--accent)] [&_input]:focus:outline-[3px_solid_rgb(22_125_119/18%)] [&_textarea]:min-h-[92px] [&_textarea]:w-full [&_textarea]:min-w-0 [&_textarea]:resize-y [&_textarea]:rounded-lg [&_textarea]:border [&_textarea]:border-[var(--border)] [&_textarea]:bg-[var(--surface-elevated)] [&_textarea]:px-3 [&_textarea]:py-[11px] [&_textarea]:text-[var(--text)] [&_textarea]:focus:border-[var(--accent)] [&_textarea]:focus:outline-[3px_solid_rgb(22_125_119/18%)]";
+const helperLine = "mb-0 text-[0.88rem] leading-[1.5] text-[var(--text-soft)]";
+const stateLine =
+  "mb-0 rounded-lg bg-[var(--accent-soft)] p-3 text-[0.92rem] font-[var(--weight-medium)] text-[var(--accent)]";
+const statCard =
+  "grid min-h-[126px] content-end gap-2.5 rounded-[18px] border border-[var(--border)] bg-[linear-gradient(180deg,rgb(255_255_255/6%),transparent_58%),var(--surface-raised)] p-[18px] shadow-[0_18px_50px_rgb(0_0_0/16%)] [&_small]:text-[0.78rem] [&_small]:font-[var(--weight-semibold)] [&_small]:uppercase [&_small]:tracking-[0.08em] [&_small]:text-[var(--text-soft)] [&_strong]:overflow-hidden [&_strong]:text-ellipsis [&_strong]:text-[clamp(1.8rem,3vw,2.75rem)] [&_strong]:font-[var(--weight-bold)] [&_strong]:leading-[0.95] [&_strong]:text-[var(--text)]";
+const compactBadge =
+  "inline-flex min-h-7 items-center rounded-full border border-[var(--border)] bg-[var(--surface-muted)] px-[11px] text-[0.74rem] font-[var(--weight-semibold)] uppercase text-[var(--text)]";
 
 export function DashboardWorkbench() {
   const {
@@ -50,56 +70,67 @@ export function DashboardWorkbench() {
   if (!session) return null;
 
   return (
-    <section className="dashboard-layout">
-      <div className="dashboard-hero">
+    <section className="mx-auto mt-[26px] w-[min(1180px,calc(100%-32px))] max-w-[1180px]">
+      <div className="mb-[18px] grid min-h-[420px] grid-cols-[minmax(0,1fr)_auto] items-end gap-6 overflow-hidden rounded-[22px] border border-[var(--border)] bg-[linear-gradient(90deg,rgb(8_9_14/78%),rgb(8_9_14/18%)),url('https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=1800&q=85')] bg-cover bg-center p-[clamp(24px,5vw,52px)] shadow-[0_28px_90px_rgb(0_0_0/28%)] max-[1120px]:grid-cols-1 max-[820px]:min-h-[520px]">
         <div>
-          <p className="section-kicker">Dashboard</p>
-          <h1>Run every event from one place.</h1>
-          <p>
+          <p className={sectionKicker}>Dashboard</p>
+          <h1 className="mb-3 max-w-[780px] text-[clamp(3rem,7vw,6.7rem)] font-[var(--weight-bold)] leading-[0.94] tracking-normal text-white">
+            Run every event from one place.
+          </h1>
+          <p className="mb-0 max-w-[580px] text-[1.05rem] leading-[1.55] text-[rgb(255_255_255/76%)]">
             Create new events, track your hosted lineup, and scan tickets at the
             door with your Passmint account.
           </p>
         </div>
-        <div className="dashboard-identity">
-          <span>{initials(session.user.name)}</span>
-          <strong>{session.user.name}</strong>
-          <small>{session.user.email}</small>
+        <div className="grid min-w-[230px] gap-1.5 rounded-2xl border border-[rgb(255_255_255/14%)] bg-[rgb(255_255_255/10%)] p-4 text-white backdrop-blur-xl max-[820px]:min-w-0">
+          <span className="mb-1 grid size-12 place-items-center rounded-xl bg-white text-[0.94rem] font-[var(--weight-bold)] text-[#101010]">
+            {initials(session.user.name)}
+          </span>
+          <strong className="truncate text-[1.05rem]">
+            {session.user.name}
+          </strong>
+          <small className="truncate text-[0.83rem] text-[rgb(255_255_255/68%)]">
+            {session.user.email}
+          </small>
         </div>
       </div>
 
-      <section className="dashboard-stats" aria-label="Dashboard summary">
-        <article>
+      <section
+        className="mb-[18px] grid grid-cols-4 gap-3 max-[1120px]:grid-cols-2 max-[600px]:grid-cols-1"
+        aria-label="Dashboard summary"
+      >
+        <article className={statCard}>
           <small>Hosted events</small>
           <strong>{dashboardEvents.length}</strong>
         </article>
-        <article>
+        <article className={statCard}>
           <small>Upcoming</small>
           <strong>{dashboardUpcomingCount}</strong>
         </article>
-        <article>
+        <article className={statCard}>
           <small>Total capacity</small>
           <strong>{dashboardCapacity.toLocaleString("en-UG")}</strong>
         </article>
-        <article>
+        <article className={statCard}>
           <small>Sellout value</small>
           <strong>{money.format(dashboardRevenuePotential / 100)}</strong>
         </article>
       </section>
 
-      <div className="dashboard-workbench">
-        <section className="event-publisher-panel">
-          <div className="panel-heading">
+      <div className="grid grid-cols-[minmax(360px,430px)_minmax(0,1fr)] items-start gap-[18px] max-[1120px]:grid-cols-1">
+        <section className={`${panel} grid gap-3.5 p-[18px]`}>
+          <div className={panelHeading}>
             <ImagePlus size={22} />
             <h2>Create event</h2>
           </div>
-          <div className="thumbnail-preview">
+          <div className="overflow-hidden rounded-lg bg-[#101010]">
             <EventThumbnail
               event={hostPreviewEvent}
               tone="tone-2"
               variant="preview"
             />
           </div>
-          <form className="form-grid" onSubmit={publishEvent}>
+          <form className={formGrid} onSubmit={publishEvent}>
             <label>
               Event name
               <input
@@ -133,7 +164,7 @@ export function DashboardWorkbench() {
                 required
               />
             </label>
-            <div className="split-fields">
+            <div className="grid grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)] gap-2.5 max-[820px]:grid-cols-1">
               <label>
                 Starts
                 <input
@@ -173,23 +204,24 @@ export function DashboardWorkbench() {
                 required
               />
             </label>
-            <label className="upload-field">
+            <label className="relative grid gap-[7px]">
               <span>Event artwork photo</span>
               <input
+                className="absolute inset-0 cursor-pointer opacity-0"
                 type="file"
                 accept="image/*"
                 onChange={(event) =>
                   selectThumbnail(event.target.files?.[0] ?? null)
                 }
               />
-              <span>
+              <span className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-dashed border-[var(--border-strong)] bg-[var(--surface-muted)] px-3 font-[var(--weight-semibold)] text-[var(--accent)]">
                 <Upload size={17} />
                 {hostThumbnailName || "Optional image upload"}
               </span>
             </label>
             {hostEvent.thumbnailUrl && (
               <button
-                className="secondary-action"
+                className={secondaryAction}
                 type="button"
                 onClick={() => selectThumbnail(null)}
               >
@@ -197,7 +229,7 @@ export function DashboardWorkbench() {
               </button>
             )}
             <button
-              className="primary-action"
+              className={primaryAction}
               type="submit"
               disabled={!canPublishEvents}
             >
@@ -205,42 +237,53 @@ export function DashboardWorkbench() {
               Create event
             </button>
           </form>
-          <p className="helper-line">
+          <p className={helperLine}>
             Photos are optional. Without one, Passmint creates a branded event
             artwork automatically.
           </p>
-          {hostState && <p className="state-line">{hostState}</p>}
+          {hostState && <p className={stateLine}>{hostState}</p>}
         </section>
 
-        <div className="dashboard-ops">
-          <section className="host-events-panel">
-            <div className="panel-heading">
+        <div className="grid min-w-0 gap-[18px]">
+          <section className={`${panel} grid gap-3.5 p-[18px]`}>
+            <div className={panelHeading}>
               <CalendarDays size={22} />
               <h2>Your events</h2>
             </div>
             {dashboardEvents.length === 0 ? (
-              <div className="empty-dashboard-card">
+              <div className="grid min-h-[220px] place-items-center gap-2 rounded-[18px] border border-dashed border-[var(--border-strong)] bg-[var(--surface-muted)] p-[22px] text-center text-[var(--text-muted)] [&_strong]:text-[1.2rem] [&_strong]:text-[var(--text)] [&_svg]:text-[var(--accent)]">
                 <TicketIcon size={34} />
                 <strong>No hosted events yet</strong>
                 <span>Create your first event and it will appear here.</span>
               </div>
             ) : (
-              <div className="host-event-list">
+              <div className="grid gap-3">
                 {dashboardEvents.map((event, index) => (
-                  <article className="host-event-card" key={event.id}>
+                  <article
+                    className="grid min-w-0 grid-cols-[190px_minmax(0,1fr)] gap-4 rounded-[18px] border border-[var(--border)] bg-[var(--surface-muted)] p-3 max-[820px]:grid-cols-1"
+                    key={event.id}
+                  >
                     <EventThumbnail
                       event={event}
                       tone={eventTone(index)}
                       variant="preview"
                     />
                     <div>
-                      <span className="ticket-badges compact">
-                        <span>{eventStatus(event)}</span>
-                        <span>{eventCategory(event)}</span>
+                      <span className="flex flex-wrap gap-2">
+                        <span className={compactBadge}>
+                          {eventStatus(event)}
+                        </span>
+                        <span className={compactBadge}>
+                          {eventCategory(event)}
+                        </span>
                       </span>
-                      <h3>{event.name}</h3>
-                      <p>{event.description}</p>
-                      <div className="host-event-meta">
+                      <h3 className="my-3 line-clamp-2 text-[1.45rem] font-[var(--weight-bold)] leading-[1.05] text-[var(--text)]">
+                        {event.name}
+                      </h3>
+                      <p className="mb-3 line-clamp-2 leading-[1.45] text-[var(--text-muted)]">
+                        {event.description}
+                      </p>
+                      <div className="flex flex-wrap gap-2 [&_span]:inline-flex [&_span]:min-h-8 [&_span]:items-center [&_span]:gap-[7px] [&_span]:rounded-full [&_span]:bg-[var(--surface-raised)] [&_span]:px-2.5 [&_span]:text-[0.82rem] [&_span]:font-[var(--weight-medium)] [&_span]:text-[var(--text-muted)] [&_svg]:text-[var(--accent)]">
                         <span>
                           <CalendarDays size={15} />
                           {dateTime.format(new Date(event.startsAt))}
@@ -249,7 +292,7 @@ export function DashboardWorkbench() {
                           <MapPin size={15} />
                           {event.venue}
                         </span>
-                        <strong>
+                        <strong className="inline-flex min-h-8 items-center gap-[7px] rounded-full bg-[var(--surface-raised)] px-2.5 text-[0.82rem] font-[var(--weight-medium)] text-[var(--price)]">
                           {event.capacity.toLocaleString("en-UG")} spots
                         </strong>
                       </div>
@@ -260,35 +303,35 @@ export function DashboardWorkbench() {
             )}
           </section>
 
-          <section className="gate-panel">
+          <section className="grid max-w-[1360px] grid-cols-[0.7fr_1fr] items-center gap-4 rounded-lg border border-[var(--border)] bg-[#101010] p-[22px] text-white shadow-[0_18px_44px_rgb(18_24_31/6%)] max-[1120px]:grid-cols-1">
             <div>
-              <div className="panel-heading">
+              <div className="mb-3 flex items-center gap-2.5 text-white [&_h2]:mb-0 [&_h2]:text-[1.55rem]">
                 <ScanLine size={22} />
                 <h2>Ticket scanning</h2>
               </div>
-              <p>
+              <p className="mb-0 text-[rgb(255_255_255/72%)]">
                 Scan QR tickets for events you created. Accepted tickets are
                 marked entered and cannot be reused.
               </p>
-              <div className="verifier-access granted">
+              <div className="mt-4 inline-flex min-h-[38px] items-center gap-2 rounded-lg bg-[#dff7e8] px-[11px] font-[var(--weight-semibold)] text-[#14532d]">
                 <ShieldCheck size={18} />
                 {session.user.name} can scan owned-event tickets.
               </div>
             </div>
-            <div className="scanner-box">
+            <div className="grid min-h-[230px] place-items-center overflow-hidden rounded-lg border border-[rgb(255_255_255/16%)] bg-[#191919] [&_video]:h-[230px] [&_video]:w-full [&_video]:object-cover">
               {cameraEnabled ? (
                 <video ref={videoRef} muted playsInline />
               ) : (
-                <div className="scanner-placeholder ready">
+                <div className="grid h-[230px] w-full place-items-center gap-2.5 text-[#8ddbd3] [&_span]:font-[var(--weight-medium)] [&_span]:text-[rgb(255_255_255/78%)]">
                   <ShieldCheck size={54} />
                   <span>Ready to scan</span>
                 </div>
               )}
             </div>
-            <div className="gate-actions">
+            <div className="col-start-2 grid grid-cols-[auto_1fr_auto] gap-2.5 max-[1120px]:col-auto max-[820px]:grid-cols-1 [&_input]:min-h-11 [&_input]:w-full [&_input]:min-w-0 [&_input]:rounded-lg [&_input]:border [&_input]:border-[var(--border)] [&_input]:bg-[var(--surface-elevated)] [&_input]:px-3 [&_input]:text-[var(--text)]">
               <button
                 type="button"
-                className="secondary-action"
+                className={secondaryAction}
                 onClick={() => setCameraEnabled((value) => !value)}
                 disabled={!canVerifyTickets}
               >
@@ -302,24 +345,32 @@ export function DashboardWorkbench() {
               />
               <button
                 type="button"
-                className="primary-action"
+                className={primaryAction}
                 onClick={() => void scan()}
                 disabled={!canVerifyTickets}
               >
                 Validate
               </button>
             </div>
-            {scanState && <p className="state-line">{scanState}</p>}
+            {scanState && <p className={stateLine}>{scanState}</p>}
             {gateResult && (
-              <div className={`gate-result ${gateResult.result}`}>
+              <div
+                className={`col-start-2 flex items-center gap-3 rounded-lg p-3.5 max-[1120px]:col-auto ${
+                  gateResult.result === "accepted"
+                    ? "bg-[#dff7e8] text-[#14532d]"
+                    : "bg-[#ffe8df] text-[#8d2718]"
+                }`}
+              >
                 {gateResult.result === "accepted" ? (
                   <CheckCircle2 size={28} />
                 ) : (
                   <XCircle size={28} />
                 )}
                 <div>
-                  <strong>{gateResult.result.replace("_", " ")}</strong>
-                  <span>
+                  <strong className="block capitalize">
+                    {gateResult.result.replace("_", " ")}
+                  </strong>
+                  <span className="break-words">
                     {gateResult.ticket?.buyerName ?? gateResult.message}
                   </span>
                 </div>

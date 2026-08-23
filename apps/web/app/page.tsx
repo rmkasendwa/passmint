@@ -21,6 +21,22 @@ import { listEventsForPage } from "../server-events";
 
 export const dynamic = "force-dynamic";
 
+const sectionKicker =
+  "mb-2 text-[0.78rem] font-[var(--weight-semibold)] uppercase tracking-[0.08em] text-[var(--text-soft)]";
+const primaryAction =
+  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-[var(--button-bg)] px-4 font-[var(--weight-bold)] text-[var(--button-text)] hover:bg-[#fa5b2d]";
+const pillPrimaryAction = `${primaryAction} justify-self-start rounded-full hover:bg-[var(--accent)] hover:text-[#081010]`;
+const inputShell =
+  "flex min-h-11 items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--control-bg)] px-[15px] text-[var(--text-muted)] focus-within:border-[var(--accent)] focus-within:outline-[3px_solid_rgb(22_125_119/18%)] [&_input]:min-h-[42px] [&_input]:w-full [&_input]:min-w-0 [&_input]:border-0 [&_input]:bg-transparent [&_input]:p-0 [&_input]:text-[var(--text)] [&_input]:outline-0 [&_input::placeholder]:text-[var(--text-soft)]";
+const eventCard =
+  "grid min-h-[560px] grid-rows-[minmax(238px,42%)_1fr] rounded-[20px] border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] shadow-[0_20px_58px_rgb(0_0_0/22%)] transition hover:border-[var(--border-strong)] hover:shadow-[0_34px_90px_rgb(0_0_0/40%)] max-[820px]:min-h-[500px] max-[600px]:min-h-0 max-[600px]:grid-rows-[220px_1fr] [&_.event-card-affordance]:hover:bg-[var(--accent)] [&_.event-card-affordance]:hover:text-[#081010] [&_.event-thumbnail-card]:max-[600px]:min-h-[220px]";
+const eventCardCopy =
+  "grid grid-rows-[auto_auto_auto_1fr_auto] gap-4 p-[26px] max-[820px]:p-[22px]";
+const eventMeta =
+  "grid gap-2 [&_span]:inline-flex [&_span]:items-center [&_span]:gap-[7px] [&_span]:text-[0.94rem] [&_span]:font-[var(--weight-medium)] [&_span]:leading-[1.34] [&_span]:text-[var(--text-muted)] [&_svg]:text-[var(--accent)]";
+const ticketBadge =
+  "inline-flex min-h-[34px] items-center rounded-full border border-[rgb(255_255_255/14%)] bg-[rgb(0_0_0/38%)] px-3.5 text-[0.82rem] font-[var(--weight-semibold)] uppercase text-white";
+
 function getParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
@@ -49,10 +65,17 @@ export default async function HomePage({
 
   return (
     <>
-      <section className="discovery-bar" aria-label="Event discovery">
-        <form className="search-panel" action="/" role="search">
-          <label>
-            <div className="input-shell">
+      <section
+        className="sticky top-16 z-20 grid justify-items-center gap-2.5 border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--surface-raised)_90%,transparent)] px-0 py-3 backdrop-blur-[18px] max-[820px]:top-[113px] max-[820px]:px-4"
+        aria-label="Event discovery"
+      >
+        <form
+          className="grid w-[min(1040px,calc(100%-var(--content-gutter)*2))] grid-cols-[minmax(280px,1fr)_minmax(230px,286px)_auto] items-end gap-3 max-[820px]:w-full max-[820px]:grid-cols-1"
+          action="/"
+          role="search"
+        >
+          <label className="grid gap-[7px] text-[0.76rem] font-[var(--weight-semibold)] text-[var(--text-muted)]">
+            <div className={inputShell}>
               <Search size={18} />
               <input
                 aria-label="Search by event or venue"
@@ -62,8 +85,8 @@ export default async function HomePage({
               />
             </div>
           </label>
-          <label>
-            <div className="input-shell date-range-fields">
+          <label className="grid gap-[7px] text-[0.76rem] font-[var(--weight-semibold)] text-[var(--text-muted)]">
+            <div className={inputShell}>
               <CalendarDays size={18} />
               <input
                 aria-label="Start date"
@@ -80,7 +103,7 @@ export default async function HomePage({
             </div>
           </label>
           <button
-            className="search-button"
+            className="inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-transparent bg-[var(--button-bg)] px-5 text-[0.95rem] font-[var(--weight-bold)] text-[var(--button-text)] hover:bg-[var(--accent)] hover:text-[#081010]"
             type="submit"
             aria-label="Search events"
           >
@@ -89,14 +112,21 @@ export default async function HomePage({
           </button>
         </form>
 
-        <form className="category-strip" aria-label="Event categories">
+        <form
+          className="flex w-[min(var(--content-max),calc(100%-var(--content-gutter)*2))] justify-center gap-[7px] overflow-x-auto pb-0.5 max-[820px]:w-full max-[820px]:justify-start"
+          aria-label="Event categories"
+        >
           {categories.map(({ label, query: categoryQuery, icon: Icon }) => (
             <button
               type="submit"
               key={label}
               name="q"
               value={categoryQuery}
-              className={query === categoryQuery ? "selected" : ""}
+              className={`flex min-h-[34px] flex-none items-center gap-3 rounded-full border border-[var(--border)] px-3 py-0 pl-[7px] text-left text-[var(--text-muted)] shadow-none hover:bg-[var(--button-bg)] hover:text-[var(--button-text)] ${
+                query === categoryQuery
+                  ? "bg-[var(--button-bg)] text-[var(--button-text)]"
+                  : "bg-[var(--surface-muted)]"
+              } [&_svg]:size-[23px] [&_svg]:rounded-full [&_svg]:bg-[color-mix(in_srgb,var(--text)_10%,transparent)] [&_svg]:p-[5px] [&_strong]:block [&_strong]:text-[0.82rem] [&_strong]:font-[var(--weight-medium)]`}
             >
               <Icon size={20} />
               <strong>{label}</strong>
@@ -106,28 +136,32 @@ export default async function HomePage({
       </section>
 
       <section
-        className="market-layout public-market home-feed"
+        className="mx-auto mt-[26px] grid w-[min(var(--content-max),calc(100%-var(--content-gutter)*2))] max-w-[var(--content-max)] grid-cols-1 gap-[18px]"
         aria-label="Event marketplace"
       >
-        <div className="main-column">
+        <div className="grid content-start gap-[60px]">
           {featuredEvent && (
-            <section className="featured-event hero-ticket">
+            <section className="relative grid min-h-[580px] grid-cols-1 overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface-raised)] shadow-[0_28px_100px_rgb(0_0_0/34%)] max-[820px]:min-h-[500px] max-[820px]:rounded-[18px]">
               <EventThumbnail
                 event={featuredEvent}
                 tone={eventTone(0)}
                 variant="featured"
               />
-              <div className="featured-copy">
-                <div className="ticket-badges">
-                  <span>{eventStatus(featuredEvent)}</span>
-                  <span>
+              <div className="absolute bottom-[clamp(28px,5vw,58px)] left-[clamp(28px,5vw,64px)] z-[4] w-[min(620px,calc(100%-56px))]">
+                <div className="mb-2 flex flex-wrap gap-2">
+                  <span className={ticketBadge}>{eventStatus(featuredEvent)}</span>
+                  <span className={ticketBadge}>
                     {chipDate.format(new Date(featuredEvent.startsAt))}
                   </span>
                 </div>
-                <p className="section-kicker">Featured event</p>
-                <h2>{featuredEvent.name}</h2>
-                <p>{featuredEvent.description}</p>
-                <div className="event-meta">
+                <p className={sectionKicker}>Featured event</p>
+                <h2 className="mb-0 text-[clamp(3.2rem,7vw,6.2rem)] font-[var(--weight-bold)] leading-[0.93] text-white max-[820px]:text-5xl">
+                  {featuredEvent.name}
+                </h2>
+                <p className="mb-0 text-[1.08rem] leading-[1.55] text-[rgb(255_255_255/78%)]">
+                  {featuredEvent.description}
+                </p>
+                <div className="my-5 flex flex-wrap gap-2.5 [&_span]:inline-flex [&_span]:min-h-[38px] [&_span]:items-center [&_span]:gap-2 [&_span]:rounded-full [&_span]:bg-[rgb(255_255_255/12%)] [&_span]:px-[13px] [&_span]:text-[0.95rem] [&_span]:font-[var(--weight-medium)] [&_span]:text-[rgb(255_255_255/88%)]">
                   <span>
                     <MapPin size={16} />
                     {featuredEvent.venue}
@@ -141,7 +175,7 @@ export default async function HomePage({
                     {featuredEvent.capacity.toLocaleString("en-UG")} spots
                   </span>
                 </div>
-                <Link className="primary-action" href="/tickets">
+                <Link className={pillPrimaryAction} href="/tickets">
                   <TicketIcon size={18} />
                   Get tickets
                 </Link>
@@ -150,33 +184,50 @@ export default async function HomePage({
           )}
 
           <section>
-            <div className="section-heading">
+            <div className="mb-[26px] flex items-end justify-between gap-4">
               <div>
-                <p className="section-kicker">Fresh from the platform</p>
-                <h2>Latest events</h2>
+                <p className={sectionKicker}>Fresh from the platform</p>
+                <h2 className="mb-0 text-[clamp(2rem,3vw,3.15rem)] font-[var(--weight-bold)] leading-none text-[var(--text)]">
+                  Latest events
+                </h2>
               </div>
-              <Link href="/tickets">See everything</Link>
+              <Link
+                className="text-base font-[var(--weight-semibold)] text-[var(--text-muted)] after:content-['_->_'] hover:text-[var(--text)]"
+                href="/tickets"
+              >
+                See everything
+              </Link>
             </div>
 
             {visibleEvents.length === 0 ? (
-              <p className="muted">No events match those filters.</p>
+              <p className="mb-0 text-[var(--text-muted)]">
+                No events match those filters.
+              </p>
             ) : (
-              <div className="event-grid">
+              <div className="grid grid-cols-3 gap-[22px] max-[1120px]:grid-cols-2 max-[600px]:grid-cols-1">
                 {visibleEvents.map((event, index) => (
                   <Link
-                    className={`event-card ${eventTone(index)}`}
+                    className={eventCard}
                     key={event.id}
                     href="/tickets"
                   >
                     <EventThumbnail event={event} tone={eventTone(index)} />
-                    <span className="event-card-copy">
-                      <span className="event-card-topline">
-                        <span>{eventCategory(event)}</span>
-                        <span>{eventStatus(event)}</span>
+                    <span className={eventCardCopy}>
+                      <span className="flex min-w-0 items-center justify-between gap-3 max-[600px]:gap-2">
+                        <span className="inline-flex min-h-[30px] items-center rounded-full bg-[var(--accent-soft)] px-3 text-[0.76rem] font-[var(--weight-semibold)] uppercase text-[var(--accent)]">
+                          {eventCategory(event)}
+                        </span>
+                        <span className="inline-flex min-h-[30px] flex-none items-center rounded-full text-[0.76rem] font-[var(--weight-medium)] uppercase text-[var(--text-soft)]">
+                          {eventStatus(event)}
+                        </span>
                       </span>
-                      <strong>{event.name}</strong>
-                      <small>{event.description}</small>
-                      <span className="event-card-meta">
+                      <strong className="min-h-[2.08em] text-[clamp(1.95rem,2.4vw,3rem)] font-[var(--weight-bold)] leading-[1.04] text-[var(--text)] max-[820px]:text-[clamp(1.7rem,8vw,2.45rem)]">
+                        {event.name}
+                      </strong>
+                      <small className="min-h-[3.1em] text-[1.02rem] font-[var(--weight-regular)] leading-[1.55] text-[var(--text-muted)]">
+                        {event.description}
+                      </small>
+                      <span className={eventMeta}>
                         <span>
                           <CalendarDays size={15} />
                           {shortDate.format(new Date(event.startsAt))}
@@ -186,11 +237,11 @@ export default async function HomePage({
                           {event.venue}
                         </span>
                       </span>
-                      <span className="event-card-foot">
-                        <span className="event-card-price">
+                      <span className="mt-1.5 flex items-center justify-between gap-4 border-t border-[var(--border)] pt-[18px]">
+                        <span className="self-center text-[1.4rem] font-[var(--weight-bold)] text-[var(--price)]">
                           {money.format(event.priceCents / 100)}
                         </span>
-                        <span className="event-card-affordance">
+                        <span className="event-card-affordance inline-grid size-10 flex-none place-items-center rounded-full bg-[var(--button-bg)] text-[var(--button-text)]">
                           <ArrowRight size={16} />
                         </span>
                       </span>
@@ -202,11 +253,13 @@ export default async function HomePage({
           </section>
 
           {nextEvent && (
-            <section className="ticket-cta">
-              <div>
-                <p className="section-kicker">Next event</p>
-                <h2>{nextEvent.name}</h2>
-                <div className="ticket-cta-meta">
+            <section className="relative flex items-center justify-between gap-7 overflow-hidden rounded-[20px] border border-[var(--border)] bg-[linear-gradient(135deg,rgb(121_230_217/20%),transparent_52%),linear-gradient(90deg,var(--surface-elevated),var(--surface-raised))] px-[clamp(28px,5vw,52px)] py-[clamp(28px,4vw,44px)] shadow-[inset_0_1px_0_rgb(255_255_255/7%)] after:pointer-events-none after:absolute after:inset-0 after:bg-[linear-gradient(90deg,rgb(255_255_255/10%),transparent_18%),linear-gradient(180deg,rgb(255_255_255/5%),transparent_42%)] max-[820px]:flex-col max-[820px]:items-stretch max-[820px]:rounded-[18px]">
+              <div className="relative z-[1]">
+                <p className={sectionKicker}>Next event</p>
+                <h2 className="mb-2.5 max-w-[760px] text-[clamp(2.4rem,4.8vw,4.4rem)] font-[var(--weight-bold)] leading-[0.98] text-[var(--text)]">
+                  {nextEvent.name}
+                </h2>
+                <div className="flex flex-wrap gap-2.5 max-[600px]:flex-col max-[600px]:items-start [&_span]:inline-flex [&_span]:min-h-[38px] [&_span]:items-center [&_span]:gap-2 [&_span]:rounded-full [&_span]:bg-[var(--surface-muted)] [&_span]:px-[13px] [&_span]:text-[0.95rem] [&_span]:font-[var(--weight-medium)] [&_span]:text-[var(--text-muted)] [&_svg]:text-[var(--accent)]">
                   <span>
                     <CalendarDays size={17} />
                     {dateTime.format(new Date(nextEvent.startsAt))}
@@ -215,10 +268,12 @@ export default async function HomePage({
                     <MapPin size={17} />
                     {nextEvent.venue}
                   </span>
-                  <strong>{money.format(nextEvent.priceCents / 100)}</strong>
+                  <strong className="inline-flex min-h-[38px] items-center gap-2 rounded-full bg-[rgb(248_200_104/14%)] px-[13px] text-[0.95rem] font-[var(--weight-semibold)] text-[var(--price)]">
+                    {money.format(nextEvent.priceCents / 100)}
+                  </strong>
                 </div>
               </div>
-              <Link className="primary-action" href="/tickets">
+              <Link className={`${pillPrimaryAction} relative z-[1]`} href="/tickets">
                 <TicketIcon size={18} />
                 Reserve spot
               </Link>
