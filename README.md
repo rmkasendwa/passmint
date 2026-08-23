@@ -68,7 +68,7 @@ pnpm run dev:db
 6. Event hosts validate tickets for their own events. Platform admins can validate across events.
 7. Valid unused tickets are marked as checked in. Duplicate scans are rejected.
 
-See [PRODUCT_FLOW.md](PRODUCT_FLOW.md) for the fuller product model.
+See [docs/product-flow.md](docs/product-flow.md) for the fuller product model.
 
 ## Useful Commands
 
