@@ -1,11 +1,22 @@
-import { PassmintApp } from "../components/passmint-app";
-import { listEventsForPage } from "../server-events";
-import { getInitialThemePreference } from "../server-theme";
-import { HomePageContent } from "./home-page-content";
+import { PassmintApp } from '../components/passmint-app';
+import { HomePageContent } from '../components/home-page-content';
+import { listEventsForPage } from '../server-events';
+import { getInitialThemePreference } from '../server-theme';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
-export default async function HomePage() {
+function getParam(
+  value: string | string[] | undefined,
+): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
   const initialEvents = await listEventsForPage();
   const initialThemePreference = await getInitialThemePreference();
 
@@ -14,7 +25,14 @@ export default async function HomePage() {
       initialEvents={initialEvents}
       initialThemePreference={initialThemePreference}
     >
-      <HomePageContent />
+      <HomePageContent
+        events={initialEvents}
+        filters={{
+          q: getParam(params.q),
+          start: getParam(params.start),
+          end: getParam(params.end),
+        }}
+      />
     </PassmintApp>
   );
 }

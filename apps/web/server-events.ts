@@ -1,4 +1,5 @@
 import { Event, getApiUrl } from './api';
+import { demoEvents } from './event-utils';
 
 export async function listEventsForPage(): Promise<Event[]> {
   try {
@@ -6,10 +7,10 @@ export async function listEventsForPage(): Promise<Event[]> {
       cache: 'no-store',
     });
 
-    if (!response.ok) return [];
+    if (!response.ok) return demoEvents;
 
     return (await response.json()) as Event[];
   } catch {
-    return [];
+    return demoEvents;
   }
 }
