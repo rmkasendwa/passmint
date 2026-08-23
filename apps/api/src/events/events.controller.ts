@@ -26,6 +26,12 @@ export class EventsController {
     return this.eventsService.findAll();
   }
 
+  @Get("mine")
+  @UseGuards(AuthGuard)
+  findMine(@Req() request: AuthenticatedRequest) {
+    return this.eventsService.findMine(request.user!.id);
+  }
+
   @Get(":id")
   findOne(@Param("id") id: string) {
     return this.eventsService.findOne(id);

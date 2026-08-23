@@ -15,7 +15,6 @@ import {
   Dumbbell,
   History,
   ImagePlus,
-  LockKeyhole,
   LogIn,
   LogOut,
   MapPin,
@@ -377,6 +376,7 @@ export function App({
   } | null>(null);
   const [hostState, setHostState] = useState("");
   const [ticketHistory, setTicketHistory] = useState<Ticket[]>([]);
+  const [hostedEvents, setHostedEvents] = useState<Event[]>([]);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const controlsRef = useRef<IScannerControls | null>(null);
   const dateWidgetRef = useRef<HTMLDivElement | null>(null);
@@ -430,11 +430,13 @@ export function App({
     if (!session) {
       window.localStorage.removeItem(SESSION_KEY);
       setTicketHistory([]);
+      setHostedEvents([]);
       return;
     }
 
     window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
     void loadHistory(session.token);
+    void loadHostedEvents(session.token);
   }, [session, sessionLoaded]);
 
   useEffect(() => {
@@ -475,7 +477,7 @@ export function App({
   }, [cameraEnabled]);
 
   useEffect(() => {
-    if (pathname === "/admin" || pathname === "/verify") return;
+    if (pathname === "/dashboard") return;
     setCameraEnabled(false);
   }, [pathname]);
 
@@ -483,6 +485,11 @@ export function App({
     setAuthState("");
     setResetState("");
   }, [pathname]);
+
+  useEffect(() => {
+    if (!sessionLoaded || pathname !== "/dashboard" || session) return;
+    router.replace("/login");
+  }, [pathname, router, session, sessionLoaded]);
 
   useEffect(() => {
     if (!datePickerOpen) return;
@@ -548,11 +555,22 @@ export function App({
     (event) => eventStatus(event) === "Upcoming",
   );
   const nextEvent = upcomingEvents[0] ?? visibleEvents[0];
-  const isAdmin = session?.user.role === "admin";
   const canPublishEvents = Boolean(session);
   const canVerifyTickets = Boolean(session);
-  const page = pathname === "/verify" ? "/admin" : pathname;
+  const page = pathname;
   const authMode = page === "/register" ? "register" : "login";
+  const dashboardEvents = hostedEvents;
+  const dashboardUpcomingCount = dashboardEvents.filter(
+    (event) => eventStatus(event) === "Upcoming",
+  ).length;
+  const dashboardCapacity = dashboardEvents.reduce(
+    (total, event) => total + event.capacity,
+    0,
+  );
+  const dashboardRevenuePotential = dashboardEvents.reduce(
+    (total, event) => total + event.capacity * event.priceCents,
+    0,
+  );
   const hostPreviewEvent: Event = {
     id: "host-preview",
     name: hostEvent.name || "Fresh event",
@@ -573,6 +591,14 @@ export function App({
       setTicketHistory(await api.myTickets(token));
     } catch {
       setTicketHistory([]);
+    }
+  }
+
+  async function loadHostedEvents(token: string) {
+    try {
+      setHostedEvents(await api.myEvents(token));
+    } catch {
+      setHostedEvents([]);
     }
   }
 
@@ -780,6 +806,13 @@ export function App({
             new Date(right.startsAt).getTime(),
         ),
       );
+      setHostedEvents((current) =>
+        [...current, created].sort(
+          (left, right) =>
+            new Date(left.startsAt).getTime() -
+            new Date(right.startsAt).getTime(),
+        ),
+      );
       setSelectedEventId(created.id);
       setHostEvent(emptyHostEvent);
       setHostThumbnailName("");
@@ -815,11 +848,7 @@ export function App({
       setBuyerEmail(nextSession.user.email);
       setAuthPassword("");
       setAuthState(`Logged in as ${nextSession.user.role}.`);
-      if (nextSession.user.role === "admin") {
-        router.push("/admin");
-      } else {
-        router.push("/tickets");
-      }
+      router.push("/dashboard");
     } catch (error) {
       const fallback = error as { message?: string };
       setAuthState(fallback.message ?? "Authentication failed.");
@@ -864,6 +893,7 @@ export function App({
           <nav aria-label="Main navigation">
             <Link href="/">Discover</Link>
             <Link href="/tickets">Tickets</Link>
+            {session && <Link href="/dashboard">Dashboard</Link>}
           </nav>
           {session ? (
             <div className="header-account">
@@ -896,10 +926,10 @@ export function App({
                   <Monitor size={16} />
                 </button>
               </div>
-              <Link className="account-chip" href="/tickets">
+              <Link className="account-chip" href="/dashboard">
                 <span>{initials(session.user.name)}</span>
                 <strong>{session.user.name}</strong>
-                <small>{session.user.role}</small>
+                <small>Dashboard</small>
               </Link>
               <button
                 type="button"
@@ -944,7 +974,7 @@ export function App({
               <button
                 type="button"
                 className="host-action"
-                onClick={() => router.push("/admin")}
+                onClick={() => router.push("/login")}
               >
                 Host events
               </button>
@@ -974,7 +1004,9 @@ export function App({
             <div className="auth-event-card">
               <span>Passmint</span>
               <strong>One account for tickets, events, and the door.</strong>
-              <small>Checkout, hosting, and gate verification in one place.</small>
+              <small>
+                Checkout, hosting, and gate verification in one place.
+              </small>
             </div>
           </div>
 
@@ -1142,8 +1174,7 @@ export function App({
                   Already on the list? <Link href="/login">Sign in</Link>
                 </p>
               )}
-              {(page === "/forgot-password" ||
-                page === "/reset-password") && (
+              {(page === "/forgot-password" || page === "/reset-password") && (
                 <p>
                   Remembered it? <Link href="/login">Back to sign in</Link>
                 </p>
@@ -1685,23 +1716,48 @@ export function App({
         </section>
       )}
 
-      {page === "/admin" && (
-        <section className="admin-layout">
-          <div className="admin-hero">
-            <p className="section-kicker">Host console</p>
-            <h1>Publish events and scan your tickets.</h1>
-            <p>
-              Any registered user can publish events. Hosts can validate tickets
-              for their own events, while platform admins can help across the
-              whole marketplace.
-            </p>
+      {page === "/dashboard" && session && (
+        <section className="dashboard-layout">
+          <div className="dashboard-hero">
+            <div>
+              <p className="section-kicker">Dashboard</p>
+              <h1>Run every event from one place.</h1>
+              <p>
+                Create new events, track your hosted lineup, and scan tickets at
+                the door with your Passmint account.
+              </p>
+            </div>
+            <div className="dashboard-identity">
+              <span>{initials(session.user.name)}</span>
+              <strong>{session.user.name}</strong>
+              <small>{session.user.email}</small>
+            </div>
           </div>
 
-          <div className="admin-workbench">
+          <section className="dashboard-stats" aria-label="Dashboard summary">
+            <article>
+              <small>Hosted events</small>
+              <strong>{dashboardEvents.length}</strong>
+            </article>
+            <article>
+              <small>Upcoming</small>
+              <strong>{dashboardUpcomingCount}</strong>
+            </article>
+            <article>
+              <small>Total capacity</small>
+              <strong>{dashboardCapacity.toLocaleString("en-UG")}</strong>
+            </article>
+            <article>
+              <small>Sellout value</small>
+              <strong>{money.format(dashboardRevenuePotential / 100)}</strong>
+            </article>
+          </section>
+
+          <div className="dashboard-workbench">
             <section className="event-publisher-panel">
               <div className="panel-heading">
                 <ImagePlus size={22} />
-                <h2>Publish event</h2>
+                <h2>Create event</h2>
               </div>
               <div className="thumbnail-preview">
                 <EventThumbnail
@@ -1813,7 +1869,7 @@ export function App({
                   disabled={!canPublishEvents}
                 >
                   <ImagePlus size={18} />
-                  Publish event
+                  Create event
                 </button>
               </form>
               <p className="helper-line">
@@ -1823,86 +1879,123 @@ export function App({
               {hostState && <p className="state-line">{hostState}</p>}
             </section>
 
-            <section className="gate-panel">
-              <div>
+            <div className="dashboard-ops">
+              <section className="host-events-panel">
                 <div className="panel-heading">
-                  <ScanLine size={22} />
-                  <h2>Verification app</h2>
+                  <CalendarDays size={22} />
+                  <h2>Your events</h2>
                 </div>
-                <p>
-                  Hosts use this separate gate surface to verify QR tickets.
-                  Accepted tickets are marked entered and cannot be reused.
-                </p>
-                {canVerifyTickets ? (
+                {dashboardEvents.length === 0 ? (
+                  <div className="empty-dashboard-card">
+                    <TicketIcon size={34} />
+                    <strong>No hosted events yet</strong>
+                    <span>
+                      Create your first event and it will appear here.
+                    </span>
+                  </div>
+                ) : (
+                  <div className="host-event-list">
+                    {dashboardEvents.map((event, index) => (
+                      <article className="host-event-card" key={event.id}>
+                        <EventThumbnail
+                          event={event}
+                          tone={eventTone(index)}
+                          variant="preview"
+                        />
+                        <div>
+                          <span className="ticket-badges compact">
+                            <span>{eventStatus(event)}</span>
+                            <span>{eventCategory(event)}</span>
+                          </span>
+                          <h3>{event.name}</h3>
+                          <p>{event.description}</p>
+                          <div className="host-event-meta">
+                            <span>
+                              <CalendarDays size={15} />
+                              {dateTime.format(new Date(event.startsAt))}
+                            </span>
+                            <span>
+                              <MapPin size={15} />
+                              {event.venue}
+                            </span>
+                            <strong>
+                              {event.capacity.toLocaleString("en-UG")} spots
+                            </strong>
+                          </div>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              <section className="gate-panel">
+                <div>
+                  <div className="panel-heading">
+                    <ScanLine size={22} />
+                    <h2>Ticket scanning</h2>
+                  </div>
+                  <p>
+                    Scan QR tickets for events you created. Accepted tickets are
+                    marked entered and cannot be reused.
+                  </p>
                   <div className="verifier-access granted">
                     <ShieldCheck size={18} />
-                    {session?.user.name} can verify owned-event tickets.
-                  </div>
-                ) : (
-                  <p className="locked-note">
-                    Sign in to use ticket verification.
-                  </p>
-                )}
-              </div>
-              <div className="scanner-box">
-                {cameraEnabled ? (
-                  <video ref={videoRef} muted playsInline />
-                ) : (
-                  <div
-                    className={`scanner-placeholder ${canVerifyTickets ? "ready" : "locked"}`}
-                  >
-                    {canVerifyTickets ? (
-                      <ShieldCheck size={54} />
-                    ) : (
-                      <LockKeyhole size={54} />
-                    )}
-                    <span>
-                      {canVerifyTickets ? "Ready to scan" : "Login required"}
-                    </span>
-                  </div>
-                )}
-              </div>
-              <div className="gate-actions">
-                <button
-                  type="button"
-                  className="secondary-action"
-                  onClick={() => setCameraEnabled((value) => !value)}
-                  disabled={!canVerifyTickets}
-                >
-                  <ScanLine size={18} />
-                  {cameraEnabled ? "Stop camera" : "Start camera"}
-                </button>
-                <input
-                  placeholder="Paste or type ticket code"
-                  value={gateCode}
-                  onChange={(event) => setGateCode(event.target.value)}
-                />
-                <button
-                  type="button"
-                  className="primary-action"
-                  onClick={() => void scan()}
-                  disabled={!canVerifyTickets}
-                >
-                  Validate
-                </button>
-              </div>
-              {scanState && <p className="state-line">{scanState}</p>}
-              {gateResult && (
-                <div className={`gate-result ${gateResult.result}`}>
-                  {gateResult.result === "accepted" ? (
-                    <CheckCircle2 size={28} />
-                  ) : (
-                    <XCircle size={28} />
-                  )}
-                  <div>
-                    <strong>{gateResult.result.replace("_", " ")}</strong>
-                    <span>
-                      {gateResult.ticket?.buyerName ?? gateResult.message}
-                    </span>
+                    {session.user.name} can scan owned-event tickets.
                   </div>
                 </div>
-              )}
-            </section>
+                <div className="scanner-box">
+                  {cameraEnabled ? (
+                    <video ref={videoRef} muted playsInline />
+                  ) : (
+                    <div className="scanner-placeholder ready">
+                      <ShieldCheck size={54} />
+                      <span>Ready to scan</span>
+                    </div>
+                  )}
+                </div>
+                <div className="gate-actions">
+                  <button
+                    type="button"
+                    className="secondary-action"
+                    onClick={() => setCameraEnabled((value) => !value)}
+                    disabled={!canVerifyTickets}
+                  >
+                    <ScanLine size={18} />
+                    {cameraEnabled ? "Stop camera" : "Start camera"}
+                  </button>
+                  <input
+                    placeholder="Paste or type ticket code"
+                    value={gateCode}
+                    onChange={(event) => setGateCode(event.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="primary-action"
+                    onClick={() => void scan()}
+                    disabled={!canVerifyTickets}
+                  >
+                    Validate
+                  </button>
+                </div>
+                {scanState && <p className="state-line">{scanState}</p>}
+                {gateResult && (
+                  <div className={`gate-result ${gateResult.result}`}>
+                    {gateResult.result === "accepted" ? (
+                      <CheckCircle2 size={28} />
+                    ) : (
+                      <XCircle size={28} />
+                    )}
+                    <div>
+                      <strong>{gateResult.result.replace("_", " ")}</strong>
+                      <span>
+                        {gateResult.ticket?.buyerName ?? gateResult.message}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </section>
+            </div>
           </div>
         </section>
       )}

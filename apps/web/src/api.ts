@@ -73,6 +73,8 @@ async function request<T>(
 
 export const api = {
   listEvents: () => request<Event[]>("/events"),
+  myEvents: (token: string) =>
+    request<Event[]>("/events/mine", undefined, token),
   createEvent: (
     payload: {
       name: string;

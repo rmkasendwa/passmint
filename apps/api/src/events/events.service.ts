@@ -197,6 +197,14 @@ export class EventsService implements OnApplicationBootstrap {
     });
   }
 
+  findMine(userId: string) {
+    return this.eventsRepository.find({
+      where: { owner: { id: userId } },
+      order: { startsAt: "ASC" },
+      loadRelationIds: true,
+    });
+  }
+
   async findOne(id: string) {
     const event = await this.eventsRepository.findOne({ where: { id } });
     if (!event) throw new NotFoundException("Event not found");
