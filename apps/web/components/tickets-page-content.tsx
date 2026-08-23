@@ -10,10 +10,10 @@ import {
   Ticket as TicketIcon,
   UserPlus,
 } from "lucide-react";
-import { EventThumbnail } from "../../components/event-thumbnail";
-import { eventTone } from "../../event-utils";
-import { dateTime, money, shortDate } from "../../formatters";
-import { usePassmint } from "../../components/passmint-app";
+import { EventThumbnail } from "./event-thumbnail";
+import { eventTone } from "../event-utils";
+import { dateTime, money, shortDate } from "../formatters";
+import { usePassmint } from "./passmint-app";
 
 export function TicketsPageContent() {
   const {

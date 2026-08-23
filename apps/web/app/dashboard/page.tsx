@@ -1,7 +1,7 @@
 import { PassmintApp } from "../../components/passmint-app";
+import { DashboardPageContent } from "../../components/dashboard-page-content";
 import { listEventsForPage } from "../../server-events";
 import { getInitialThemePreference } from "../../server-theme";
-import { DashboardPageContent } from "./dashboard-page-content";
 
 export const dynamic = "force-dynamic";
 
