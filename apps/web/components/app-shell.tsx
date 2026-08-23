@@ -33,40 +33,73 @@ export function AppShell({
   setThemePreference: (preference: ThemePreference) => void;
   themePreference: ThemePreference;
 }) {
+  const navItemClass =
+    "inline-flex min-h-9 items-center justify-center rounded-full border-0 bg-transparent px-3 text-[0.9rem] font-[var(--weight-semibold)] text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text)]";
+
   return (
     <main className={`app-shell theme-${resolvedTheme}`}>
-      <header className="site-header">
-        <div className="site-header-inner">
-          <Link className="brand" href="/" aria-label="Passmint home">
-            <span className="brand-mark">
+      <header className="sticky top-0 z-30 min-h-16 w-full border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--surface-raised)_92%,transparent)] backdrop-blur-[18px]">
+        <div className="mx-auto grid min-h-16 w-[min(var(--content-max),calc(100%-var(--content-gutter)*2))] grid-cols-[auto_1fr_auto] items-center gap-[22px] max-[820px]:grid-cols-1 max-[820px]:py-3.5">
+          <Link
+            className="inline-flex items-center gap-[9px] text-[1.02rem] font-[var(--weight-bold)] text-[var(--text)]"
+            href="/"
+            aria-label="Passmint home"
+          >
+            <span className="grid size-[30px] place-items-center rounded-full bg-black text-white">
               <TicketIcon size={22} />
             </span>
             <span>Passmint</span>
           </Link>
-          <nav aria-label="Main navigation">
-            <Link href="/">Discover</Link>
-            <Link href="/tickets">Tickets</Link>
+          <nav
+            className="inline-flex items-center justify-center gap-1 self-center max-[820px]:flex-wrap max-[820px]:justify-start"
+            aria-label="Main navigation"
+          >
+            <Link className={navItemClass} href="/">
+              Discover
+            </Link>
+            <Link className={navItemClass} href="/tickets">
+              Tickets
+            </Link>
             {!session && (
-              <button type="button" onClick={onHostEvents}>
+              <button
+                className={navItemClass}
+                type="button"
+                onClick={onHostEvents}
+              >
                 Host events
               </button>
             )}
-            {session && <Link href="/dashboard">Dashboard</Link>}
+            {session && (
+              <Link className={navItemClass} href="/dashboard">
+                Dashboard
+              </Link>
+            )}
           </nav>
           {session ? (
-            <div className="header-account">
+            <div className="inline-flex items-center justify-self-end gap-2 max-[820px]:w-full max-[820px]:justify-self-stretch">
               <ThemeToggle
                 preference={themePreference}
                 onChange={setThemePreference}
               />
-              <Link className="account-chip" href="/dashboard">
-                <span>{initials(session.user.name)}</span>
-                <strong>{session.user.name}</strong>
-                <small>Dashboard</small>
+              <Link
+                className="inline-flex min-h-[46px] items-center gap-[9px] rounded-full border border-[var(--border)] bg-[var(--surface-muted)] py-[5px] pl-[5px] pr-2.5 max-[820px]:flex-1"
+                href="/dashboard"
+              >
+                <span className="grid size-[34px] place-items-center rounded-lg bg-[#101010] text-[0.82rem] font-[var(--weight-bold)] text-white">
+                  {initials(session.user.name)}
+                </span>
+                <span className="grid min-w-0 gap-1">
+                  <strong className="block max-w-[110px] truncate text-[0.86rem] leading-none text-[var(--text)]">
+                    {session.user.name}
+                  </strong>
+                  <small className="block max-w-[110px] truncate text-[0.72rem] font-[var(--weight-semibold)] uppercase text-[var(--accent)]">
+                    Dashboard
+                  </small>
+                </span>
               </Link>
               <button
                 type="button"
-                className="icon-button"
+                className="inline-flex size-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-muted)] text-[var(--text)] hover:border-[var(--border-strong)]"
                 onClick={logout}
                 aria-label="Logout"
               >
@@ -74,14 +107,14 @@ export function AppShell({
               </button>
             </div>
           ) : (
-            <div className="header-actions">
+            <div className="inline-flex items-center justify-self-end gap-2 max-[820px]:w-full max-[820px]:justify-self-stretch">
               <ThemeToggle
                 preference={themePreference}
                 onChange={setThemePreference}
               />
               <button
                 type="button"
-                className="secondary-action compact-action"
+                className="secondary-action min-h-[38px] rounded-full px-[13px] text-[0.9rem] font-[var(--weight-semibold)] max-[820px]:flex-1"
                 onClick={() => openAuth("login")}
               >
                 <LogIn size={16} />
@@ -92,19 +125,43 @@ export function AppShell({
         </div>
       </header>
       {children}
-      <footer className="site-footer">
-        <div className="site-footer-inner">
-          <Link className="brand" href="/" aria-label="Passmint home">
-            <span className="brand-mark">
+      <footer className="mt-14 border-t border-[var(--border)] bg-[var(--surface-raised)]">
+        <div className="mx-auto grid min-h-[92px] w-[min(var(--content-max),calc(100%-var(--content-gutter)*2))] grid-cols-[auto_1fr_auto] items-center gap-[22px] max-[820px]:grid-cols-1 max-[820px]:justify-items-start max-[820px]:py-6">
+          <Link
+            className="inline-flex items-center gap-[9px] text-[1.02rem] font-[var(--weight-bold)] text-[var(--text)]"
+            href="/"
+            aria-label="Passmint home"
+          >
+            <span className="grid size-[30px] place-items-center rounded-full bg-black text-white">
               <TicketIcon size={20} />
             </span>
             <span>Passmint</span>
           </Link>
-          <p>© {new Date().getFullYear()} Passmint. All rights reserved.</p>
-          <nav aria-label="Footer navigation">
-            <Link href="/">Discover</Link>
-            <Link href="/tickets">Tickets</Link>
-            <Link href="/login">Sign in</Link>
+          <p className="mb-0 text-center text-[0.88rem] text-[var(--text-muted)] max-[820px]:text-left">
+            © {new Date().getFullYear()} Passmint. All rights reserved.
+          </p>
+          <nav
+            className="inline-flex items-center justify-end gap-4 max-[820px]:flex-wrap max-[820px]:justify-start"
+            aria-label="Footer navigation"
+          >
+            <Link
+              className="text-[0.88rem] font-[var(--weight-medium)] text-[var(--text-muted)] hover:text-[var(--text)]"
+              href="/"
+            >
+              Discover
+            </Link>
+            <Link
+              className="text-[0.88rem] font-[var(--weight-medium)] text-[var(--text-muted)] hover:text-[var(--text)]"
+              href="/tickets"
+            >
+              Tickets
+            </Link>
+            <Link
+              className="text-[0.88rem] font-[var(--weight-medium)] text-[var(--text-muted)] hover:text-[var(--text)]"
+              href="/login"
+            >
+              Sign in
+            </Link>
           </nav>
         </div>
       </footer>
@@ -119,11 +176,19 @@ function ThemeToggle({
   preference: ThemePreference;
   onChange: (preference: ThemePreference) => void;
 }) {
+  const buttonClass =
+    "inline-grid h-7 w-[30px] place-items-center rounded-full border-0 bg-transparent text-[var(--text-muted)] hover:text-[var(--text)]";
+  const selectedClass =
+    "bg-[var(--button-bg)] text-[var(--button-text)] shadow-[0_6px_14px_rgb(0_0_0/10%)] hover:text-[var(--button-text)]";
+
   return (
-    <div className="theme-toggle" aria-label="Color theme">
+    <div
+      className="inline-grid min-h-[34px] flex-none grid-cols-[repeat(3,30px)] items-center gap-0.5 rounded-full border border-[var(--border)] bg-[var(--surface-muted)] p-0.5"
+      aria-label="Color theme"
+    >
       <button
         type="button"
-        className={preference === "light" ? "selected" : ""}
+        className={`${buttonClass} ${preference === "light" ? selectedClass : ""}`}
         onClick={() => onChange("light")}
         aria-label="Use light mode"
         title="Light mode"
@@ -132,7 +197,7 @@ function ThemeToggle({
       </button>
       <button
         type="button"
-        className={preference === "dark" ? "selected" : ""}
+        className={`${buttonClass} ${preference === "dark" ? selectedClass : ""}`}
         onClick={() => onChange("dark")}
         aria-label="Use dark mode"
         title="Dark mode"
@@ -141,7 +206,7 @@ function ThemeToggle({
       </button>
       <button
         type="button"
-        className={preference === "system" ? "selected" : ""}
+        className={`${buttonClass} ${preference === "system" ? selectedClass : ""}`}
         onClick={() => onChange("system")}
         aria-label="Use system theme"
         title="System theme"
