@@ -23,7 +23,7 @@ const fallbackDecor =
 const variantClass = {
   featured:
     "min-h-[580px] max-[820px]:min-h-[500px] max-[600px]:min-h-[260px]",
-  card: "min-h-[238px] [&_.thumbnail-badge_small]:hidden [&_.thumbnail-frame]:inset-3 [&_.thumbnail-frame]:rounded-2xl [&_.thumbnail-frame]:border-[rgb(255_255_255/14%)] [&_.thumbnail-initials]:text-[4.7rem] [&_.thumbnail-title]:hidden [&_.thumbnail-date]:hidden",
+  card: "min-h-[360px] [&_.thumbnail-badge_small]:hidden [&_.thumbnail-frame]:inset-3 [&_.thumbnail-frame]:rounded-2xl [&_.thumbnail-frame]:border-[rgb(255_255_255/14%)] [&_.thumbnail-frame]:border-b-0 [&_.thumbnail-initials]:text-[4.7rem] [&_.thumbnail-title]:hidden [&_.thumbnail-date]:hidden max-[600px]:min-h-[340px]",
   preview: "min-h-[148px]",
 };
 
@@ -47,8 +47,12 @@ export function EventThumbnail({
   const hasImage = Boolean(event.thumbnailUrl) && !imageFailed;
   const imageOverlay =
     mood === "gold"
-      ? "bg-[linear-gradient(180deg,rgb(249_193_91/26%),rgb(40_24_9/12%)_34%,rgb(16_12_9/84%)),radial-gradient(circle_at_76%_78%,rgb(246_181_61/34%),transparent_36%)]"
-      : "bg-[linear-gradient(180deg,rgb(2_18_16/3%),rgb(2_24_22/24%)_46%,rgb(0_35_31/82%)),linear-gradient(135deg,rgb(42_190_171/22%),rgb(8_16_18/10%))]";
+      ? "bg-[linear-gradient(180deg,rgb(249_193_91/28%),rgb(40_24_9/8%)_28%,rgb(22_15_8/34%)_54%,rgb(15_12_9/92%)_88%),radial-gradient(circle_at_74%_76%,rgb(246_181_61/46%),transparent_40%)]"
+      : "bg-[linear-gradient(180deg,rgb(2_18_16/4%),rgb(2_24_22/15%)_36%,rgb(0_35_31/48%)_65%,rgb(6_16_15/94%)_91%),linear-gradient(135deg,rgb(42_190_171/25%),rgb(8_16_18/8%))]";
+  const blendFadeClass =
+    mood === "gold"
+      ? "bg-[linear-gradient(180deg,transparent_0%,rgb(30_20_11/38%)_28%,rgb(16_13_10/82%)_66%,#0f0d0b_100%)]"
+      : "bg-[linear-gradient(180deg,transparent_0%,rgb(4_33_29/34%)_30%,rgb(6_22_20/80%)_68%,#06100f_100%)]";
   const frameClass =
     mood === "gold"
       ? "border-[rgb(246_181_61/36%)] shadow-[inset_0_1px_0_rgb(255_255_255/16%)]"
@@ -77,6 +81,10 @@ export function EventThumbnail({
         />
       )}
       <span className={`absolute inset-0 z-[1] ${imageOverlay}`} />
+      <span
+        aria-hidden="true"
+        className={`pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-52 ${blendFadeClass}`}
+      />
       <span
         className={`thumbnail-frame absolute inset-4 z-[2] rounded-lg border ${frameClass}`}
       />
