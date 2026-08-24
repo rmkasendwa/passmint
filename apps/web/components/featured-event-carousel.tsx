@@ -24,7 +24,7 @@ const sectionKicker =
   'mb-2 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-[rgb(255_246_226/62%)]';
 
 const ticketBadge =
-  'inline-flex min-h-[34px] items-center gap-2 rounded-full border border-[rgb(246_181_61/26%)] bg-[rgb(18_14_10/48%)] px-3.5 text-[0.82rem] font-(weight:--weight-semibold) uppercase text-[#ffe6a8] backdrop-blur-xl';
+  'featured-carousel__badge';
 
 export function FeaturedEventCarousel({ events }: { events: Event[] }) {
   const featuredEvents = useMemo(() => events.slice(0, 5), [events]);
@@ -74,7 +74,7 @@ export function FeaturedEventCarousel({ events }: { events: Event[] }) {
       <p className="mb-0 mt-3 line-clamp-2 max-w-147.5 text-[1.08rem] leading-normal text-[rgb(255_255_255/82%)]">
         {event.description}
       </p>
-      <div className="my-5 flex flex-wrap gap-2.5 [&_span]:inline-flex [&_span]:min-h-10 [&_span]:items-center [&_span]:gap-2 [&_span]:rounded-full [&_span]:bg-[rgb(255_255_255/14%)] [&_span]:px-3.5 [&_span]:text-[0.95rem] [&_span]:font-(--weight-semibold) [&_span]:text-[rgb(255_255_255/90%)] [&_span]:backdrop-blur-md">
+      <div className="featured-carousel__meta">
         <span>
           <MapPin size={16} />
           {event.venue}

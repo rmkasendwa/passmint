@@ -472,15 +472,93 @@ button:disabled {
 }
 
 html[data-theme="light"] .event-list-card {
+  --card-bg: #f7fbf8;
+  --card-border: rgb(22 125 119 / 18%);
+  --card-border-hover: rgb(22 125 119 / 28%);
+  --card-chip-bg: rgb(255 255 255 / 68%);
+  --card-chip-border: rgb(22 125 119 / 22%);
+  --card-chip-text: #0c6f66;
+  --card-title: #14201d;
+  --card-copy: rgb(31 45 42 / 78%);
+  --card-meta: rgb(34 58 53 / 72%);
+  --card-line: rgb(22 125 119 / 16%);
+  --card-price: #9b6100;
+  --card-arc: rgb(22 125 119 / 18%);
+  --card-orb:
+    radial-gradient(circle at 42% 40%, rgb(22 125 119 / 12%), rgb(22 125 119 / 6%) 44%, transparent 72%);
+  --card-sheen:
+    radial-gradient(circle at 82% 2%, rgb(22 125 119 / 14%), transparent 24%),
+    radial-gradient(circle at 50% 38%, rgb(244 198 104 / 14%), transparent 35%),
+    linear-gradient(115deg, transparent 0%, rgb(255 255 255 / 32%) 43%, transparent 58%);
+  --media-overlay:
+    linear-gradient(180deg, rgb(248 252 250 / 10%) 0%, rgb(247 251 248 / 30%) 30%, rgb(237 248 244 / 70%) 58%, rgb(247 251 248 / 94%) 80%, #f7fbf8 100%),
+    linear-gradient(180deg, transparent 0%, rgb(247 251 248 / 40%) 44%, #f7fbf8 100%),
+    radial-gradient(circle at 58% 76%, rgb(22 125 119 / 13%), transparent 50%);
+  --cta-bg: linear-gradient(180deg, #2f9a8b 0%, #197a6e 56%, #0f665d 100%);
+  --cta-bg-hover: linear-gradient(180deg, #36a394 0%, #1f8174 56%, #126b61 100%);
+  --cta-border: rgb(22 125 119 / 24%);
+  --cta-text: #ffffff;
+  --cta-text-hover: #ffffff;
+  background:
+    radial-gradient(circle at 82% 18%, rgb(22 125 119 / 10%), transparent 30%),
+    linear-gradient(180deg, #fbfdfb, var(--card-bg));
   box-shadow:
     0 20px 56px rgb(16 24 40 / 14%),
     inset 0 1px 0 rgb(255 255 255 / 18%);
+}
+
+html[data-theme="light"] .event-list-card--gold {
+  --card-bg: #fff8e8;
+  --card-border: rgb(168 100 0 / 22%);
+  --card-border-hover: rgb(168 100 0 / 34%);
+  --card-chip-bg: rgb(255 251 241 / 72%);
+  --card-chip-border: rgb(168 100 0 / 24%);
+  --card-chip-text: #8e5900;
+  --card-copy: rgb(56 43 23 / 76%);
+  --card-meta: rgb(62 50 32 / 72%);
+  --card-line: rgb(168 100 0 / 18%);
+  --card-arc: rgb(168 100 0 / 20%);
+  --card-orb:
+    radial-gradient(circle at 58% 42%, rgb(246 181 61 / 22%), rgb(246 181 61 / 11%) 38%, transparent 72%);
+  --card-sheen:
+    radial-gradient(circle at 86% 0%, rgb(255 226 160 / 38%), transparent 26%),
+    radial-gradient(circle at 45% 42%, rgb(246 181 61 / 22%), transparent 34%),
+    linear-gradient(115deg, transparent 0%, rgb(255 255 255 / 30%) 44%, transparent 60%);
+  --media-overlay:
+    linear-gradient(180deg, rgb(255 248 232 / 12%) 0%, rgb(255 248 232 / 28%) 28%, rgb(255 239 201 / 68%) 56%, rgb(255 248 232 / 94%) 80%, #fff8e8 100%),
+    linear-gradient(180deg, transparent 0%, rgb(255 248 232 / 42%) 44%, #fff8e8 100%),
+    radial-gradient(circle at 64% 78%, rgb(246 181 61 / 26%), transparent 50%);
+  background:
+    radial-gradient(circle at 72% 30%, rgb(246 181 61 / 18%), transparent 34%),
+    radial-gradient(circle at 20% 100%, rgb(22 125 119 / 8%), transparent 34%),
+    linear-gradient(180deg, #fffdfa, var(--card-bg));
 }
 
 html[data-theme="light"] .event-list-card:hover {
   box-shadow:
     0 30px 84px rgb(16 24 40 / 20%),
     0 0 0 1px rgb(22 125 119 / 12%);
+}
+
+html[data-theme="light"] .event-list-card--gold:hover {
+  box-shadow:
+    0 30px 84px rgb(84 52 4 / 16%),
+    0 0 0 1px rgb(168 100 0 / 12%);
+}
+
+html[data-theme="light"] .event-list-card__media img {
+  opacity: 0.7;
+}
+
+html[data-theme="light"] .event-list-card__sheen {
+  mix-blend-mode: normal;
+  opacity: 0.98;
+}
+
+html[data-theme="light"] .event-list-card__frame {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 42%),
+    0 0 0 1px rgb(255 255 255 / 20%);
 }
 
 @media (max-width: 600px) {
@@ -628,6 +706,43 @@ html[data-theme="light"] .event-list-card:hover {
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 20%),
     0 10px 24px rgb(0 0 0 / 22%);
+  backdrop-filter: blur(18px);
+}
+
+.featured-carousel__badge {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgb(246 181 61 / 26%);
+  border-radius: 999px;
+  background: rgb(18 14 10 / 48%);
+  padding: 0 14px;
+  color: #ffe6a8;
+  font-size: 0.82rem;
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  backdrop-filter: blur(18px);
+}
+
+.featured-carousel__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.featured-carousel__meta span {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 14%);
+  padding: 0 14px;
+  color: rgb(255 255 255 / 90%);
+  font-size: 0.95rem;
+  font-weight: var(--weight-semibold);
   backdrop-filter: blur(18px);
 }
 
@@ -827,17 +942,101 @@ html[data-theme="light"] .event-list-card:hover {
 }
 
 html[data-theme="light"] .next-event-panel {
+  border-color: rgb(22 125 119 / 16%);
+  background:
+    radial-gradient(circle at 9% 18%, rgb(22 125 119 / 12%), transparent 24%),
+    radial-gradient(circle at 82% 70%, rgb(246 181 61 / 16%), transparent 28%),
+    linear-gradient(180deg, #fbfdfb, #eef8f4);
+  color: #14201d;
   border-color: rgb(22 125 119 / 18%);
   box-shadow:
     0 24px 70px rgb(16 24 40 / 15%),
     inset 0 1px 0 rgb(255 255 255 / 14%);
 }
 
+html[data-theme="light"] .next-event-panel__sheen {
+  background:
+    radial-gradient(circle at 0% 0%, rgb(22 125 119 / 14%), transparent 28%),
+    linear-gradient(115deg, rgb(255 255 255 / 52%), transparent 36%);
+  mix-blend-mode: normal;
+}
+
+html[data-theme="light"] .next-event-panel__arc {
+  border-color: rgb(168 100 0 / 15%);
+  box-shadow: 0 0 42px rgb(168 100 0 / 8%);
+}
+
+html[data-theme="light"] .next-event-panel__kicker {
+  color: rgb(34 58 53 / 52%);
+}
+
+html[data-theme="light"] .next-event-panel__title {
+  color: #14201d;
+}
+
+html[data-theme="light"] .next-event-panel__meta span {
+  border-color: rgb(22 125 119 / 16%);
+  background: rgb(255 255 255 / 54%);
+  color: rgb(34 58 53 / 74%);
+}
+
+html[data-theme="light"] .next-event-panel__meta strong {
+  border-color: rgb(168 100 0 / 18%);
+  background: rgb(246 181 61 / 16%);
+  color: #8f5900;
+}
+
 html[data-theme="light"] .featured-carousel {
+  border-color: rgb(168 100 0 / 22%);
+  background:
+    radial-gradient(circle at 76% 12%, rgb(246 181 61 / 18%), transparent 32%),
+    radial-gradient(circle at 18% 95%, rgb(22 125 119 / 10%), transparent 34%),
+    linear-gradient(180deg, #fffdfa, #eef8f4);
   box-shadow:
     0 28px 92px rgb(16 24 40 / 18%),
     0 0 0 1px rgb(168 100 0 / 10%),
     inset 0 1px 0 rgb(255 255 255 / 18%);
+}
+
+html[data-theme="light"] .featured-carousel__media img {
+  opacity: 0.7;
+}
+
+html[data-theme="light"] .featured-carousel__media::after {
+  background:
+    linear-gradient(90deg, rgb(255 253 250 / 88%) 0%, rgb(255 253 250 / 58%) 42%, rgb(255 253 250 / 24%) 100%),
+    linear-gradient(180deg, rgb(255 248 232 / 24%) 0%, rgb(255 253 250 / 26%) 34%, rgb(239 248 244 / 80%) 74%, #eef8f4 100%),
+    radial-gradient(circle at 54% 76%, rgb(246 181 61 / 24%), transparent 44%);
+}
+
+html[data-theme="light"] .featured-carousel__sheen {
+  background:
+    radial-gradient(circle at 84% 0%, rgb(255 226 160 / 32%), transparent 24%),
+    radial-gradient(circle at 46% 64%, rgb(246 181 61 / 18%), transparent 36%),
+    linear-gradient(115deg, transparent 0%, rgb(255 255 255 / 38%) 45%, transparent 62%);
+  mix-blend-mode: normal;
+}
+
+html[data-theme="light"] .featured-carousel h2,
+html[data-theme="light"] .featured-carousel p {
+  color: #14201d;
+}
+
+html[data-theme="light"] .featured-carousel__chip,
+html[data-theme="light"] .featured-carousel__badge {
+  border-color: rgb(168 100 0 / 22%);
+  background: rgb(255 251 241 / 68%);
+  color: #8e5900;
+}
+
+html[data-theme="light"] .featured-carousel__meta span {
+  border: 1px solid rgb(22 125 119 / 12%);
+  background: rgb(255 255 255 / 50%);
+  color: rgb(34 58 53 / 74%);
+}
+
+html[data-theme="light"] .featured-carousel__meta svg {
+  color: #167d77;
 }
 
 @media (max-width: 820px) {
