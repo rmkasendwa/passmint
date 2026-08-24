@@ -16,14 +16,14 @@ import { eventTone } from "../event-utils";
 import { dateTime, money, shortDate } from "../formatters";
 
 const sectionKicker =
-  "mb-2 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-[#fa5b2d]";
+  "mb-2 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-(color:--accent)";
 const panel =
   "rounded-lg border border-(color:--border) bg-(color:--surface-raised) shadow-[0_18px_44px_rgb(18_24_31/6%)]";
 const panelPadded = `${panel} grid gap-3.5 p-[18px]`;
 const panelHeading =
   "mb-3 flex items-center gap-2.5 text-(color:--text) [&_h2]:mb-0 [&_h2]:text-[1.55rem] [&_svg]:text-(color:--accent)";
 const primaryAction =
-  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-(color:--button-bg) px-4 font-(weight:--weight-bold) text-(color:--button-text) hover:bg-[#fa5b2d]";
+  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-(color:--button-bg) px-4 font-(weight:--weight-bold) text-(color:--button-text) hover:bg-(color:--accent)";
 const secondaryAction =
   "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-(color:--border) bg-(color:--surface-muted) px-4 font-(weight:--weight-bold) text-(color:--text)";
 const formGrid = "grid gap-3 [&_label]:grid [&_label]:gap-[7px] [&_label]:text-[0.82rem] [&_label]:font-(weight:--weight-semibold) [&_label]:text-(color:--text-muted) [&_input]:min-h-11 [&_input]:w-full [&_input]:min-w-0 [&_input]:rounded-lg [&_input]:border [&_input]:border-(color:--border) [&_input]:bg-(color:--surface-elevated) [&_input]:px-3 [&_input]:text-(color:--text) [&_input]:focus:border-(color:--accent) [&_input]:focus:outline-[3px_solid_rgb(22_125_119/18%)]";

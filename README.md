@@ -2,7 +2,7 @@
 
 A pnpm monorepo ticketing system for publishing events, issuing QR tickets, and validating entry at the gate.
 
-- Next.js frontend for event discovery, anonymous checkout, account history, host publishing, and ticket verification
+- Next.js frontend for event discovery, event detail checkout, account history, host publishing, event editing, and ticket verification
 - NestJS backend API
 - PostgreSQL database
 - QR code tickets that can be scanned once at the gate
@@ -61,12 +61,15 @@ pnpm run dev:db
 ## Main Flows
 
 1. Registered users create and publish free or paid events.
-2. Attendees get tickets anonymously with an email address, or log in first to attach the purchase to account history.
-3. Paid checkout captures a mobile money number for the payment flow.
-4. The API creates unique ticket codes and QR codes.
-5. If the same email requests more tickets for the same event, checkout asks for confirmation and tracks the total for that event-email pair.
-6. Event hosts validate tickets for their own events. Platform admins can validate across events.
-7. Valid unused tickets are marked as checked in. Duplicate scans are rejected.
+2. Discovery cards link to `/event/:eventId`, where attendees review details and buy tickets.
+3. Attendees get tickets anonymously with an email address, or log in first to attach the purchase to account history.
+4. Paid checkout captures a mobile money number for the payment flow.
+5. The API creates unique ticket codes and QR codes.
+6. Tickets already owned for the event are listed on that event detail page when the attendee is signed in.
+7. Event owners can edit their own event details from the event detail page.
+8. If the same email requests more tickets for the same event, checkout asks for confirmation and tracks the total for that event-email pair.
+9. Event hosts validate tickets for their own events. Platform admins can validate across events.
+10. Valid unused tickets are marked as checked in. Duplicate scans are rejected.
 
 See [docs/product-flow.md](docs/product-flow.md) for the fuller product model.
 

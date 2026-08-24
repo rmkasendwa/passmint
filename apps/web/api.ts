@@ -9,6 +9,7 @@ export type Event = {
   capacity: number;
   priceCents: number;
   thumbnailUrl?: string | null;
+  owner?: string | User | null;
 };
 
 export type Ticket = {
@@ -73,6 +74,7 @@ async function request<T>(
 
 export const api = {
   listEvents: () => request<Event[]>("/events"),
+  getEvent: (eventId: string) => request<Event>(`/events/${eventId}`),
   myEvents: (token: string) =>
     request<Event[]>("/events/mine", undefined, token),
   createEvent: (
@@ -103,6 +105,27 @@ export const api = {
       "/events/uploads",
       {
         method: "POST",
+        body: JSON.stringify(payload),
+      },
+      token,
+    ),
+  updateEvent: (
+    eventId: string,
+    payload: Partial<{
+      name: string;
+      description: string;
+      venue: string;
+      startsAt: string;
+      capacity: number;
+      priceCents: number;
+      thumbnailUrl: string;
+    }>,
+    token: string,
+  ) =>
+    request<Event>(
+      `/events/${eventId}`,
+      {
+        method: "PATCH",
         body: JSON.stringify(payload),
       },
       token,

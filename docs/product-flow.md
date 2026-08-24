@@ -31,16 +31,31 @@ A platform admin can support marketplace operations and validate tickets across 
 5. Published events appear in public discovery.
 6. The publishing user becomes the event owner.
 
+## Event Discovery And Detail
+
+Discovery is the public marketplace entry point. Event cards and featured-event calls to action link to `/event/:eventId`.
+
+The event detail page is the primary purchase surface. It shows the event artwork, category, status, date and time, venue, capacity, price, full description, checkout form, and any tickets the signed-in attendee already owns for that event.
+
+The old standalone ticket-selection model is no longer the core product flow. Buying should happen in context from the specific event page.
+
+## Event Editing
+
+Event owners can edit their own event from the event detail page. Platform admins may update events as an operational override. Users who do not own an event cannot update it.
+
+Editable event fields are name, description, venue, start time, capacity, price, and artwork URL. Ownership is not editable from the public UI.
+
 ## Ticket Checkout
 
-1. An attendee selects an event.
+1. An attendee opens an event detail page from discovery.
 2. The attendee enters buyer name, ticket delivery email, and quantity.
 3. If the event is paid, the attendee provides a mobile money number and pays with mobile money.
 4. If the event is free, no payment is required.
 5. Passmint issues unique QR tickets and sends them to the provided email address.
-6. If the attendee is signed in, the tickets are attached to their account history.
-7. If the attendee is not signed in, checkout still succeeds as long as an email address is provided.
-8. After checkout, Passmint offers the attendee a path to register and track the ticket, attendance, and payment methods.
+6. Newly issued tickets appear on the event detail page immediately.
+7. If the attendee is signed in, the tickets are attached to their account history and are listed on that event detail page on later visits.
+8. If the attendee is not signed in, checkout still succeeds as long as an email address is provided.
+9. After checkout, Passmint offers the attendee a path to register and track the ticket, attendance, and payment methods.
 
 ## Repeat Ticket Requests By Email
 
@@ -73,4 +88,6 @@ This avoids accidental duplicate purchases while still allowing one person to bu
 - Ticket ownership remains optional so guest checkout can work.
 - Ticket delivery email is normalised before storage.
 - Repeat ticket checkout is guarded by a confirmation step based on event and email.
+- Event detail pages are addressed as `/event/:eventId`.
+- Event updates are guarded by ownership, with platform admins allowed as an override.
 - The current mobile money flow captures the number and product intent; payment provider integration still needs to be connected before real charging and settlement.

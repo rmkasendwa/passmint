@@ -28,7 +28,7 @@ export class TicketsService {
   ) {}
 
   async create(dto: CreateTicketDto, authUser?: AuthUser) {
-    const event = await this.eventsService.findOne(dto.eventId);
+    const event = await this.eventsService.findOneWithOwner(dto.eventId);
     const quantity = dto.quantity ?? 1;
     const soldCount = await this.ticketsRepository.count({
       where: { event: { id: event.id } },

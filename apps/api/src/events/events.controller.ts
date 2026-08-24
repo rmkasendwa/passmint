@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Req,
   UseGuards,
@@ -10,6 +11,7 @@ import {
 import { AuthGuard } from "../auth/auth.guard";
 import { AuthenticatedRequest } from "../auth/auth.types";
 import { CreateEventDto } from "./dto/create-event.dto";
+import { UpdateEventDto } from "./dto/update-event.dto";
 import { UploadEventImageDto } from "./dto/upload-event-image.dto";
 import { EventsService } from "./events.service";
 import { ImageStorageService } from "./image-storage.service";
@@ -47,5 +49,15 @@ export class EventsController {
   @UseGuards(AuthGuard)
   create(@Body() dto: CreateEventDto, @Req() request: AuthenticatedRequest) {
     return this.eventsService.create(dto, request.user!);
+  }
+
+  @Patch(":id")
+  @UseGuards(AuthGuard)
+  update(
+    @Param("id") id: string,
+    @Body() dto: UpdateEventDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.eventsService.update(id, dto, request.user!);
   }
 }

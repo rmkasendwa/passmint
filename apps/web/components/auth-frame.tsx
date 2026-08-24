@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 const sectionKicker =
-  "mb-2 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-[#fa5b2d]";
+  "mb-2 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-(color:--accent)";
 
 export function AuthFrame({
   children,

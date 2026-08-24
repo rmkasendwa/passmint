@@ -22,13 +22,13 @@ import { useAppContext } from "./app-provider";
 import { EventThumbnail } from "./event-thumbnail";
 
 const sectionKicker =
-  "mb-2 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-[#fa5b2d]";
+  "mb-2 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-(color:--accent)";
 const panel =
-  "rounded-[20px] border border-(color:--border) bg-(color:--surface-raised) shadow-[0_18px_52px_rgb(0_0_0/15%)]";
+  "rounded-lg border border-(color:--border) bg-(color:--surface-raised) shadow-[0_18px_52px_rgb(0_0_0/15%)]";
 const panelHeading =
   "mb-3 flex items-center gap-2.5 text-(color:--text) [&_h2]:mb-0 [&_h2]:text-[1.55rem] [&_svg]:text-(color:--accent)";
 const primaryAction =
-  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-(color:--button-bg) px-4 font-(weight:--weight-bold) text-(color:--button-text) hover:bg-[#fa5b2d]";
+  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-(color:--button-bg) px-4 font-(weight:--weight-bold) text-(color:--button-text) hover:bg-(color:--accent)";
 const secondaryAction =
   "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-(color:--border) bg-(color:--surface-muted) px-4 font-(weight:--weight-bold) text-(color:--text)";
 const formGrid =
@@ -37,7 +37,7 @@ const helperLine = "mb-0 text-[0.88rem] leading-[1.5] text-(color:--text-soft)";
 const stateLine =
   "mb-0 rounded-lg bg-(color:--accent-soft) p-3 text-[0.92rem] font-(weight:--weight-medium) text-(color:--accent)";
 const statCard =
-  "grid min-h-[126px] content-end gap-2.5 rounded-[18px] border border-(color:--border) bg-[linear-gradient(180deg,rgb(255_255_255/6%),transparent_58%),var(--surface-raised)] p-[18px] shadow-[0_18px_50px_rgb(0_0_0/16%)] [&_small]:text-[0.78rem] [&_small]:font-(weight:--weight-semibold) [&_small]:uppercase [&_small]:tracking-[0.08em] [&_small]:text-(color:--text-soft) [&_strong]:overflow-hidden [&_strong]:text-ellipsis [&_strong]:text-[clamp(1.8rem,3vw,2.75rem)] [&_strong]:font-(weight:--weight-bold) [&_strong]:leading-[0.95] [&_strong]:text-(color:--text)";
+  "grid min-h-[126px] content-end gap-2.5 rounded-lg border border-(color:--border) bg-[linear-gradient(180deg,rgb(255_255_255/6%),transparent_58%),var(--surface-raised)] p-[18px] shadow-[0_18px_50px_rgb(0_0_0/16%)] [&_small]:text-[0.78rem] [&_small]:font-(weight:--weight-semibold) [&_small]:uppercase [&_small]:tracking-[0.08em] [&_small]:text-(color:--text-soft) [&_strong]:overflow-hidden [&_strong]:text-ellipsis [&_strong]:text-[clamp(1.8rem,3vw,2.75rem)] [&_strong]:font-(weight:--weight-bold) [&_strong]:leading-[0.95] [&_strong]:text-(color:--text)";
 const compactBadge =
   "inline-flex min-h-7 items-center rounded-full border border-(color:--border) bg-(color:--surface-muted) px-[11px] text-[0.74rem] font-(weight:--weight-semibold) uppercase text-(color:--text)";
 

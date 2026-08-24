@@ -1,5 +1,6 @@
 import {
   Injectable,
+  ForbiddenException,
   NotFoundException,
   OnApplicationBootstrap,
 } from "@nestjs/common";
@@ -7,7 +8,9 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { In, Repository } from "typeorm";
 import { AuthUser } from "../auth/auth.types";
 import { User } from "../users/user.entity";
+import { UserRole } from "../users/user-role.enum";
 import { CreateEventDto } from "./dto/create-event.dto";
+import { UpdateEventDto } from "./dto/update-event.dto";
 import { Event } from "./event.entity";
 
 function startsInDays(days: number, hour: number, minute = 0) {
@@ -206,7 +209,19 @@ export class EventsService implements OnApplicationBootstrap {
   }
 
   async findOne(id: string) {
-    const event = await this.eventsRepository.findOne({ where: { id } });
+    const event = await this.eventsRepository.findOne({
+      where: { id },
+      loadRelationIds: true,
+    });
+    if (!event) throw new NotFoundException("Event not found");
+    return event;
+  }
+
+  async findOneWithOwner(id: string) {
+    const event = await this.eventsRepository.findOne({
+      where: { id },
+      relations: { owner: true },
+    });
     if (!event) throw new NotFoundException("Event not found");
     return event;
   }
@@ -219,5 +234,18 @@ export class EventsService implements OnApplicationBootstrap {
     return this.eventsRepository.save(
       this.eventsRepository.create({ ...dto, owner }),
     );
+  }
+
+  async update(id: string, dto: UpdateEventDto, authUser: AuthUser) {
+    const event = await this.findOneWithOwner(id);
+    const canUpdate =
+      authUser.role === UserRole.Admin || event.owner?.id === authUser.id;
+
+    if (!canUpdate) {
+      throw new ForbiddenException("You can only edit events you created.");
+    }
+
+    Object.assign(event, dto);
+    return this.eventsRepository.save(event);
   }
 }

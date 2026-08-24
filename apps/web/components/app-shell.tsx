@@ -57,22 +57,18 @@ export function AppShell({
             <Link className={navItemClass} href="/">
               Discover
             </Link>
-            <Link className={navItemClass} href="/tickets">
-              Tickets
-            </Link>
-            {!session && (
+            {session ? (
+              <Link className={navItemClass} href="/dashboard">
+                Dashboard
+              </Link>
+            ) : (
               <button
                 className={navItemClass}
                 type="button"
                 onClick={onHostEvents}
               >
-                Host events
+                Host
               </button>
-            )}
-            {session && (
-              <Link className={navItemClass} href="/dashboard">
-                Dashboard
-              </Link>
             )}
           </nav>
           {session ? (
@@ -149,12 +145,6 @@ export function AppShell({
               href="/"
             >
               Discover
-            </Link>
-            <Link
-              className="text-[0.88rem] font-(--weight-medium) text-text-muted hover:text-text"
-              href="/tickets"
-            >
-              Tickets
             </Link>
             <Link
               className="text-[0.88rem] font-(--weight-medium) text-text-muted hover:text-text"

@@ -88,7 +88,7 @@ export function FeaturedEventCarousel({ events }: { events: Event[] }) {
           {event.capacity.toLocaleString('en-UG')} spots
         </span>
       </div>
-      <Link className={primaryAction} href="/tickets">
+      <Link className={primaryAction} href={`/event/${event.id}`}>
         Get tickets
         <ArrowRight size={18} />
       </Link>

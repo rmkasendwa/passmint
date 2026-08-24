@@ -86,8 +86,8 @@ export default async function HomePage({
             <FeaturedEventCarousel events={featuredEvents} />
           )}
 
-          <section>
-            <div className="mb-6.5 flex items-end justify-between gap-4">
+            <section>
+            <div id="events" className="mb-6.5 flex items-end justify-between gap-4">
               <div>
                 <p className={sectionKicker}>Fresh from the platform</p>
                 <h2 className="mb-0 text-[clamp(2rem,3vw,3.15rem)] font-(--weight-bold) leading-none text-text">
@@ -96,7 +96,7 @@ export default async function HomePage({
               </div>
               <Link
                 className="text-base font-(--weight-semibold) text-text-muted after:content-['_->_'] hover:text-text"
-                href="/tickets"
+                href="#events"
               >
                 See everything
               </Link>
@@ -122,7 +122,7 @@ export default async function HomePage({
                           : 'event-list-card--green'
                       }`}
                       key={event.id}
-                      href="/tickets"
+                      href={`/event/${event.id}`}
                     >
                       <span className="event-list-card__media" aria-hidden="true">
                         {event.thumbnailUrl ? (
@@ -203,7 +203,7 @@ export default async function HomePage({
                   </strong>
                 </div>
               </div>
-              <Link className="next-event-panel__cta" href="/tickets">
+              <Link className="next-event-panel__cta" href={`/event/${nextEvent.id}`}>
                 <TicketIcon size={18} />
                 Reserve spot
               </Link>
