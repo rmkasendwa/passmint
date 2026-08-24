@@ -1,9 +1,7 @@
 {
-  "css.lint.unknownAtRules": "ignore",
+  "css.customData": [".vscode/tailwind.css-data.json"],
   "files.associations": {
-    "apps/web/styles.css": "tailwindcss"
+    "*.css": "tailwindcss"
   },
-  "tailwindCSS.experimental.configFile": {
-    "apps/web/styles.css": "apps/web/**/*.{css,js,jsx,ts,tsx}"
-  }
+  "tailwindCSS.experimental.configFile": "apps/web/styles.css"
 }

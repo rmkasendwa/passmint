@@ -34,14 +34,14 @@ export function AppShell({
   themePreference: ThemePreference;
 }) {
   const navItemClass =
-    "inline-flex min-h-9 items-center justify-center rounded-full border-0 bg-transparent px-3 text-[0.9rem] font-[var(--weight-semibold)] text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text)]";
+    "inline-flex min-h-9 items-center justify-center rounded-full border-0 bg-transparent px-3 text-[0.9rem] font-(weight:--weight-semibold) text-(color:--text-muted) hover:bg-(color:--surface-muted) hover:text-(color:--text)";
 
   return (
     <main className={`app-shell theme-${resolvedTheme}`}>
-      <header className="sticky top-0 z-30 min-h-16 w-full border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--surface-raised)_92%,transparent)] backdrop-blur-[18px]">
+      <header className="sticky top-0 z-30 min-h-16 w-full border-b border-(color:--border) bg-[color-mix(in_srgb,var(--surface-raised)_92%,transparent)] backdrop-blur-[18px]">
         <div className="mx-auto grid min-h-16 w-[min(var(--content-max),calc(100%-var(--content-gutter)*2))] grid-cols-[auto_1fr_auto] items-center gap-[22px] max-[820px]:grid-cols-1 max-[820px]:py-3.5">
           <Link
-            className="inline-flex items-center gap-[9px] text-[1.02rem] font-[var(--weight-bold)] text-[var(--text)]"
+            className="inline-flex items-center gap-[9px] text-[1.02rem] font-(weight:--weight-bold) text-(color:--text)"
             href="/"
             aria-label="Passmint home"
           >
@@ -82,24 +82,24 @@ export function AppShell({
                 onChange={setThemePreference}
               />
               <Link
-                className="inline-flex min-h-[46px] items-center gap-[9px] rounded-full border border-[var(--border)] bg-[var(--surface-muted)] py-[5px] pl-[5px] pr-2.5 max-[820px]:flex-1"
+                className="inline-flex min-h-[46px] items-center gap-[9px] rounded-full border border-(color:--border) bg-(color:--surface-muted) py-[5px] pl-[5px] pr-2.5 max-[820px]:flex-1"
                 href="/dashboard"
               >
-                <span className="grid size-[34px] place-items-center rounded-lg bg-[#101010] text-[0.82rem] font-[var(--weight-bold)] text-white">
+                <span className="grid size-[34px] place-items-center rounded-lg bg-[#101010] text-[0.82rem] font-(weight:--weight-bold) text-white">
                   {initials(session.user.name)}
                 </span>
                 <span className="grid min-w-0 gap-1">
-                  <strong className="block max-w-[110px] truncate text-[0.86rem] leading-none text-[var(--text)]">
+                  <strong className="block max-w-[110px] truncate text-[0.86rem] leading-none text-(color:--text)">
                     {session.user.name}
                   </strong>
-                  <small className="block max-w-[110px] truncate text-[0.72rem] font-[var(--weight-semibold)] uppercase text-[var(--accent)]">
+                  <small className="block max-w-[110px] truncate text-[0.72rem] font-(weight:--weight-semibold) uppercase text-(color:--accent)">
                     Dashboard
                   </small>
                 </span>
               </Link>
               <button
                 type="button"
-                className="inline-flex size-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-muted)] text-[var(--text)] hover:border-[var(--border-strong)]"
+                className="inline-flex size-10 items-center justify-center rounded-full border border-(color:--border) bg-(color:--surface-muted) text-(color:--text) hover:border-(color:--border-strong)"
                 onClick={logout}
                 aria-label="Logout"
               >
@@ -114,7 +114,7 @@ export function AppShell({
               />
               <button
                 type="button"
-                className="inline-flex min-h-[38px] items-center justify-center gap-2 whitespace-nowrap rounded-full border border-[var(--border)] bg-[var(--surface-muted)] px-[13px] text-[0.9rem] font-[var(--weight-semibold)] text-[var(--text)] hover:border-[var(--border-strong)] hover:bg-[var(--button-bg)] hover:text-[var(--button-text)] max-[820px]:flex-1"
+                className="inline-flex min-h-[38px] items-center justify-center gap-2 whitespace-nowrap rounded-full border border-(color:--border) bg-(color:--surface-muted) px-[13px] text-[0.9rem] font-(weight:--weight-semibold) text-(color:--text) hover:border-(color:--border-strong) hover:bg-(color:--button-bg) hover:text-(color:--button-text) max-[820px]:flex-1"
                 onClick={() => openAuth("login")}
               >
                 <LogIn size={16} />
@@ -125,10 +125,10 @@ export function AppShell({
         </div>
       </header>
       {children}
-      <footer className="mt-14 border-t border-[var(--border)] bg-[var(--surface-raised)]">
+      <footer className="mt-14 border-t border-(color:--border) bg-(color:--surface-raised)">
         <div className="mx-auto grid min-h-[92px] w-[min(var(--content-max),calc(100%-var(--content-gutter)*2))] grid-cols-[auto_1fr_auto] items-center gap-[22px] max-[820px]:grid-cols-1 max-[820px]:justify-items-start max-[820px]:py-6">
           <Link
-            className="inline-flex items-center gap-[9px] text-[1.02rem] font-[var(--weight-bold)] text-[var(--text)]"
+            className="inline-flex items-center gap-[9px] text-[1.02rem] font-(weight:--weight-bold) text-(color:--text)"
             href="/"
             aria-label="Passmint home"
           >
@@ -137,7 +137,7 @@ export function AppShell({
             </span>
             <span>Passmint</span>
           </Link>
-          <p className="mb-0 text-center text-[0.88rem] text-[var(--text-muted)] max-[820px]:text-left">
+          <p className="mb-0 text-center text-[0.88rem] text-(color:--text-muted) max-[820px]:text-left">
             © {new Date().getFullYear()} Passmint. All rights reserved.
           </p>
           <nav
@@ -145,19 +145,19 @@ export function AppShell({
             aria-label="Footer navigation"
           >
             <Link
-              className="text-[0.88rem] font-[var(--weight-medium)] text-[var(--text-muted)] hover:text-[var(--text)]"
+              className="text-[0.88rem] font-(weight:--weight-medium) text-(color:--text-muted) hover:text-(color:--text)"
               href="/"
             >
               Discover
             </Link>
             <Link
-              className="text-[0.88rem] font-[var(--weight-medium)] text-[var(--text-muted)] hover:text-[var(--text)]"
+              className="text-[0.88rem] font-(weight:--weight-medium) text-(color:--text-muted) hover:text-(color:--text)"
               href="/tickets"
             >
               Tickets
             </Link>
             <Link
-              className="text-[0.88rem] font-[var(--weight-medium)] text-[var(--text-muted)] hover:text-[var(--text)]"
+              className="text-[0.88rem] font-(weight:--weight-medium) text-(color:--text-muted) hover:text-(color:--text)"
               href="/login"
             >
               Sign in
@@ -177,13 +177,13 @@ function ThemeToggle({
   onChange: (preference: ThemePreference) => void;
 }) {
   const buttonClass =
-    "inline-grid h-7 w-[30px] place-items-center rounded-full border-0 bg-transparent text-[var(--text-muted)] hover:text-[var(--text)]";
+    "inline-grid h-7 w-[30px] place-items-center rounded-full border-0 bg-transparent text-(color:--text-muted) hover:text-(color:--text)";
   const selectedClass =
-    "bg-[var(--button-bg)] text-[var(--button-text)] shadow-[0_6px_14px_rgb(0_0_0/10%)] hover:text-[var(--button-text)]";
+    "bg-(color:--button-bg) text-(color:--button-text) shadow-[0_6px_14px_rgb(0_0_0/10%)] hover:text-(color:--button-text)";
 
   return (
     <div
-      className="inline-grid min-h-[34px] flex-none grid-cols-[repeat(3,30px)] items-center gap-0.5 rounded-full border border-[var(--border)] bg-[var(--surface-muted)] p-0.5"
+      className="inline-grid min-h-[34px] flex-none grid-cols-[repeat(3,30px)] items-center gap-0.5 rounded-full border border-(color:--border) bg-(color:--surface-muted) p-0.5"
       aria-label="Color theme"
     >
       <button

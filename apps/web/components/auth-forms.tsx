@@ -5,18 +5,18 @@ import { useAppContext } from "./app-provider";
 
 const formClass = "grid w-full max-w-[430px] gap-4 max-[820px]:max-w-none";
 const labelClass =
-  "grid gap-[7px] text-[0.82rem] font-[var(--weight-semibold)] text-[var(--text-muted)]";
+  "grid gap-[7px] text-[0.82rem] font-(weight:--weight-semibold) text-(color:--text-muted)";
 const inputClass =
-  "min-h-[52px] w-full min-w-0 rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] px-3 text-[var(--text)] hover:border-[var(--border-strong)] focus:border-[var(--accent)] focus:outline-[3px_solid_rgb(22_125_119/18%)] placeholder:text-[var(--text-soft)]";
+  "min-h-[52px] w-full min-w-0 rounded-lg border border-(color:--border) bg-(color:--surface-elevated) px-3 text-(color:--text) hover:border-(color:--border-strong) focus:border-(color:--accent) focus:outline-[3px_solid_rgb(22_125_119/18%)] placeholder:text-(color:--text-soft)";
 const labelRowClass = "flex items-center justify-between gap-3";
 const textLinkClass =
-  "font-[var(--weight-semibold)] text-[var(--accent)] hover:text-[#fa5b2d]";
+  "font-(weight:--weight-semibold) text-(color:--accent) hover:text-[#fa5b2d]";
 const submitClass =
-  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-[var(--button-bg)] px-4 font-[var(--weight-bold)] text-[var(--button-text)] hover:bg-[#fa5b2d]";
+  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-(color:--button-bg) px-4 font-(weight:--weight-bold) text-(color:--button-text) hover:bg-[#fa5b2d]";
 const stateClass =
-  "mb-0 w-full max-w-[430px] rounded-lg bg-[var(--accent-soft)] p-3 text-[0.92rem] font-[var(--weight-medium)] text-[var(--accent)] max-[820px]:max-w-none";
+  "mb-0 w-full max-w-[430px] rounded-lg bg-(color:--accent-soft) p-3 text-[0.92rem] font-(weight:--weight-medium) text-(color:--accent) max-[820px]:max-w-none";
 const switchClass =
-  "w-full max-w-[430px] text-[0.96rem] text-[var(--text-muted)] max-[820px]:max-w-none [&_a]:font-[var(--weight-semibold)] [&_a]:text-[var(--accent)] [&_a:hover]:text-[#fa5b2d] [&_p]:mb-0";
+  "w-full max-w-[430px] text-[0.96rem] text-(color:--text-muted) max-[820px]:max-w-none [&_a]:font-(weight:--weight-semibold) [&_a]:text-(color:--accent) [&_a:hover]:text-[#fa5b2d] [&_p]:mb-0";
 
 export function LoginForm() {
   const {

@@ -16,7 +16,7 @@ import {
 } from "../event-utils";
 
 const inputShell =
-  "flex min-h-11 items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--control-bg)] px-[15px] text-[var(--text-muted)] focus-within:border-[var(--accent)] focus-within:outline-[3px_solid_rgb(22_125_119/18%)] [&_input]:min-h-[42px] [&_input]:w-full [&_input]:min-w-0 [&_input]:border-0 [&_input]:bg-transparent [&_input]:p-0 [&_input]:text-[var(--text)] [&_input]:outline-0 [&_input::placeholder]:text-[var(--text-soft)]";
+  "flex min-h-11 items-center gap-2 rounded-full border border-(color:--border) bg-(color:--control-bg) px-[15px] text-(color:--text-muted) focus-within:border-(color:--accent) focus-within:outline-[3px_solid_rgb(22_125_119/18%)] [&_input]:min-h-[42px] [&_input]:w-full [&_input]:min-w-0 [&_input]:border-0 [&_input]:bg-transparent [&_input]:p-0 [&_input]:text-(color:--text) [&_input]:outline-0 [&_input::placeholder]:text-(color:--text-soft)";
 
 export function DiscoveryFilters({
   query,
@@ -77,7 +77,7 @@ export function DiscoveryFilters({
       action="/"
       role="search"
     >
-      <label className="grid gap-[7px] text-[0.76rem] font-[var(--weight-semibold)] text-[var(--text-muted)]">
+      <label className="grid gap-[7px] text-[0.76rem] font-(weight:--weight-semibold) text-(color:--text-muted)">
         <div className={inputShell}>
           <Search size={18} />
           <input
@@ -89,39 +89,39 @@ export function DiscoveryFilters({
         </div>
       </label>
 
-      <div className="relative grid gap-[7px] text-[0.76rem] font-[var(--weight-semibold)] text-[var(--text-muted)]">
+      <div className="relative grid gap-[7px] text-[0.76rem] font-(weight:--weight-semibold) text-(color:--text-muted)">
         <input type="hidden" name="start" value={dateStart} />
         <input type="hidden" name="end" value={dateEnd} />
         <button
-          className={`${inputShell} w-full justify-start text-left text-[var(--text)]`}
+          className={`${inputShell} w-full justify-start text-left text-(color:--text)`}
           type="button"
           aria-expanded={pickerOpen}
           aria-label="Choose event date range"
           onClick={() => setPickerOpen((open) => !open)}
         >
           <CalendarDays size={18} />
-          <span className="min-w-0 flex-1 truncate text-[0.95rem] font-[var(--weight-semibold)]">
+          <span className="min-w-0 flex-1 truncate text-[0.95rem] font-(weight:--weight-semibold)">
             {dateFilterLabel(dateStart, dateEnd)}
           </span>
         </button>
 
         {pickerOpen && (
-          <div className="absolute left-0 top-[calc(100%+8px)] z-40 grid w-[min(340px,calc(100vw-32px))] gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-3 text-[var(--text)] shadow-[0_24px_70px_rgb(0_0_0/38%)]">
+          <div className="absolute left-0 top-[calc(100%+8px)] z-40 grid w-[min(340px,calc(100vw-32px))] gap-3 rounded-2xl border border-(color:--border) bg-(color:--surface-raised) p-3 text-(color:--text) shadow-[0_24px_70px_rgb(0_0_0/38%)]">
             <div className="flex items-center justify-between gap-2">
               <button
                 type="button"
-                className="grid size-9 place-items-center rounded-full border border-[var(--border)] bg-[var(--surface-muted)] text-[var(--text-muted)] hover:text-[var(--text)]"
+                className="grid size-9 place-items-center rounded-full border border-(color:--border) bg-(color:--surface-muted) text-(color:--text-muted) hover:text-(color:--text)"
                 onClick={() => moveMonth(-1)}
                 aria-label="Previous month"
               >
                 <ChevronLeft size={17} />
               </button>
-              <strong className="text-[0.95rem] font-[var(--weight-bold)]">
+              <strong className="text-[0.95rem] font-(weight:--weight-bold)">
                 {calendarMonthLabel}
               </strong>
               <button
                 type="button"
-                className="grid size-9 place-items-center rounded-full border border-[var(--border)] bg-[var(--surface-muted)] text-[var(--text-muted)] hover:text-[var(--text)]"
+                className="grid size-9 place-items-center rounded-full border border-(color:--border) bg-(color:--surface-muted) text-(color:--text-muted) hover:text-(color:--text)"
                 onClick={() => moveMonth(1)}
                 aria-label="Next month"
               >
@@ -129,7 +129,7 @@ export function DiscoveryFilters({
               </button>
             </div>
 
-            <div className="grid grid-cols-7 gap-1 text-center text-[0.72rem] font-[var(--weight-semibold)] uppercase text-[var(--text-soft)]">
+            <div className="grid grid-cols-7 gap-1 text-center text-[0.72rem] font-(weight:--weight-semibold) uppercase text-(color:--text-soft)">
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
                 <span key={day}>{day}</span>
               ))}
@@ -150,12 +150,12 @@ export function DiscoveryFilters({
                   <button
                     key={dateKey}
                     type="button"
-                    className={`grid aspect-square place-items-center rounded-lg text-[0.82rem] font-[var(--weight-semibold)] ${
+                    className={`grid aspect-square place-items-center rounded-lg text-[0.82rem] font-(weight:--weight-semibold) ${
                       isSelected
-                        ? "bg-[var(--button-bg)] text-[var(--button-text)]"
+                        ? "bg-(color:--button-bg) text-(color:--button-text)"
                         : isInRange
-                          ? "bg-[var(--accent-soft)] text-[var(--text)]"
-                          : "bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text)]"
+                          ? "bg-(color:--accent-soft) text-(color:--text)"
+                          : "bg-transparent text-(color:--text-muted) hover:bg-(color:--surface-muted) hover:text-(color:--text)"
                     } ${isOutsideMonth ? "opacity-45" : ""}`}
                     onClick={() => chooseCalendarDate(dateKey)}
                   >
@@ -165,10 +165,10 @@ export function DiscoveryFilters({
               })}
             </div>
 
-            <div className="flex items-center justify-between gap-2 border-t border-[var(--border)] pt-3">
+            <div className="flex items-center justify-between gap-2 border-t border-(color:--border) pt-3">
               <button
                 type="button"
-                className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-muted)] px-3 text-[0.82rem] font-[var(--weight-semibold)] text-[var(--text-muted)] hover:text-[var(--text)]"
+                className="inline-flex min-h-9 items-center gap-2 rounded-full border border-(color:--border) bg-(color:--surface-muted) px-3 text-[0.82rem] font-(weight:--weight-semibold) text-(color:--text-muted) hover:text-(color:--text)"
                 onClick={() => {
                   setDateStart("");
                   setDateEnd("");
@@ -179,7 +179,7 @@ export function DiscoveryFilters({
               </button>
               <button
                 type="button"
-                className="inline-flex min-h-9 items-center rounded-full bg-[var(--button-bg)] px-3 text-[0.82rem] font-[var(--weight-bold)] text-[var(--button-text)]"
+                className="inline-flex min-h-9 items-center rounded-full bg-(color:--button-bg) px-3 text-[0.82rem] font-(weight:--weight-bold) text-(color:--button-text)"
                 onClick={() => setPickerOpen(false)}
               >
                 Apply
@@ -190,7 +190,7 @@ export function DiscoveryFilters({
       </div>
 
       <button
-        className="inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-transparent bg-[var(--button-bg)] px-5 text-[0.95rem] font-[var(--weight-bold)] text-[var(--button-text)] hover:bg-[var(--accent)] hover:text-[#081010]"
+        className="inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-transparent bg-(color:--button-bg) px-5 text-[0.95rem] font-(weight:--weight-bold) text-(color:--button-text) hover:bg-(color:--accent) hover:text-[#081010]"
         type="submit"
         aria-label="Search events"
       >

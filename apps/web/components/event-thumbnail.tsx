@@ -65,30 +65,30 @@ export function EventThumbnail({
       <span className="absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgb(0_0_0/8%),rgb(0_0_0/18%)_42%,rgb(0_0_0/76%)),linear-gradient(135deg,rgb(19_52_63/32%),rgb(12_18_28/16%))]" />
       <span className="thumbnail-frame absolute inset-4 z-[2] rounded-lg border border-[rgb(255_255_255/32%)]" />
       <span
-        className="thumbnail-badge absolute left-[22px] top-[22px] z-[3] inline-flex min-h-8 items-center gap-[7px] rounded-lg bg-[rgb(8_13_20/46%)] px-2.5 text-[0.72rem] font-[var(--weight-semibold)] uppercase backdrop-blur-xl data-[featured=true]:hidden"
+        className="thumbnail-badge absolute left-[22px] top-[22px] z-[3] inline-flex min-h-8 items-center gap-[7px] rounded-lg bg-[rgb(8_13_20/46%)] px-2.5 text-[0.72rem] font-(weight:--weight-semibold) uppercase backdrop-blur-xl data-[featured=true]:hidden"
         data-featured={variant === "featured"}
       >
         <TicketIcon size={variant === "featured" ? 25 : 18} />
         <small>{eventCategory(event)}</small>
       </span>
       {!hasImage && (
-        <span className="thumbnail-initials absolute left-[22px] top-[52%] z-[2] -translate-y-1/2 text-[clamp(4rem,10vw,8rem)] font-[var(--weight-bold)] leading-[0.8] text-[rgb(255_255_255/14%)]">
+        <span className="thumbnail-initials absolute left-[22px] top-[52%] z-[2] -translate-y-1/2 text-[clamp(4rem,10vw,8rem)] font-(weight:--weight-bold) leading-[0.8] text-[rgb(255_255_255/14%)]">
           {initials(event.name)}
         </span>
       )}
       <span className="thumbnail-date absolute bottom-[22px] right-[22px] z-[3] grid min-w-[68px] place-items-center rounded-lg bg-white px-2.5 py-[9px] text-[#101010] shadow-[0_16px_34px_rgb(0_0_0/18%)]">
-        <strong className="text-[2.15rem] font-[var(--weight-bold)] leading-[0.9]">
+        <strong className="text-[2.15rem] font-(weight:--weight-bold) leading-[0.9]">
           {day}
         </strong>
-        <small className="font-[var(--weight-semibold)] uppercase">
+        <small className="font-(weight:--weight-semibold) uppercase">
           {month}
         </small>
       </span>
       <span className="thumbnail-title absolute bottom-6 left-[22px] right-28 z-[3] hidden gap-[5px]">
-        <strong className="overflow-hidden text-[1.35rem] font-[var(--weight-bold)] leading-[1.02]">
+        <strong className="overflow-hidden text-[1.35rem] font-(weight:--weight-bold) leading-[1.02]">
           {event.name || "New event"}
         </strong>
-        <small className="font-[var(--weight-semibold)] uppercase">
+        <small className="font-(weight:--weight-semibold) uppercase">
           {event.venue || "Venue to be announced"}
         </small>
       </span>
