@@ -25,12 +25,16 @@ const sectionKicker =
 const primaryAction =
   'inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-(color:--button-bg) px-4 font-(weight:--weight-bold) text-(color:--button-text) hover:bg-[#fa5b2d]';
 const pillPrimaryAction = `${primaryAction} justify-self-start rounded-full hover:bg-(color:--accent) hover:text-[#081010]`;
-const eventCard =
-  'grid min-h-[560px] grid-rows-[minmax(238px,42%)_1fr] rounded-[20px] border border-(color:--border) bg-(color:--surface) text-(color:--text) shadow-[0_20px_58px_rgb(0_0_0/22%)] transition hover:border-(color:--border-strong) hover:shadow-[0_34px_90px_rgb(0_0_0/40%)] max-[820px]:min-h-[500px] max-[600px]:min-h-0 max-[600px]:grid-rows-[220px_1fr] [&_.event-card-affordance]:hover:bg-(color:--accent) [&_.event-card-affordance]:hover:text-[#081010] [&_.event-thumbnail-card]:max-[600px]:min-h-[220px]';
+const eventCardBase =
+  'group grid min-h-[548px] grid-rows-[minmax(236px,42%)_1fr] overflow-hidden rounded-[22px] border text-(color:--text) transition duration-300 max-[820px]:min-h-[500px] max-[600px]:min-h-0 max-[600px]:grid-rows-[220px_1fr] [&_.event-thumbnail-card]:max-[600px]:min-h-[220px]';
+const eventCardStandard = `${eventCardBase} border-[rgb(73_210_190/34%)] bg-[linear-gradient(180deg,#071614,#06100f)] shadow-[0_22px_64px_rgb(0_0_0/30%),inset_0_1px_0_rgb(255_255_255/8%)] hover:border-[rgb(119_238_219/58%)] hover:shadow-[0_34px_90px_rgb(0_0_0/46%),0_0_0_1px_rgb(121_230_217/12%)]`;
+const eventCardFeatured = `${eventCardBase} border-[rgb(246_181_61/52%)] bg-[radial-gradient(circle_at_72%_30%,rgb(246_181_61/19%),transparent_32%),linear-gradient(180deg,#1b130c,#0f0d0b_58%,#090908)] shadow-[0_26px_84px_rgb(0_0_0/42%),0_0_0_1px_rgb(246_181_61/10%),inset_0_1px_0_rgb(255_255_255/11%)] hover:border-[rgb(246_200_104/74%)] hover:shadow-[0_38px_110px_rgb(0_0_0/54%),0_0_32px_rgb(246_181_61/13%)]`;
 const eventCardCopy =
   'grid grid-rows-[auto_auto_auto_1fr_auto] gap-4 p-[26px] max-[820px]:p-[22px]';
 const eventMeta =
-  'grid gap-2 [&_span]:inline-flex [&_span]:items-center [&_span]:gap-[7px] [&_span]:text-[0.94rem] [&_span]:font-(weight:--weight-medium) [&_span]:leading-[1.34] [&_span]:text-(color:--text-muted) [&_svg]:text-(color:--accent)';
+  'grid gap-2 [&_span]:inline-flex [&_span]:items-center [&_span]:gap-[7px] [&_span]:text-[0.94rem] [&_span]:font-(weight:--weight-medium) [&_span]:leading-[1.34] [&_span]:text-(color:--text-muted)';
+const eventCta =
+  'inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-4 text-[0.92rem] font-(--weight-bold) transition group-hover:translate-x-0.5';
 
 function getParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -118,45 +122,97 @@ export default async function HomePage({
               </p>
             ) : (
               <div className="grid grid-cols-3 gap-5.5 max-[1120px]:grid-cols-2 max-[600px]:grid-cols-1">
-                {visibleEvents.map((event, index) => (
-                  <Link className={eventCard} key={event.id} href="/tickets">
-                    <EventThumbnail event={event} tone={eventTone(index)} />
-                    <span className={eventCardCopy}>
-                      <span className="flex min-w-0 items-center justify-between gap-3 max-[600px]:gap-2">
-                        <span className="inline-flex min-h-7.5 items-center rounded-full bg-accent-soft px-3 text-[0.76rem] font-(--weight-semibold) uppercase text-accent">
-                          {eventCategory(event)}
+                {visibleEvents.map((event, index) => {
+                  const isFeaturedCard = index === 0;
+                  const mood = isFeaturedCard ? 'gold' : 'green';
+
+                  return (
+                    <Link
+                      className={
+                        isFeaturedCard ? eventCardFeatured : eventCardStandard
+                      }
+                      key={event.id}
+                      href="/tickets"
+                    >
+                      <EventThumbnail
+                        event={event}
+                        tone={eventTone(index)}
+                        mood={mood}
+                      />
+                      <span className={eventCardCopy}>
+                        <span className="flex min-w-0 items-center justify-between gap-3 max-[600px]:gap-2">
+                          <span
+                            className={
+                              isFeaturedCard
+                                ? 'inline-flex min-h-7.5 items-center rounded-full border border-[rgb(246_181_61/28%)] bg-[rgb(246_181_61/12%)] px-3 text-[0.76rem] font-(--weight-semibold) uppercase text-[#f6c866]'
+                                : 'inline-flex min-h-7.5 items-center rounded-full border border-[rgb(94_226_204/22%)] bg-[rgb(94_226_204/12%)] px-3 text-[0.76rem] font-(--weight-semibold) uppercase text-[#94f0e5]'
+                            }
+                          >
+                            {isFeaturedCard ? 'Featured' : eventCategory(event)}
+                          </span>
+                          <span
+                            className={
+                              isFeaturedCard
+                                ? 'inline-flex min-h-7.5 flex-none items-center rounded-full text-[0.76rem] font-(--weight-medium) uppercase text-[rgb(255_238_198/66%)]'
+                                : 'inline-flex min-h-7.5 flex-none items-center rounded-full text-[0.76rem] font-(--weight-medium) uppercase text-[rgb(213_255_248/56%)]'
+                            }
+                          >
+                            {eventStatus(event)}
+                          </span>
                         </span>
-                        <span className="inline-flex min-h-7.5 flex-none items-center rounded-full text-[0.76rem] font-(--weight-medium) uppercase text-text-soft">
-                          {eventStatus(event)}
+                        <strong className="min-h-[2.08em] text-[clamp(1.95rem,2.4vw,3rem)] font-(--weight-bold) leading-[1.04] text-[#fffaf0] max-[820px]:text-[clamp(1.7rem,8vw,2.45rem)]">
+                          {event.name}
+                        </strong>
+                        <small
+                          className={
+                            isFeaturedCard
+                              ? 'min-h-[3.1em] text-[1.02rem] font-(--weight-regular) leading-[1.55] text-[rgb(255_246_226/74%)]'
+                              : 'min-h-[3.1em] text-[1.02rem] font-(--weight-regular) leading-[1.55] text-[rgb(222_244_240/72%)]'
+                          }
+                        >
+                          {event.description}
+                        </small>
+                        <span
+                          className={`${eventMeta} ${
+                            isFeaturedCard
+                              ? '[&_span]:text-[rgb(255_246_226/76%)] [&_svg]:text-[#f6c866]'
+                              : '[&_span]:text-[rgb(222_244_240/72%)] [&_svg]:text-[#5ee2cc]'
+                          }`}
+                        >
+                          <span>
+                            <CalendarDays size={15} />
+                            {shortDate.format(new Date(event.startsAt))}
+                          </span>
+                          <span>
+                            <MapPin size={15} />
+                            {event.venue}
+                          </span>
+                        </span>
+                        <span
+                          className={
+                            isFeaturedCard
+                              ? 'mt-1.5 flex items-center justify-between gap-4 border-t border-[rgb(246_181_61/24%)] pt-4.5'
+                              : 'mt-1.5 flex items-center justify-between gap-4 border-t border-[rgb(94_226_204/18%)] pt-4.5'
+                          }
+                        >
+                          <span className="self-center text-[1.4rem] font-(--weight-bold) text-[#f6c866]">
+                            {money.format(event.priceCents / 100)}
+                          </span>
+                          <span
+                            className={`${eventCta} ${
+                              isFeaturedCard
+                                ? 'bg-[#f3b64b] text-[#18120a] shadow-[0_14px_32px_rgb(246_181_61/20%)] group-hover:bg-[#ffd37a]'
+                                : 'bg-[rgb(17_103_89/92%)] text-[#ecfffb] shadow-[0_14px_32px_rgb(0_0_0/22%)] group-hover:bg-[#79e6d9] group-hover:text-[#07100f]'
+                            }`}
+                          >
+                            Get tickets
+                            <ArrowRight size={16} />
+                          </span>
                         </span>
                       </span>
-                      <strong className="min-h-[2.08em] text-[clamp(1.95rem,2.4vw,3rem)] font-(--weight-bold) leading-[1.04] text-text max-[820px]:text-[clamp(1.7rem,8vw,2.45rem)]">
-                        {event.name}
-                      </strong>
-                      <small className="min-h-[3.1em] text-[1.02rem] font-(--weight-regular) leading-[1.55] text-text-muted">
-                        {event.description}
-                      </small>
-                      <span className={eventMeta}>
-                        <span>
-                          <CalendarDays size={15} />
-                          {shortDate.format(new Date(event.startsAt))}
-                        </span>
-                        <span>
-                          <MapPin size={15} />
-                          {event.venue}
-                        </span>
-                      </span>
-                      <span className="mt-1.5 flex items-center justify-between gap-4 border-t border-border pt-4.5">
-                        <span className="self-center text-[1.4rem] font-(--weight-bold) text-price">
-                          {money.format(event.priceCents / 100)}
-                        </span>
-                        <span className="event-card-affordance inline-grid size-10 flex-none place-items-center rounded-full bg-(--button-bg) text-(--button-text)">
-                          <ArrowRight size={16} />
-                        </span>
-                      </span>
-                    </span>
-                  </Link>
-                ))}
+                    </Link>
+                  );
+                })}
               </div>
             )}
           </section>

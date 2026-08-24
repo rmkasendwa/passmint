@@ -31,10 +31,12 @@ export function EventThumbnail({
   event,
   tone,
   variant = "card",
+  mood = "green",
 }: {
   event: Event;
   tone: string;
   variant?: "card" | "featured" | "preview";
+  mood?: "green" | "gold";
 }) {
   const [imageFailed, setImageFailed] = useState(false);
   const date = new Date(event.startsAt);
@@ -43,6 +45,18 @@ export function EventThumbnail({
     date,
   );
   const hasImage = Boolean(event.thumbnailUrl) && !imageFailed;
+  const imageOverlay =
+    mood === "gold"
+      ? "bg-[linear-gradient(180deg,rgb(249_193_91/26%),rgb(40_24_9/12%)_34%,rgb(16_12_9/84%)),radial-gradient(circle_at_76%_78%,rgb(246_181_61/34%),transparent_36%)]"
+      : "bg-[linear-gradient(180deg,rgb(2_18_16/3%),rgb(2_24_22/24%)_46%,rgb(0_35_31/82%)),linear-gradient(135deg,rgb(42_190_171/22%),rgb(8_16_18/10%))]";
+  const frameClass =
+    mood === "gold"
+      ? "border-[rgb(246_181_61/36%)] shadow-[inset_0_1px_0_rgb(255_255_255/16%)]"
+      : "border-[rgb(94_226_204/24%)] shadow-[inset_0_1px_0_rgb(255_255_255/12%)]";
+  const badgeClass =
+    mood === "gold"
+      ? "border-[rgb(246_181_61/32%)] bg-[rgb(31_20_11/58%)] text-[#f6c866]"
+      : "border-[rgb(94_226_204/26%)] bg-[rgb(0_77_67/56%)] text-[#dffcf7]";
 
   useEffect(() => {
     setImageFailed(false);
@@ -62,10 +76,12 @@ export function EventThumbnail({
           onError={() => setImageFailed(true)}
         />
       )}
-      <span className="absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgb(0_0_0/8%),rgb(0_0_0/18%)_42%,rgb(0_0_0/76%)),linear-gradient(135deg,rgb(19_52_63/32%),rgb(12_18_28/16%))]" />
-      <span className="thumbnail-frame absolute inset-4 z-[2] rounded-lg border border-[rgb(255_255_255/32%)]" />
+      <span className={`absolute inset-0 z-[1] ${imageOverlay}`} />
       <span
-        className="thumbnail-badge absolute left-[22px] top-[22px] z-[3] inline-flex min-h-8 items-center gap-[7px] rounded-lg bg-[rgb(8_13_20/46%)] px-2.5 text-[0.72rem] font-(weight:--weight-semibold) uppercase backdrop-blur-xl data-[featured=true]:hidden"
+        className={`thumbnail-frame absolute inset-4 z-[2] rounded-lg border ${frameClass}`}
+      />
+      <span
+        className={`thumbnail-badge absolute left-[22px] top-[22px] z-[3] inline-flex min-h-8 items-center gap-[7px] rounded-full border px-2.75 text-[0.72rem] font-(weight:--weight-semibold) uppercase backdrop-blur-xl data-[featured=true]:hidden ${badgeClass}`}
         data-featured={variant === "featured"}
       >
         <TicketIcon size={variant === "featured" ? 25 : 18} />
