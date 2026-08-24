@@ -1,22 +1,21 @@
 import {
   ArrowRight,
   CalendarDays,
-  CircleDollarSign,
   MapPin,
   Ticket as TicketIcon,
-  Users,
 } from "lucide-react";
 import Link from "next/link";
 import type { Event } from "../api";
 import { DiscoveryFilters } from "../components/discovery-filters";
 import { EventThumbnail } from "../components/event-thumbnail";
+import { FeaturedEventCarousel } from "../components/featured-event-carousel";
 import {
   categories,
   eventCategory,
   eventStatus,
   eventTone,
 } from "../event-utils";
-import { chipDate, dateTime, money, shortDate } from "../formatters";
+import { dateTime, money, shortDate } from "../formatters";
 import { listEventsForPage } from "../server-events";
 
 export const dynamic = "force-dynamic";
@@ -32,8 +31,6 @@ const eventCardCopy =
   "grid grid-rows-[auto_auto_auto_1fr_auto] gap-4 p-[26px] max-[820px]:p-[22px]";
 const eventMeta =
   "grid gap-2 [&_span]:inline-flex [&_span]:items-center [&_span]:gap-[7px] [&_span]:text-[0.94rem] [&_span]:font-[var(--weight-medium)] [&_span]:leading-[1.34] [&_span]:text-[var(--text-muted)] [&_svg]:text-[var(--accent)]";
-const ticketBadge =
-  "inline-flex min-h-[34px] items-center rounded-full border border-[rgb(255_255_255/14%)] bg-[rgb(0_0_0/38%)] px-3.5 text-[0.82rem] font-[var(--weight-semibold)] uppercase text-white";
 
 function getParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -56,7 +53,8 @@ export default async function HomePage({
     start: dateStart,
     end: dateEnd,
   });
-  const featuredEvent = visibleEvents[0] ?? events[0];
+  const featuredEvents =
+    visibleEvents.length > 0 ? visibleEvents.slice(0, 5) : events.slice(0, 5);
   const nextEvent =
     visibleEvents.find((event) => eventStatus(event) === "Upcoming") ??
     visibleEvents[0];
@@ -94,47 +92,8 @@ export default async function HomePage({
         aria-label="Event marketplace"
       >
         <div className="grid content-start gap-[60px]">
-          {featuredEvent && (
-            <section className="relative grid min-h-[580px] grid-cols-1 overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface-raised)] shadow-[0_28px_100px_rgb(0_0_0/34%)] max-[820px]:min-h-[500px] max-[820px]:rounded-[18px]">
-              <EventThumbnail
-                event={featuredEvent}
-                tone={eventTone(0)}
-                variant="featured"
-              />
-              <div className="absolute bottom-[clamp(28px,5vw,58px)] left-[clamp(28px,5vw,64px)] z-[4] w-[min(620px,calc(100%-56px))]">
-                <div className="mb-2 flex flex-wrap gap-2">
-                  <span className={ticketBadge}>{eventStatus(featuredEvent)}</span>
-                  <span className={ticketBadge}>
-                    {chipDate.format(new Date(featuredEvent.startsAt))}
-                  </span>
-                </div>
-                <p className={sectionKicker}>Featured event</p>
-                <h2 className="mb-0 text-[clamp(3.2rem,7vw,6.2rem)] font-[var(--weight-bold)] leading-[0.93] text-white max-[820px]:text-5xl">
-                  {featuredEvent.name}
-                </h2>
-                <p className="mb-0 text-[1.08rem] leading-[1.55] text-[rgb(255_255_255/78%)]">
-                  {featuredEvent.description}
-                </p>
-                <div className="my-5 flex flex-wrap gap-2.5 [&_span]:inline-flex [&_span]:min-h-[38px] [&_span]:items-center [&_span]:gap-2 [&_span]:rounded-full [&_span]:bg-[rgb(255_255_255/12%)] [&_span]:px-[13px] [&_span]:text-[0.95rem] [&_span]:font-[var(--weight-medium)] [&_span]:text-[rgb(255_255_255/88%)]">
-                  <span>
-                    <MapPin size={16} />
-                    {featuredEvent.venue}
-                  </span>
-                  <span>
-                    <CircleDollarSign size={16} />
-                    {money.format(featuredEvent.priceCents / 100)}
-                  </span>
-                  <span>
-                    <Users size={16} />
-                    {featuredEvent.capacity.toLocaleString("en-UG")} spots
-                  </span>
-                </div>
-                <Link className={pillPrimaryAction} href="/tickets">
-                  <TicketIcon size={18} />
-                  Get tickets
-                </Link>
-              </div>
-            </section>
+          {featuredEvents.length > 0 && (
+            <FeaturedEventCarousel events={featuredEvents} />
           )}
 
           <section>

@@ -19,7 +19,7 @@ const fallbackDecor =
 
 const variantClass = {
   featured:
-    "min-h-[580px] max-[820px]:min-h-[500px] max-[600px]:min-h-[260px] [&_.thumbnail-title]:grid [&_.thumbnail-title_strong]:text-[clamp(1.85rem,4vw,3.6rem)] [&_.thumbnail-title_strong]:leading-[0.94] [&_.thumbnail-title_small]:text-[0.88rem]",
+    "min-h-[580px] max-[820px]:min-h-[500px] max-[600px]:min-h-[260px]",
   card: "min-h-[238px] [&_.thumbnail-badge_small]:hidden [&_.thumbnail-frame]:inset-3 [&_.thumbnail-frame]:rounded-2xl [&_.thumbnail-frame]:border-[rgb(255_255_255/14%)] [&_.thumbnail-initials]:text-[4.7rem] [&_.thumbnail-title]:hidden [&_.thumbnail-date]:hidden",
   preview: "min-h-[148px]",
 };
