@@ -2,6 +2,7 @@ import {
   ArrowRight,
   CalendarDays,
   MapPin,
+  Music2,
   Ticket as TicketIcon,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -31,14 +32,16 @@ const eventCardStandard = `${eventCardBase} border-[rgb(73_210_190/34%)] bg-[rad
 const eventCardFeatured = `${eventCardBase} border-[rgb(246_181_61/62%)] bg-[radial-gradient(circle_at_72%_30%,rgb(246_181_61/28%),transparent_34%),radial-gradient(circle_at_20%_100%,rgb(246_181_61/14%),transparent_34%),linear-gradient(180deg,#1b130c,#0f0d0b_58%,#090908)] shadow-[0_26px_84px_rgb(0_0_0/42%),0_0_0_1px_rgb(246_181_61/13%),inset_0_1px_0_rgb(255_255_255/11%)] hover:border-[rgb(246_200_104/82%)] hover:shadow-[0_38px_110px_rgb(0_0_0/54%),0_0_38px_rgb(246_181_61/18%)]`;
 const eventCardSheen =
   'pointer-events-none absolute inset-0 z-[1] opacity-95 mix-blend-screen transition duration-300 group-hover:opacity-100';
+const eventCardOrb =
+  'pointer-events-none absolute z-[1] rounded-full opacity-95 blur-[1px] transition duration-500 group-hover:scale-[1.025]';
 const eventCardArc =
   'pointer-events-none absolute z-[1] rounded-full border transition duration-500 group-hover:scale-[1.03]';
 const eventCardCopy =
-  'relative z-[3] grid grid-rows-[auto_auto_auto_1fr_auto] gap-4 px-[26px] pb-[26px] pt-[42px] max-[820px]:px-[22px] max-[820px]:pb-[22px]';
+  'relative z-[3] grid grid-rows-[auto_auto_1fr_auto] gap-4 px-[26px] pb-[26px] pt-[54px] max-[820px]:px-[22px] max-[820px]:pb-[22px]';
 const eventMeta =
   'grid gap-2 [&_span]:inline-flex [&_span]:items-center [&_span]:gap-[7px] [&_span]:text-[0.94rem] [&_span]:font-(weight:--weight-medium) [&_span]:leading-[1.34] [&_span]:text-(color:--text-muted)';
 const eventCta =
-  'inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-4 text-[0.92rem] font-(--weight-bold) transition group-hover:translate-x-0.5';
+  'inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-4 text-[0.92rem] font-(--weight-bold) transition duration-200 group-hover:-translate-y-0.5 group-active:translate-y-0';
 
 function getParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -129,6 +132,9 @@ export default async function HomePage({
                 {visibleEvents.map((event, index) => {
                   const isFeaturedCard = index === 0;
                   const mood = isFeaturedCard ? 'gold' : 'green';
+                  const category = eventCategory(event);
+                  const CategoryIcon =
+                    category === 'Music' ? Music2 : TicketIcon;
 
                   return (
                     <Link
@@ -142,47 +148,46 @@ export default async function HomePage({
                         aria-hidden="true"
                         className={`${eventCardSheen} ${
                           isFeaturedCard
-                            ? 'bg-[radial-gradient(circle_at_84%_4%,rgb(255_218_142/48%),transparent_24%),radial-gradient(circle_at_50%_39%,rgb(246_181_61/34%),transparent_33%),linear-gradient(115deg,transparent_0%,rgb(255_232_184/16%)_45%,transparent_58%)]'
-                            : 'bg-[radial-gradient(circle_at_82%_4%,rgb(132_255_236/28%),transparent_24%),linear-gradient(115deg,transparent_0%,rgb(132_255_236/10%)_43%,transparent_58%)]'
+                            ? 'bg-[radial-gradient(circle_at_86%_0%,rgb(255_226_160/68%),transparent_26%),radial-gradient(circle_at_45%_42%,rgb(246_181_61/42%),transparent_34%),linear-gradient(115deg,transparent_0%,rgb(255_232_184/18%)_44%,transparent_60%)]'
+                            : 'bg-[radial-gradient(circle_at_82%_2%,rgb(132_255_236/34%),transparent_24%),radial-gradient(circle_at_50%_40%,rgb(38_197_169/20%),transparent_34%),linear-gradient(115deg,transparent_0%,rgb(132_255_236/12%)_43%,transparent_58%)]'
+                        }`}
+                      />
+                      <span
+                        aria-hidden="true"
+                        className={`${eventCardOrb} ${
+                          isFeaturedCard
+                            ? '-left-24 top-44 size-95 bg-[radial-gradient(circle_at_58%_42%,rgb(255_214_126/42%),rgb(246_181_61/20%)_33%,rgb(246_181_61/7%)_52%,transparent_70%)] max-[600px]:top-40'
+                            : '-right-20 top-48 size-72 bg-[radial-gradient(circle_at_42%_40%,rgb(111_246_220/20%),rgb(38_197_169/9%)_40%,transparent_70%)] max-[600px]:top-43'
                         }`}
                       />
                       <span
                         aria-hidden="true"
                         className={`${eventCardArc} ${
                           isFeaturedCard
-                            ? '-left-14.5 top-46.25 size-77.5 border-[rgb(246_181_61/34%)] shadow-[0_0_44px_rgb(246_181_61/22%)] max-[600px]:top-42.5'
-                            : '-right-19 top-41 size-62.5 border-[rgb(94_226_204/17%)] shadow-[0_0_34px_rgb(94_226_204/12%)] max-[600px]:top-39.5'
+                            ? '-left-18 top-48 size-88 border-[rgb(246_181_61/46%)] shadow-[0_0_54px_rgb(246_181_61/30%)] max-[600px]:top-43'
+                            : '-right-19 top-48 size-68 border-[rgb(94_226_204/21%)] shadow-[0_0_38px_rgb(94_226_204/15%)] max-[600px]:top-43'
                         }`}
                       />
+                      <span
+                        className={
+                          isFeaturedCard
+                            ? 'absolute left-5 top-5 z-5 inline-flex min-h-8 items-center gap-2 rounded-full border border-[rgb(246_181_61/36%)] bg-[rgb(31_20_11/62%)] px-3 text-[0.74rem] font-(--weight-semibold) uppercase text-[#f6c866] shadow-[inset_0_1px_0_rgb(255_255_255/20%),0_10px_24px_rgb(0_0_0/22%)] backdrop-blur-xl'
+                            : 'absolute left-5 top-5 z-5 inline-flex min-h-8 items-center gap-2 rounded-full border border-[rgb(94_226_204/34%)] bg-[rgb(0_77_67/62%)] px-3 text-[0.74rem] font-(--weight-semibold) uppercase text-[#dffcf7] shadow-[inset_0_1px_0_rgb(255_255_255/18%),0_10px_24px_rgb(0_0_0/20%)] backdrop-blur-xl'
+                        }
+                      >
+                        <CategoryIcon size={17} />
+                        {category}
+                      </span>
                       <span className="relative z-2 -mb-28 min-w-0">
                         <EventThumbnail
                           event={event}
                           tone={eventTone(index)}
                           mood={mood}
+                          showBadge={false}
                         />
                       </span>
                       <span className={eventCardCopy}>
-                        <span className="flex min-w-0 items-center justify-between gap-3 max-[600px]:gap-2">
-                          <span
-                            className={
-                              isFeaturedCard
-                                ? 'inline-flex min-h-7.5 items-center rounded-full border border-[rgb(246_181_61/28%)] bg-[rgb(246_181_61/12%)] px-3 text-[0.76rem] font-(--weight-semibold) uppercase text-[#f6c866]'
-                                : 'inline-flex min-h-7.5 items-center rounded-full border border-[rgb(94_226_204/22%)] bg-[rgb(94_226_204/12%)] px-3 text-[0.76rem] font-(--weight-semibold) uppercase text-[#94f0e5]'
-                            }
-                          >
-                            {isFeaturedCard ? 'Featured' : eventCategory(event)}
-                          </span>
-                          <span
-                            className={
-                              isFeaturedCard
-                                ? 'inline-flex min-h-7.5 flex-none items-center rounded-full text-[0.76rem] font-(--weight-medium) uppercase text-[rgb(255_238_198/66%)]'
-                                : 'inline-flex min-h-7.5 flex-none items-center rounded-full text-[0.76rem] font-(--weight-medium) uppercase text-[rgb(213_255_248/56%)]'
-                            }
-                          >
-                            {eventStatus(event)}
-                          </span>
-                        </span>
-                        <strong className="min-h-[2.08em] text-[clamp(1.95rem,2.4vw,3rem)] font-(--weight-bold) leading-[1.04] text-[#fffaf0] max-[820px]:text-[clamp(1.7rem,8vw,2.45rem)]">
+                        <strong className="min-h-[2.08em] font-serif text-[clamp(2rem,2.5vw,3.15rem)] font-(--weight-bold) leading-[1.02] text-[#fffaf0] max-[820px]:text-[clamp(1.85rem,8vw,2.55rem)]">
                           {event.name}
                         </strong>
                         <small
@@ -223,8 +228,8 @@ export default async function HomePage({
                           <span
                             className={`${eventCta} ${
                               isFeaturedCard
-                                ? 'bg-[#f3b64b] text-[#18120a] shadow-[0_14px_32px_rgb(246_181_61/20%)] group-hover:bg-[#ffd37a]'
-                                : 'bg-[rgb(17_103_89/92%)] text-[#ecfffb] shadow-[0_14px_32px_rgb(0_0_0/22%)] group-hover:bg-[#79e6d9] group-hover:text-[#07100f]'
+                                ? 'border border-[rgb(255_238_181/42%)] bg-[linear-gradient(180deg,#ffd978_0%,#f4b33f_52%,#d98c22_100%)] text-[#1a1207] shadow-[inset_0_1px_0_rgb(255_255_255/58%),inset_0_-3px_6px_rgb(107_57_8/24%),0_18px_30px_rgb(246_181_61/24%),0_5px_0_rgb(116_66_12/28%)] group-hover:bg-[linear-gradient(180deg,#ffe39a_0%,#f7bd4f_56%,#df9628_100%)]'
+                                : 'border border-[rgb(139_255_235/25%)] bg-[linear-gradient(180deg,#2a9383_0%,#126d60_55%,#0a4c43_100%)] text-[#ecfffb] shadow-[inset_0_1px_0_rgb(255_255_255/26%),inset_0_-3px_7px_rgb(0_20_18/26%),0_16px_28px_rgb(0_0_0/28%),0_4px_0_rgb(0_48_42/48%)] group-hover:bg-[linear-gradient(180deg,#79e6d9_0%,#2a9a89_58%,#106759_100%)] group-hover:text-[#06100f]'
                             }`}
                           >
                             Get tickets

@@ -1,6 +1,6 @@
 "use client";
 
-import { Ticket as TicketIcon } from "lucide-react";
+import { Music2, Ticket as TicketIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Event } from "../api";
 import { eventCategory, initials } from "../event-utils";
@@ -32,11 +32,13 @@ export function EventThumbnail({
   tone,
   variant = "card",
   mood = "green",
+  showBadge = true,
 }: {
   event: Event;
   tone: string;
   variant?: "card" | "featured" | "preview";
   mood?: "green" | "gold";
+  showBadge?: boolean;
 }) {
   const [imageFailed, setImageFailed] = useState(false);
   const date = new Date(event.startsAt);
@@ -45,14 +47,16 @@ export function EventThumbnail({
     date,
   );
   const hasImage = Boolean(event.thumbnailUrl) && !imageFailed;
+  const category = eventCategory(event);
+  const BadgeIcon = category === "Music" ? Music2 : TicketIcon;
   const imageOverlay =
     mood === "gold"
-      ? "bg-[linear-gradient(180deg,rgb(249_193_91/28%),rgb(40_24_9/8%)_28%,rgb(22_15_8/34%)_54%,rgb(15_12_9/92%)_88%),radial-gradient(circle_at_74%_76%,rgb(246_181_61/46%),transparent_40%)]"
-      : "bg-[linear-gradient(180deg,rgb(2_18_16/4%),rgb(2_24_22/15%)_36%,rgb(0_35_31/48%)_65%,rgb(6_16_15/94%)_91%),linear-gradient(135deg,rgb(42_190_171/25%),rgb(8_16_18/8%))]";
+      ? "bg-[linear-gradient(180deg,rgb(249_193_91/22%),rgb(40_24_9/3%)_24%,rgb(70_38_10/24%)_50%,rgb(16_13_10/96%)_92%),radial-gradient(circle_at_72%_82%,rgb(246_181_61/58%),transparent_44%)]"
+      : "bg-[linear-gradient(180deg,rgb(2_18_16/3%),rgb(2_24_22/9%)_34%,rgb(0_60_51/34%)_62%,rgb(6_16_15/96%)_92%),radial-gradient(circle_at_62%_88%,rgb(28_166_143/34%),transparent_46%)]";
   const blendFadeClass =
     mood === "gold"
-      ? "bg-[linear-gradient(180deg,transparent_0%,rgb(30_20_11/38%)_28%,rgb(16_13_10/82%)_66%,#0f0d0b_100%)]"
-      : "bg-[linear-gradient(180deg,transparent_0%,rgb(4_33_29/34%)_30%,rgb(6_22_20/80%)_68%,#06100f_100%)]";
+      ? "bg-[linear-gradient(180deg,transparent_0%,rgb(64_36_11/26%)_24%,rgb(30_20_11/72%)_58%,#0f0d0b_100%)]"
+      : "bg-[linear-gradient(180deg,transparent_0%,rgb(4_58_49/22%)_26%,rgb(6_28_25/72%)_60%,#06100f_100%)]";
   const frameClass =
     mood === "gold"
       ? "border-[rgb(246_181_61/36%)] shadow-[inset_0_1px_0_rgb(255_255_255/16%)]"
@@ -88,13 +92,15 @@ export function EventThumbnail({
       <span
         className={`thumbnail-frame absolute inset-4 z-[2] rounded-lg border ${frameClass}`}
       />
-      <span
-        className={`thumbnail-badge absolute left-[22px] top-[22px] z-[3] inline-flex min-h-8 items-center gap-[7px] rounded-full border px-2.75 text-[0.72rem] font-(weight:--weight-semibold) uppercase backdrop-blur-xl data-[featured=true]:hidden ${badgeClass}`}
-        data-featured={variant === "featured"}
-      >
-        <TicketIcon size={variant === "featured" ? 25 : 18} />
-        <small>{eventCategory(event)}</small>
-      </span>
+      {showBadge && (
+        <span
+          className={`thumbnail-badge absolute left-[22px] top-[22px] z-[3] inline-flex min-h-8 items-center gap-[7px] rounded-full border px-2.75 text-[0.72rem] font-(weight:--weight-semibold) uppercase backdrop-blur-xl data-[featured=true]:hidden ${badgeClass}`}
+          data-featured={variant === "featured"}
+        >
+          <BadgeIcon size={variant === "featured" ? 25 : 18} />
+          <small>{category}</small>
+        </span>
+      )}
       {!hasImage && (
         <span className="thumbnail-initials absolute left-[22px] top-[52%] z-[2] -translate-y-1/2 text-[clamp(4rem,10vw,8rem)] font-(weight:--weight-bold) leading-[0.8] text-[rgb(255_255_255/14%)]">
           {initials(event.name)}
