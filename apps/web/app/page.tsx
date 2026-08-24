@@ -8,13 +8,11 @@ import {
 import Link from 'next/link';
 import type { Event } from '../api';
 import { DiscoveryFilters } from '../components/discovery-filters';
-import { EventThumbnail } from '../components/event-thumbnail';
 import { FeaturedEventCarousel } from '../components/featured-event-carousel';
 import {
   categories,
   eventCategory,
   eventStatus,
-  eventTone,
 } from '../event-utils';
 import { dateTime, money, shortDate } from '../formatters';
 import { listEventsForPage } from '../server-events';
@@ -26,22 +24,6 @@ const sectionKicker =
 const primaryAction =
   'inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-(color:--button-bg) px-4 font-(weight:--weight-bold) text-(color:--button-text) hover:bg-[#fa5b2d]';
 const pillPrimaryAction = `${primaryAction} justify-self-start rounded-full hover:bg-(color:--accent) hover:text-[#081010]`;
-const eventCardBase =
-  'group relative isolate grid min-h-[548px] grid-rows-[minmax(236px,42%)_1fr] overflow-hidden rounded-[22px] border text-(color:--text) transition duration-300 max-[820px]:min-h-[500px] max-[600px]:min-h-0 max-[600px]:grid-rows-[228px_1fr] [&_.event-thumbnail-card]:max-[600px]:min-h-[340px]';
-const eventCardStandard = `${eventCardBase} border-[rgb(73_210_190/34%)] bg-[radial-gradient(circle_at_82%_18%,rgb(102_255_226/16%),transparent_30%),linear-gradient(180deg,#071614,#06100f)] shadow-[0_22px_64px_rgb(0_0_0/30%),inset_0_1px_0_rgb(255_255_255/8%)] hover:border-[rgb(119_238_219/58%)] hover:shadow-[0_34px_90px_rgb(0_0_0/46%),0_0_0_1px_rgb(121_230_217/12%)]`;
-const eventCardFeatured = `${eventCardBase} border-[rgb(246_181_61/62%)] bg-[radial-gradient(circle_at_72%_30%,rgb(246_181_61/28%),transparent_34%),radial-gradient(circle_at_20%_100%,rgb(246_181_61/14%),transparent_34%),linear-gradient(180deg,#1b130c,#0f0d0b_58%,#090908)] shadow-[0_26px_84px_rgb(0_0_0/42%),0_0_0_1px_rgb(246_181_61/13%),inset_0_1px_0_rgb(255_255_255/11%)] hover:border-[rgb(246_200_104/82%)] hover:shadow-[0_38px_110px_rgb(0_0_0/54%),0_0_38px_rgb(246_181_61/18%)]`;
-const eventCardSheen =
-  'pointer-events-none absolute inset-0 z-[1] opacity-95 mix-blend-screen transition duration-300 group-hover:opacity-100';
-const eventCardOrb =
-  'pointer-events-none absolute z-[1] rounded-full opacity-95 blur-[1px] transition duration-500 group-hover:scale-[1.025]';
-const eventCardArc =
-  'pointer-events-none absolute z-[1] rounded-full border transition duration-500 group-hover:scale-[1.03]';
-const eventCardCopy =
-  'relative z-[3] grid grid-rows-[auto_auto_1fr_auto] gap-4 px-[26px] pb-[26px] pt-[54px] max-[820px]:px-[22px] max-[820px]:pb-[22px]';
-const eventMeta =
-  'grid gap-2 [&_span]:inline-flex [&_span]:items-center [&_span]:gap-[7px] [&_span]:text-[0.94rem] [&_span]:font-(weight:--weight-medium) [&_span]:leading-[1.34] [&_span]:text-(color:--text-muted)';
-const eventCta =
-  'inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-4 text-[0.92rem] font-(--weight-bold) transition duration-200 group-hover:-translate-y-0.5 group-active:translate-y-0';
 
 function getParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -131,81 +113,50 @@ export default async function HomePage({
               <div className="grid grid-cols-3 gap-5.5 max-[1120px]:grid-cols-2 max-[600px]:grid-cols-1">
                 {visibleEvents.map((event, index) => {
                   const isFeaturedCard = index === 0;
-                  const mood = isFeaturedCard ? 'gold' : 'green';
                   const category = eventCategory(event);
                   const CategoryIcon =
                     category === 'Music' ? Music2 : TicketIcon;
 
                   return (
                     <Link
-                      className={
-                        isFeaturedCard ? eventCardFeatured : eventCardStandard
-                      }
+                      className={`event-list-card ${
+                        isFeaturedCard
+                          ? 'event-list-card--gold'
+                          : 'event-list-card--green'
+                      }`}
                       key={event.id}
                       href="/tickets"
                     >
-                      <span
-                        aria-hidden="true"
-                        className={`${eventCardSheen} ${
-                          isFeaturedCard
-                            ? 'bg-[radial-gradient(circle_at_86%_0%,rgb(255_226_160/68%),transparent_26%),radial-gradient(circle_at_45%_42%,rgb(246_181_61/42%),transparent_34%),linear-gradient(115deg,transparent_0%,rgb(255_232_184/18%)_44%,transparent_60%)]'
-                            : 'bg-[radial-gradient(circle_at_82%_2%,rgb(132_255_236/34%),transparent_24%),radial-gradient(circle_at_50%_40%,rgb(38_197_169/20%),transparent_34%),linear-gradient(115deg,transparent_0%,rgb(132_255_236/12%)_43%,transparent_58%)]'
-                        }`}
-                      />
-                      <span
-                        aria-hidden="true"
-                        className={`${eventCardOrb} ${
-                          isFeaturedCard
-                            ? '-left-24 top-44 size-95 bg-[radial-gradient(circle_at_58%_42%,rgb(255_214_126/42%),rgb(246_181_61/20%)_33%,rgb(246_181_61/7%)_52%,transparent_70%)] max-[600px]:top-40'
-                            : '-right-20 top-48 size-72 bg-[radial-gradient(circle_at_42%_40%,rgb(111_246_220/20%),rgb(38_197_169/9%)_40%,transparent_70%)] max-[600px]:top-43'
-                        }`}
-                      />
-                      <span
-                        aria-hidden="true"
-                        className={`${eventCardArc} ${
-                          isFeaturedCard
-                            ? '-left-18 top-48 size-88 border-[rgb(246_181_61/46%)] shadow-[0_0_54px_rgb(246_181_61/30%)] max-[600px]:top-43'
-                            : '-right-19 top-48 size-68 border-[rgb(94_226_204/21%)] shadow-[0_0_38px_rgb(94_226_204/15%)] max-[600px]:top-43'
-                        }`}
-                      />
-                      <span
-                        className={
-                          isFeaturedCard
-                            ? 'absolute left-5 top-5 z-5 inline-flex min-h-8 items-center gap-2 rounded-full border border-[rgb(246_181_61/36%)] bg-[rgb(31_20_11/62%)] px-3 text-[0.74rem] font-(--weight-semibold) uppercase text-[#f6c866] shadow-[inset_0_1px_0_rgb(255_255_255/20%),0_10px_24px_rgb(0_0_0/22%)] backdrop-blur-xl'
-                            : 'absolute left-5 top-5 z-5 inline-flex min-h-8 items-center gap-2 rounded-full border border-[rgb(94_226_204/34%)] bg-[rgb(0_77_67/62%)] px-3 text-[0.74rem] font-(--weight-semibold) uppercase text-[#dffcf7] shadow-[inset_0_1px_0_rgb(255_255_255/18%),0_10px_24px_rgb(0_0_0/20%)] backdrop-blur-xl'
-                        }
-                      >
+                      <span className="event-list-card__media" aria-hidden="true">
+                        {event.thumbnailUrl ? (
+                          <img src={event.thumbnailUrl} alt="" />
+                        ) : (
+                          <span className="event-list-card__fallback">
+                            {event.name
+                              .split(' ')
+                              .map((part) => part[0])
+                              .join('')
+                              .slice(0, 2)
+                              .toUpperCase()}
+                          </span>
+                        )}
+                      </span>
+                      <span className="event-list-card__sheen" aria-hidden="true" />
+                      <span className="event-list-card__orb" aria-hidden="true" />
+                      <span className="event-list-card__arc" aria-hidden="true" />
+                      <span className="event-list-card__frame" aria-hidden="true" />
+                      <span className="event-list-card__chip">
                         <CategoryIcon size={17} />
                         {category}
                       </span>
-                      <span className="relative z-2 -mb-28 min-w-0">
-                        <EventThumbnail
-                          event={event}
-                          tone={eventTone(index)}
-                          mood={mood}
-                          showBadge={false}
-                        />
-                      </span>
-                      <span className={eventCardCopy}>
-                        <strong className="min-h-[2.08em] font-serif text-[clamp(2rem,2.5vw,3.15rem)] font-(--weight-bold) leading-[1.02] text-[#fffaf0] max-[820px]:text-[clamp(1.85rem,8vw,2.55rem)]">
+                      <span className="event-list-card__content">
+                        <strong className="event-list-card__title">
                           {event.name}
                         </strong>
-                        <small
-                          className={
-                            isFeaturedCard
-                              ? 'min-h-[3.1em] text-[1.02rem] font-(--weight-regular) leading-[1.55] text-[rgb(255_246_226/74%)]'
-                              : 'min-h-[3.1em] text-[1.02rem] font-(--weight-regular) leading-[1.55] text-[rgb(222_244_240/72%)]'
-                          }
-                        >
+                        <small className="event-list-card__description">
                           {event.description}
                         </small>
-                        <span
-                          className={`${eventMeta} ${
-                            isFeaturedCard
-                              ? '[&_span]:text-[rgb(255_246_226/76%)] [&_svg]:text-[#f6c866]'
-                              : '[&_span]:text-[rgb(222_244_240/72%)] [&_svg]:text-[#5ee2cc]'
-                          }`}
-                        >
+                        <span className="event-list-card__meta">
                           <span>
                             <CalendarDays size={15} />
                             {shortDate.format(new Date(event.startsAt))}
@@ -215,23 +166,11 @@ export default async function HomePage({
                             {event.venue}
                           </span>
                         </span>
-                        <span
-                          className={
-                            isFeaturedCard
-                              ? 'mt-1.5 flex items-center justify-between gap-4 border-t border-[rgb(246_181_61/24%)] pt-4.5'
-                              : 'mt-1.5 flex items-center justify-between gap-4 border-t border-[rgb(94_226_204/18%)] pt-4.5'
-                          }
-                        >
-                          <span className="self-center text-[1.4rem] font-(--weight-bold) text-[#f6c866]">
+                        <span className="event-list-card__footer">
+                          <span className="event-list-card__price">
                             {money.format(event.priceCents / 100)}
                           </span>
-                          <span
-                            className={`${eventCta} ${
-                              isFeaturedCard
-                                ? 'border border-[rgb(255_238_181/42%)] bg-[linear-gradient(180deg,#ffd978_0%,#f4b33f_52%,#d98c22_100%)] text-[#1a1207] shadow-[inset_0_1px_0_rgb(255_255_255/58%),inset_0_-3px_6px_rgb(107_57_8/24%),0_18px_30px_rgb(246_181_61/24%),0_5px_0_rgb(116_66_12/28%)] group-hover:bg-[linear-gradient(180deg,#ffe39a_0%,#f7bd4f_56%,#df9628_100%)]'
-                                : 'border border-[rgb(139_255_235/25%)] bg-[linear-gradient(180deg,#2a9383_0%,#126d60_55%,#0a4c43_100%)] text-[#ecfffb] shadow-[inset_0_1px_0_rgb(255_255_255/26%),inset_0_-3px_7px_rgb(0_20_18/26%),0_16px_28px_rgb(0_0_0/28%),0_4px_0_rgb(0_48_42/48%)] group-hover:bg-[linear-gradient(180deg,#79e6d9_0%,#2a9a89_58%,#106759_100%)] group-hover:text-[#06100f]'
-                            }`}
-                          >
+                          <span className="event-list-card__cta">
                             Get tickets
                             <ArrowRight size={16} />
                           </span>

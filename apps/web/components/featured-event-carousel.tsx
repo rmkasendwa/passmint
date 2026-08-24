@@ -1,28 +1,30 @@
 'use client';
 
 import {
+  ArrowRight,
   ChevronLeft,
   ChevronRight,
+  CalendarDays,
   CircleDollarSign,
   MapPin,
+  Music2,
   Ticket as TicketIcon,
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import type { Event } from '../api';
-import { eventStatus, eventTone } from '../event-utils';
+import { eventCategory, eventStatus } from '../event-utils';
 import { chipDate, money } from '../formatters';
-import { EventThumbnail } from './event-thumbnail';
 
 const primaryAction =
-  'inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-(color:--button-bg) px-4 font-(weight:--weight-bold) text-(color:--button-text) shadow-[0_16px_38px_rgb(0_0_0/24%)] hover:bg-[#fa5b2d]';
+  'featured-carousel__cta';
 
 const sectionKicker =
-  'mb-2 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-[rgb(255_255_255/58%)]';
+  'mb-2 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-[rgb(255_246_226/62%)]';
 
 const ticketBadge =
-  'inline-flex min-h-[34px] items-center rounded-full border border-[rgb(255_255_255/14%)] bg-[rgb(0_0_0/38%)] px-3.5 text-[0.82rem] font-(weight:--weight-semibold) uppercase text-white';
+  'inline-flex min-h-[34px] items-center gap-2 rounded-full border border-[rgb(246_181_61/26%)] bg-[rgb(18_14_10/48%)] px-3.5 text-[0.82rem] font-(weight:--weight-semibold) uppercase text-[#ffe6a8] backdrop-blur-xl';
 
 export function FeaturedEventCarousel({ events }: { events: Event[] }) {
   const featuredEvents = useMemo(() => events.slice(0, 5), [events]);
@@ -43,10 +45,21 @@ export function FeaturedEventCarousel({ events }: { events: Event[] }) {
 
   if (!activeEvent) return null;
 
-  const renderEventCopy = (event: Event) => (
+  const renderEventCopy = (event: Event) => {
+    const category = eventCategory(event);
+    const CategoryIcon = category === 'Music' ? Music2 : TicketIcon;
+
+    return (
     <>
       <div className="mb-4 flex flex-wrap gap-2">
-        <span className={ticketBadge}>{eventStatus(event)}</span>
+        <span className="featured-carousel__chip">
+          <CategoryIcon size={18} />
+          {category}
+        </span>
+        <span className={ticketBadge}>
+          <CalendarDays size={15} />
+          {eventStatus(event)}
+        </span>
         <span className={ticketBadge}>
           {chipDate.format(new Date(event.startsAt))}
         </span>
@@ -76,11 +89,12 @@ export function FeaturedEventCarousel({ events }: { events: Event[] }) {
         </span>
       </div>
       <Link className={primaryAction} href="/tickets">
-        <TicketIcon size={18} />
         Get tickets
+        <ArrowRight size={18} />
       </Link>
     </>
-  );
+    );
+  };
 
   const goToPrevious = () => {
     setActiveIndex(
@@ -95,7 +109,7 @@ export function FeaturedEventCarousel({ events }: { events: Event[] }) {
 
   return (
     <section
-      className="relative grid min-h-150 grid-cols-1 overflow-hidden rounded-3xl border border-border bg-surface-raised shadow-[0_28px_100px_rgb(0_0_0/34%)] max-[820px]:min-h-130 max-[820px]:rounded-[18px] max-[600px]:min-h-140"
+      className="featured-carousel"
       aria-label="Featured events"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
@@ -112,13 +126,26 @@ export function FeaturedEventCarousel({ events }: { events: Event[] }) {
             data-active={isActive}
             aria-hidden={!isActive}
           >
-            <EventThumbnail
-              event={event}
-              tone={eventTone(index)}
-              variant="featured"
-            />
+            <span className="featured-carousel__media" aria-hidden="true">
+              {event.thumbnailUrl ? (
+                <img src={event.thumbnailUrl} alt="" />
+              ) : (
+                <span className="featured-carousel__fallback">
+                  {event.name
+                    .split(' ')
+                    .map((part) => part[0])
+                    .join('')
+                    .slice(0, 2)
+                    .toUpperCase()}
+                </span>
+              )}
+            </span>
+            <span className="featured-carousel__sheen" aria-hidden="true" />
+            <span className="featured-carousel__orb" aria-hidden="true" />
+            <span className="featured-carousel__arc" aria-hidden="true" />
+            <span className="featured-carousel__frame" aria-hidden="true" />
             <div
-              className="absolute bottom-[clamp(30px,5vw,62px)] left-[clamp(26px,5vw,64px)] z-4 w-[min(1040px,calc(100%-56px))] transition duration-700 ease-out data-[active=false]:translate-y-4 data-[active=false]:opacity-0 data-[active=true]:translate-y-0 data-[active=true]:opacity-100 motion-reduce:transition-none max-[600px]:bottom-28"
+              className="absolute bottom-[clamp(30px,5vw,62px)] left-[clamp(26px,5vw,64px)] z-4 w-[min(1040px,calc(100%-56px))] transition duration-700 ease-out data-[active=false]:translate-y-4 data-[active=false]:opacity-0 data-[active=true]:translate-y-0 data-[active=true]:opacity-100 motion-reduce:transition-none max-[600px]:bottom-26"
               data-active={isActive}
             >
               {renderEventCopy(event)}
@@ -131,18 +158,18 @@ export function FeaturedEventCarousel({ events }: { events: Event[] }) {
         <div className="absolute bottom-8.5 right-[clamp(142px,12vw,190px)] z-5 flex items-center gap-2 max-[600px]:bottom-8 max-[600px]:right-7">
           <button
             type="button"
-            className="grid size-10 place-items-center rounded-full border border-[rgb(255_255_255/22%)] bg-[rgb(0_0_0/36%)] text-white backdrop-blur-xl transition hover:border-[rgb(255_255_255/44%)] hover:bg-[rgb(255_255_255/16%)]"
+            className="featured-carousel__nav-button"
             aria-label="Previous featured event"
             onClick={goToPrevious}
           >
             <ChevronLeft size={18} />
           </button>
-          <div className="flex items-center gap-1.5 rounded-full border border-[rgb(255_255_255/16%)] bg-[rgb(0_0_0/34%)] px-2.5 py-2 backdrop-blur-xl">
+          <div className="featured-carousel__dots">
             {featuredEvents.map((event, index) => (
               <button
                 type="button"
                 key={event.id}
-                className="size-2.5 rounded-full bg-white transition data-[active=false]:bg-[rgb(255_255_255/38%)] data-[active=true]:w-6"
+                className="size-2.5 rounded-full bg-[#f6c866] transition data-[active=false]:bg-[rgb(255_246_226/38%)] data-[active=true]:w-6"
                 data-active={index === activeIndex}
                 aria-label={`Show featured event ${index + 1}`}
                 aria-current={index === activeIndex}
@@ -152,7 +179,7 @@ export function FeaturedEventCarousel({ events }: { events: Event[] }) {
           </div>
           <button
             type="button"
-            className="grid size-10 place-items-center rounded-full border border-[rgb(255_255_255/22%)] bg-[rgb(0_0_0/36%)] text-white backdrop-blur-xl transition hover:border-[rgb(255_255_255/44%)] hover:bg-[rgb(255_255_255/16%)]"
+            className="featured-carousel__nav-button"
             aria-label="Next featured event"
             onClick={goToNext}
           >
