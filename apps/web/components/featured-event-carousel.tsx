@@ -53,15 +53,15 @@ export function FeaturedEventCarousel({ events }: { events: Event[] }) {
       </div>
       <p className={sectionKicker}>Featured event</p>
       <h2
-        className="mb-0 line-clamp-2 max-w-[1040px] text-[clamp(3.35rem,7.2vw,6.35rem)] font-(weight:--weight-bold) leading-normal text-white max-[820px]:text-5xl"
+        className="mb-0 line-clamp-2 max-w-230 text-[clamp(3.1rem,6.2vw,5.6rem)] font-(--weight-bold) leading-[0.96] text-white max-[820px]:max-w-[min(100%,620px)] max-[820px]:text-5xl max-[820px]:leading-[1.02]"
         title={event.name}
       >
         {event.name}
       </h2>
-      <p className="mb-0 mt-3 max-w-[590px] text-[1.08rem] leading-normal text-[rgb(255_255_255/82%)]">
+      <p className="mb-0 mt-3 line-clamp-2 max-w-147.5 text-[1.08rem] leading-normal text-[rgb(255_255_255/82%)]">
         {event.description}
       </p>
-      <div className="my-5 flex flex-wrap gap-2.5 [&_span]:inline-flex [&_span]:min-h-[40px] [&_span]:items-center [&_span]:gap-2 [&_span]:rounded-full [&_span]:bg-[rgb(255_255_255/14%)] [&_span]:px-3.5 [&_span]:text-[0.95rem] [&_span]:font-(weight:--weight-semibold) [&_span]:text-[rgb(255_255_255/90%)] [&_span]:backdrop-blur-md">
+      <div className="my-5 flex flex-wrap gap-2.5 [&_span]:inline-flex [&_span]:min-h-10 [&_span]:items-center [&_span]:gap-2 [&_span]:rounded-full [&_span]:bg-[rgb(255_255_255/14%)] [&_span]:px-3.5 [&_span]:text-[0.95rem] [&_span]:font-(--weight-semibold) [&_span]:text-[rgb(255_255_255/90%)] [&_span]:backdrop-blur-md">
         <span>
           <MapPin size={16} />
           {event.venue}
@@ -95,7 +95,7 @@ export function FeaturedEventCarousel({ events }: { events: Event[] }) {
 
   return (
     <section
-      className="relative grid min-h-[600px] grid-cols-1 overflow-hidden rounded-3xl border border-(color:--border) bg-(color:--surface-raised) shadow-[0_28px_100px_rgb(0_0_0/34%)] max-[820px]:min-h-[520px] max-[820px]:rounded-[18px] max-[600px]:min-h-[560px]"
+      className="relative grid min-h-150 grid-cols-1 overflow-hidden rounded-3xl border border-border bg-surface-raised shadow-[0_28px_100px_rgb(0_0_0/34%)] max-[820px]:min-h-130 max-[820px]:rounded-[18px] max-[600px]:min-h-140"
       aria-label="Featured events"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
@@ -118,7 +118,7 @@ export function FeaturedEventCarousel({ events }: { events: Event[] }) {
               variant="featured"
             />
             <div
-              className="absolute bottom-[clamp(30px,5vw,62px)] left-[clamp(26px,5vw,64px)] z-[4] w-[min(1040px,calc(100%-56px))] transition duration-700 ease-out data-[active=false]:translate-y-4 data-[active=false]:opacity-0 data-[active=true]:translate-y-0 data-[active=true]:opacity-100 motion-reduce:transition-none max-[600px]:bottom-28"
+              className="absolute bottom-[clamp(30px,5vw,62px)] left-[clamp(26px,5vw,64px)] z-4 w-[min(1040px,calc(100%-56px))] transition duration-700 ease-out data-[active=false]:translate-y-4 data-[active=false]:opacity-0 data-[active=true]:translate-y-0 data-[active=true]:opacity-100 motion-reduce:transition-none max-[600px]:bottom-28"
               data-active={isActive}
             >
               {renderEventCopy(event)}
@@ -128,7 +128,7 @@ export function FeaturedEventCarousel({ events }: { events: Event[] }) {
       })}
 
       {hasMultiple && (
-        <div className="absolute bottom-[34px] right-[clamp(142px,12vw,190px)] z-[5] flex items-center gap-2 max-[600px]:bottom-8 max-[600px]:right-7">
+        <div className="absolute bottom-8.5 right-[clamp(142px,12vw,190px)] z-5 flex items-center gap-2 max-[600px]:bottom-8 max-[600px]:right-7">
           <button
             type="button"
             className="grid size-10 place-items-center rounded-full border border-[rgb(255_255_255/22%)] bg-[rgb(0_0_0/36%)] text-white backdrop-blur-xl transition hover:border-[rgb(255_255_255/44%)] hover:bg-[rgb(255_255_255/16%)]"
