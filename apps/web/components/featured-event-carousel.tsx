@@ -43,6 +43,42 @@ export function FeaturedEventCarousel({ events }: { events: Event[] }) {
 
   if (!activeEvent) return null;
 
+  const renderEventCopy = (event: Event) => (
+    <>
+      <div className="mb-4 flex flex-wrap gap-2">
+        <span className={ticketBadge}>{eventStatus(event)}</span>
+        <span className={ticketBadge}>
+          {chipDate.format(new Date(event.startsAt))}
+        </span>
+      </div>
+      <p className={sectionKicker}>Featured event</p>
+      <h2 className="mb-0 text-[clamp(3.35rem,7.2vw,6.35rem)] font-[var(--weight-bold)] leading-[0.92] text-white max-[820px]:text-5xl">
+        {event.name}
+      </h2>
+      <p className="mb-0 mt-3 max-w-[590px] text-[1.08rem] leading-[1.5] text-[rgb(255_255_255/82%)]">
+        {event.description}
+      </p>
+      <div className="my-5 flex flex-wrap gap-2.5 [&_span]:inline-flex [&_span]:min-h-[40px] [&_span]:items-center [&_span]:gap-2 [&_span]:rounded-full [&_span]:bg-[rgb(255_255_255/14%)] [&_span]:px-3.5 [&_span]:text-[0.95rem] [&_span]:font-[var(--weight-semibold)] [&_span]:text-[rgb(255_255_255/90%)] [&_span]:backdrop-blur-md">
+        <span>
+          <MapPin size={16} />
+          {event.venue}
+        </span>
+        <span>
+          <CircleDollarSign size={16} />
+          {money.format(event.priceCents / 100)}
+        </span>
+        <span>
+          <Users size={16} />
+          {event.capacity.toLocaleString("en-UG")} spots
+        </span>
+      </div>
+      <Link className={primaryAction} href="/tickets">
+        <TicketIcon size={18} />
+        Get tickets
+      </Link>
+    </>
+  );
+
   const goToPrevious = () => {
     setActiveIndex(
       (current) =>
@@ -63,47 +99,33 @@ export function FeaturedEventCarousel({ events }: { events: Event[] }) {
       onFocus={() => setIsPaused(true)}
       onBlur={() => setIsPaused(false)}
     >
-      <EventThumbnail
-        event={activeEvent}
-        tone={eventTone(activeIndex)}
-        variant="featured"
-      />
-      <div className="absolute bottom-[clamp(30px,5vw,62px)] left-[clamp(26px,5vw,64px)] z-[4] w-[min(660px,calc(100%-56px))] max-[600px]:bottom-28">
-        <div className="mb-4 flex flex-wrap gap-2">
-          <span className={ticketBadge}>{eventStatus(activeEvent)}</span>
-          <span className={ticketBadge}>
-            {chipDate.format(new Date(activeEvent.startsAt))}
-          </span>
-        </div>
-        <p className={sectionKicker}>Featured event</p>
-        <h2 className="mb-0 text-[clamp(3.35rem,7.2vw,6.35rem)] font-[var(--weight-bold)] leading-[0.92] text-white max-[820px]:text-5xl">
-          {activeEvent.name}
-        </h2>
-        <p className="mb-0 mt-3 max-w-[590px] text-[1.08rem] leading-[1.5] text-[rgb(255_255_255/82%)]">
-          {activeEvent.description}
-        </p>
-        <div className="my-5 flex flex-wrap gap-2.5 [&_span]:inline-flex [&_span]:min-h-[40px] [&_span]:items-center [&_span]:gap-2 [&_span]:rounded-full [&_span]:bg-[rgb(255_255_255/14%)] [&_span]:px-3.5 [&_span]:text-[0.95rem] [&_span]:font-[var(--weight-semibold)] [&_span]:text-[rgb(255_255_255/90%)] [&_span]:backdrop-blur-md">
-          <span>
-            <MapPin size={16} />
-            {activeEvent.venue}
-          </span>
-          <span>
-            <CircleDollarSign size={16} />
-            {money.format(activeEvent.priceCents / 100)}
-          </span>
-          <span>
-            <Users size={16} />
-            {activeEvent.capacity.toLocaleString("en-UG")} spots
-          </span>
-        </div>
-        <Link className={primaryAction} href="/tickets">
-          <TicketIcon size={18} />
-          Get tickets
-        </Link>
-      </div>
+      {featuredEvents.map((event, index) => {
+        const isActive = index === activeIndex;
+
+        return (
+          <div
+            key={event.id}
+            className="absolute inset-0 grid transition duration-700 ease-out data-[active=false]:pointer-events-none data-[active=false]:opacity-0 data-[active=false]:translate-x-6 data-[active=true]:opacity-100 data-[active=true]:translate-x-0 motion-reduce:transition-none"
+            data-active={isActive}
+            aria-hidden={!isActive}
+          >
+            <EventThumbnail
+              event={event}
+              tone={eventTone(index)}
+              variant="featured"
+            />
+            <div
+              className="absolute bottom-[clamp(30px,5vw,62px)] left-[clamp(26px,5vw,64px)] z-[4] w-[min(660px,calc(100%-56px))] transition duration-700 ease-out data-[active=false]:translate-y-4 data-[active=false]:opacity-0 data-[active=true]:translate-y-0 data-[active=true]:opacity-100 motion-reduce:transition-none max-[600px]:bottom-28"
+              data-active={isActive}
+            >
+              {renderEventCopy(event)}
+            </div>
+          </div>
+        );
+      })}
 
       {hasMultiple && (
-        <div className="absolute bottom-[34px] right-[clamp(114px,9vw,132px)] z-[5] flex items-center gap-2 max-[600px]:bottom-8 max-[600px]:right-7">
+        <div className="absolute bottom-[34px] right-[clamp(142px,12vw,190px)] z-[5] flex items-center gap-2 max-[600px]:bottom-8 max-[600px]:right-7">
           <button
             type="button"
             className="grid size-10 place-items-center rounded-full border border-[rgb(255_255_255/22%)] bg-[rgb(0_0_0/36%)] text-white backdrop-blur-xl transition hover:border-[rgb(255_255_255/44%)] hover:bg-[rgb(255_255_255/16%)]"

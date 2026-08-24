@@ -1,4 +1,7 @@
+"use client";
+
 import { Ticket as TicketIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 import type { Event } from "../api";
 import { eventCategory, initials } from "../event-utils";
 
@@ -33,28 +36,42 @@ export function EventThumbnail({
   tone: string;
   variant?: "card" | "featured" | "preview";
 }) {
+  const [imageFailed, setImageFailed] = useState(false);
   const date = new Date(event.startsAt);
   const day = new Intl.DateTimeFormat("en-UG", { day: "numeric" }).format(date);
   const month = new Intl.DateTimeFormat("en-UG", { month: "short" }).format(
     date,
   );
+  const hasImage = Boolean(event.thumbnailUrl) && !imageFailed;
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [event.thumbnailUrl]);
 
   return (
     <span
       className={`event-thumbnail-${variant} ${baseThumbnail} ${variantClass[variant]} ${
-        event.thumbnailUrl ? "" : `${fallbackDecor} ${toneGradient[tone] ?? toneGradient["tone-1"]}`
+        hasImage ? "" : `${fallbackDecor} ${toneGradient[tone] ?? toneGradient["tone-1"]}`
       }`}
     >
-      {event.thumbnailUrl && (
-        <img src={event.thumbnailUrl} alt="" aria-hidden="true" />
+      {hasImage && (
+        <img
+          src={event.thumbnailUrl ?? ""}
+          alt=""
+          aria-hidden="true"
+          onError={() => setImageFailed(true)}
+        />
       )}
       <span className="absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgb(0_0_0/8%),rgb(0_0_0/18%)_42%,rgb(0_0_0/76%)),linear-gradient(135deg,rgb(19_52_63/32%),rgb(12_18_28/16%))]" />
       <span className="thumbnail-frame absolute inset-4 z-[2] rounded-lg border border-[rgb(255_255_255/32%)]" />
-      <span className="thumbnail-badge absolute left-[22px] top-[22px] z-[3] inline-flex min-h-8 items-center gap-[7px] rounded-lg bg-[rgb(8_13_20/46%)] px-2.5 text-[0.72rem] font-[var(--weight-semibold)] uppercase backdrop-blur-xl">
+      <span
+        className="thumbnail-badge absolute left-[22px] top-[22px] z-[3] inline-flex min-h-8 items-center gap-[7px] rounded-lg bg-[rgb(8_13_20/46%)] px-2.5 text-[0.72rem] font-[var(--weight-semibold)] uppercase backdrop-blur-xl data-[featured=true]:hidden"
+        data-featured={variant === "featured"}
+      >
         <TicketIcon size={variant === "featured" ? 25 : 18} />
         <small>{eventCategory(event)}</small>
       </span>
-      {!event.thumbnailUrl && (
+      {!hasImage && (
         <span className="thumbnail-initials absolute left-[22px] top-[52%] z-[2] -translate-y-1/2 text-[clamp(4rem,10vw,8rem)] font-[var(--weight-bold)] leading-[0.8] text-[rgb(255_255_255/14%)]">
           {initials(event.name)}
         </span>
