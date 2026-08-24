@@ -21,9 +21,6 @@ export const dynamic = 'force-dynamic';
 
 const sectionKicker =
   'mb-2 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-(color:--text-soft)';
-const primaryAction =
-  'inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-(color:--button-bg) px-4 font-(weight:--weight-bold) text-(color:--button-text) hover:bg-[#fa5b2d]';
-const pillPrimaryAction = `${primaryAction} justify-self-start rounded-full hover:bg-(color:--accent) hover:text-[#081010]`;
 
 function getParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -180,17 +177,19 @@ export default async function HomePage({
                   );
                 })}
               </div>
-            )}
-          </section>
+          )}
+        </section>
 
           {nextEvent && (
-            <section className="relative flex items-center justify-between gap-7 overflow-hidden rounded-[20px] border border-border bg-[linear-gradient(135deg,rgb(121_230_217/20%),transparent_52%),linear-gradient(90deg,var(--surface-elevated),var(--surface-raised))] px-[clamp(28px,5vw,52px)] py-[clamp(28px,4vw,44px)] shadow-[inset_0_1px_0_rgb(255_255_255/7%)] after:pointer-events-none after:absolute after:inset-0 after:bg-[linear-gradient(90deg,rgb(255_255_255/10%),transparent_18%),linear-gradient(180deg,rgb(255_255_255/5%),transparent_42%)] max-[820px]:flex-col max-[820px]:items-stretch max-[820px]:rounded-[18px]">
-              <div className="relative z-1">
-                <p className={sectionKicker}>Next event</p>
-                <h2 className="mb-2.5 max-w-190 text-[clamp(2.4rem,4.8vw,4.4rem)] font-(--weight-bold) leading-[0.98] text-text">
+            <section className="next-event-panel">
+              <span className="next-event-panel__sheen" aria-hidden="true" />
+              <span className="next-event-panel__arc" aria-hidden="true" />
+              <div className="next-event-panel__content">
+                <p className="next-event-panel__kicker">Next event</p>
+                <h2 className="next-event-panel__title">
                   {nextEvent.name}
                 </h2>
-                <div className="flex flex-wrap gap-2.5 max-[600px]:flex-col max-[600px]:items-start [&_span]:inline-flex [&_span]:min-h-9.5 [&_span]:items-center [&_span]:gap-2 [&_span]:rounded-full [&_span]:bg-surface-muted [&_span]:px-3.25 [&_span]:text-[0.95rem] [&_span]:font-(--weight-medium) [&_span]:text-text-muted [&_svg]:text-accent">
+                <div className="next-event-panel__meta">
                   <span>
                     <CalendarDays size={17} />
                     {dateTime.format(new Date(nextEvent.startsAt))}
@@ -199,15 +198,12 @@ export default async function HomePage({
                     <MapPin size={17} />
                     {nextEvent.venue}
                   </span>
-                  <strong className="inline-flex min-h-9.5 items-center gap-2 rounded-full bg-[rgb(248_200_104/14%)] px-3.25 text-[0.95rem] font-(--weight-semibold) text-price">
+                  <strong>
                     {money.format(nextEvent.priceCents / 100)}
                   </strong>
                 </div>
               </div>
-              <Link
-                className={`${pillPrimaryAction} relative z-1`}
-                href="/tickets"
-              >
+              <Link className="next-event-panel__cta" href="/tickets">
                 <TicketIcon size={18} />
                 Reserve spot
               </Link>
