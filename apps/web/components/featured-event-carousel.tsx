@@ -52,7 +52,10 @@ export function FeaturedEventCarousel({ events }: { events: Event[] }) {
         </span>
       </div>
       <p className={sectionKicker}>Featured event</p>
-      <h2 className="mb-0 text-[clamp(3.35rem,7.2vw,6.35rem)] font-[var(--weight-bold)] leading-[0.92] text-white max-[820px]:text-5xl">
+      <h2
+        className="mb-0 line-clamp-2 max-w-[1040px] text-[clamp(3.35rem,7.2vw,6.35rem)] font-[var(--weight-bold)] leading-[0.92] text-white max-[820px]:text-5xl"
+        title={event.name}
+      >
         {event.name}
       </h2>
       <p className="mb-0 mt-3 max-w-[590px] text-[1.08rem] leading-[1.5] text-[rgb(255_255_255/82%)]">
@@ -115,7 +118,7 @@ export function FeaturedEventCarousel({ events }: { events: Event[] }) {
               variant="featured"
             />
             <div
-              className="absolute bottom-[clamp(30px,5vw,62px)] left-[clamp(26px,5vw,64px)] z-[4] w-[min(660px,calc(100%-56px))] transition duration-700 ease-out data-[active=false]:translate-y-4 data-[active=false]:opacity-0 data-[active=true]:translate-y-0 data-[active=true]:opacity-100 motion-reduce:transition-none max-[600px]:bottom-28"
+              className="absolute bottom-[clamp(30px,5vw,62px)] left-[clamp(26px,5vw,64px)] z-[4] w-[min(1040px,calc(100%-56px))] transition duration-700 ease-out data-[active=false]:translate-y-4 data-[active=false]:opacity-0 data-[active=true]:translate-y-0 data-[active=true]:opacity-100 motion-reduce:transition-none max-[600px]:bottom-28"
               data-active={isActive}
             >
               {renderEventCopy(event)}
