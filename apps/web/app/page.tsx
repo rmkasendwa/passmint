@@ -3,12 +3,12 @@ import {
   CalendarDays,
   CircleDollarSign,
   MapPin,
-  Search,
   Ticket as TicketIcon,
   Users,
 } from "lucide-react";
 import Link from "next/link";
 import type { Event } from "../api";
+import { DiscoveryFilters } from "../components/discovery-filters";
 import { EventThumbnail } from "../components/event-thumbnail";
 import {
   categories,
@@ -26,8 +26,6 @@ const sectionKicker =
 const primaryAction =
   "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-[var(--button-bg)] px-4 font-[var(--weight-bold)] text-[var(--button-text)] hover:bg-[#fa5b2d]";
 const pillPrimaryAction = `${primaryAction} justify-self-start rounded-full hover:bg-[var(--accent)] hover:text-[#081010]`;
-const inputShell =
-  "flex min-h-11 items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--control-bg)] px-[15px] text-[var(--text-muted)] focus-within:border-[var(--accent)] focus-within:outline-[3px_solid_rgb(22_125_119/18%)] [&_input]:min-h-[42px] [&_input]:w-full [&_input]:min-w-0 [&_input]:border-0 [&_input]:bg-transparent [&_input]:p-0 [&_input]:text-[var(--text)] [&_input]:outline-0 [&_input::placeholder]:text-[var(--text-soft)]";
 const eventCard =
   "grid min-h-[560px] grid-rows-[minmax(238px,42%)_1fr] rounded-[20px] border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] shadow-[0_20px_58px_rgb(0_0_0/22%)] transition hover:border-[var(--border-strong)] hover:shadow-[0_34px_90px_rgb(0_0_0/40%)] max-[820px]:min-h-[500px] max-[600px]:min-h-0 max-[600px]:grid-rows-[220px_1fr] [&_.event-card-affordance]:hover:bg-[var(--accent)] [&_.event-card-affordance]:hover:text-[#081010] [&_.event-thumbnail-card]:max-[600px]:min-h-[220px]";
 const eventCardCopy =
@@ -69,48 +67,7 @@ export default async function HomePage({
         className="sticky top-16 z-20 grid justify-items-center gap-2.5 border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--surface-raised)_90%,transparent)] px-0 py-3 backdrop-blur-[18px] max-[820px]:top-[113px] max-[820px]:px-4"
         aria-label="Event discovery"
       >
-        <form
-          className="grid w-[min(1040px,calc(100%-var(--content-gutter)*2))] grid-cols-[minmax(280px,1fr)_minmax(230px,286px)_auto] items-end gap-3 max-[820px]:w-full max-[820px]:grid-cols-1"
-          action="/"
-          role="search"
-        >
-          <label className="grid gap-[7px] text-[0.76rem] font-[var(--weight-semibold)] text-[var(--text-muted)]">
-            <div className={inputShell}>
-              <Search size={18} />
-              <input
-                aria-label="Search by event or venue"
-                name="q"
-                placeholder="Event, venue, artist, team"
-                defaultValue={query}
-              />
-            </div>
-          </label>
-          <label className="grid gap-[7px] text-[0.76rem] font-[var(--weight-semibold)] text-[var(--text-muted)]">
-            <div className={inputShell}>
-              <CalendarDays size={18} />
-              <input
-                aria-label="Start date"
-                name="start"
-                type="date"
-                defaultValue={dateStart}
-              />
-              <input
-                aria-label="End date"
-                name="end"
-                type="date"
-                defaultValue={dateEnd}
-              />
-            </div>
-          </label>
-          <button
-            className="inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-transparent bg-[var(--button-bg)] px-5 text-[0.95rem] font-[var(--weight-bold)] text-[var(--button-text)] hover:bg-[var(--accent)] hover:text-[#081010]"
-            type="submit"
-            aria-label="Search events"
-          >
-            <Search size={19} />
-            Search events
-          </button>
-        </form>
+        <DiscoveryFilters query={query} start={dateStart} end={dateEnd} />
 
         <form
           className="flex w-[min(var(--content-max),calc(100%-var(--content-gutter)*2))] justify-center gap-[7px] overflow-x-auto pb-0.5 max-[820px]:w-full max-[820px]:justify-start"
@@ -122,11 +79,8 @@ export default async function HomePage({
               key={label}
               name="q"
               value={categoryQuery}
-              className={`flex min-h-[34px] flex-none items-center gap-3 rounded-full border border-[var(--border)] px-3 py-0 pl-[7px] text-left text-[var(--text-muted)] shadow-none hover:bg-[var(--button-bg)] hover:text-[var(--button-text)] ${
-                query === categoryQuery
-                  ? "bg-[var(--button-bg)] text-[var(--button-text)]"
-                  : "bg-[var(--surface-muted)]"
-              } [&_svg]:size-[23px] [&_svg]:rounded-full [&_svg]:bg-[color-mix(in_srgb,var(--text)_10%,transparent)] [&_svg]:p-[5px] [&_strong]:block [&_strong]:text-[0.82rem] [&_strong]:font-[var(--weight-medium)]`}
+              data-selected={query === categoryQuery}
+              className="category-pill flex min-h-[34px] flex-none items-center gap-3 rounded-full border px-3 py-0 pl-[7px] text-left shadow-none [&_svg]:size-[23px] [&_svg]:rounded-full [&_svg]:p-[5px] [&_strong]:block [&_strong]:text-[0.82rem] [&_strong]:font-[var(--weight-medium)]"
             >
               <Icon size={20} />
               <strong>{label}</strong>

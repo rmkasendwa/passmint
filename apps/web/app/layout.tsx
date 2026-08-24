@@ -24,8 +24,11 @@ export default async function RootLayout({
   const initialEvents = await listEventsForPage();
   const initialThemePreference = await getInitialThemePreference();
 
+  const initialResolvedTheme =
+    initialThemePreference === "light" ? "light" : "dark";
+
   return (
-    <html lang="en">
+    <html lang="en" data-theme={initialResolvedTheme}>
       <body>
         <AppProvider
           initialEvents={initialEvents}

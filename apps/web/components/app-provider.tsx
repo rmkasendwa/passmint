@@ -225,13 +225,18 @@ export function AppProvider({
 
     window.localStorage.setItem(THEME_KEY, themePreference);
     document.cookie = `${THEME_KEY}=${themePreference}; Path=/; Max-Age=31536000; SameSite=Lax`;
-    setResolvedTheme(resolveThemePreference(themePreference));
+    const nextResolvedTheme = resolveThemePreference(themePreference);
+    setResolvedTheme(nextResolvedTheme);
+    document.documentElement.dataset.theme = nextResolvedTheme;
 
     if (themePreference !== "system") return;
 
     const media = window.matchMedia("(prefers-color-scheme: light)");
-    const updateResolvedTheme = () =>
-      setResolvedTheme(media.matches ? "light" : "dark");
+    const updateResolvedTheme = () => {
+      const systemTheme = media.matches ? "light" : "dark";
+      setResolvedTheme(systemTheme);
+      document.documentElement.dataset.theme = systemTheme;
+    };
 
     media.addEventListener("change", updateResolvedTheme);
     return () => media.removeEventListener("change", updateResolvedTheme);
