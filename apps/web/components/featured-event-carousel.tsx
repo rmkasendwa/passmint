@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   ChevronLeft,
@@ -7,22 +7,22 @@ import {
   MapPin,
   Ticket as TicketIcon,
   Users,
-} from "lucide-react";
-import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import type { Event } from "../api";
-import { eventStatus, eventTone } from "../event-utils";
-import { chipDate, money } from "../formatters";
-import { EventThumbnail } from "./event-thumbnail";
+} from 'lucide-react';
+import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
+import type { Event } from '../api';
+import { eventStatus, eventTone } from '../event-utils';
+import { chipDate, money } from '../formatters';
+import { EventThumbnail } from './event-thumbnail';
 
 const primaryAction =
-  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-[var(--button-bg)] px-4 font-[var(--weight-bold)] text-[var(--button-text)] shadow-[0_16px_38px_rgb(0_0_0/24%)] hover:bg-[#fa5b2d]";
+  'inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-[var(--button-bg)] px-4 font-[var(--weight-bold)] text-[var(--button-text)] shadow-[0_16px_38px_rgb(0_0_0/24%)] hover:bg-[#fa5b2d]';
 
 const sectionKicker =
-  "mb-2 text-[0.78rem] font-[var(--weight-semibold)] uppercase tracking-[0.08em] text-[rgb(255_255_255/58%)]";
+  'mb-2 text-[0.78rem] font-[var(--weight-semibold)] uppercase tracking-[0.08em] text-[rgb(255_255_255/58%)]';
 
 const ticketBadge =
-  "inline-flex min-h-[34px] items-center rounded-full border border-[rgb(255_255_255/14%)] bg-[rgb(0_0_0/38%)] px-3.5 text-[0.82rem] font-[var(--weight-semibold)] uppercase text-white";
+  'inline-flex min-h-[34px] items-center rounded-full border border-[rgb(255_255_255/14%)] bg-[rgb(0_0_0/38%)] px-3.5 text-[0.82rem] font-[var(--weight-semibold)] uppercase text-white';
 
 export function FeaturedEventCarousel({ events }: { events: Event[] }) {
   const featuredEvents = useMemo(() => events.slice(0, 5), [events]);
@@ -53,12 +53,12 @@ export function FeaturedEventCarousel({ events }: { events: Event[] }) {
       </div>
       <p className={sectionKicker}>Featured event</p>
       <h2
-        className="mb-0 line-clamp-2 max-w-[1040px] text-[clamp(3.35rem,7.2vw,6.35rem)] font-[var(--weight-bold)] leading-[0.92] text-white max-[820px]:text-5xl"
+        className="mb-0 line-clamp-2 max-w-[1040px] text-[clamp(3.35rem,7.2vw,6.35rem)] font-[var(--weight-bold)] leading-normal text-white max-[820px]:text-5xl"
         title={event.name}
       >
         {event.name}
       </h2>
-      <p className="mb-0 mt-3 max-w-[590px] text-[1.08rem] leading-[1.5] text-[rgb(255_255_255/82%)]">
+      <p className="mb-0 mt-3 max-w-[590px] text-[1.08rem] leading-normal text-[rgb(255_255_255/82%)]">
         {event.description}
       </p>
       <div className="my-5 flex flex-wrap gap-2.5 [&_span]:inline-flex [&_span]:min-h-[40px] [&_span]:items-center [&_span]:gap-2 [&_span]:rounded-full [&_span]:bg-[rgb(255_255_255/14%)] [&_span]:px-3.5 [&_span]:text-[0.95rem] [&_span]:font-[var(--weight-semibold)] [&_span]:text-[rgb(255_255_255/90%)] [&_span]:backdrop-blur-md">
@@ -72,7 +72,7 @@ export function FeaturedEventCarousel({ events }: { events: Event[] }) {
         </span>
         <span>
           <Users size={16} />
-          {event.capacity.toLocaleString("en-UG")} spots
+          {event.capacity.toLocaleString('en-UG')} spots
         </span>
       </div>
       <Link className={primaryAction} href="/tickets">
