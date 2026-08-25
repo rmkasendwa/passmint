@@ -1,9 +1,14 @@
-'use client';
+"use client";
 
-import { Check, ChevronDown, Search } from 'lucide-react';
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import type { ChangeEvent, KeyboardEvent } from 'react';
-import { createPortal } from 'react-dom';
+import { Check, ChevronDown, Search } from "lucide-react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import type { ChangeEvent, KeyboardEvent } from "react";
+import { createPortal } from "react-dom";
+import {
+  RequiredLabel,
+  clearCustomValidity,
+  showCustomValidity,
+} from "./form-validation";
 
 type PhoneCountry = {
   code: string;
@@ -14,7 +19,7 @@ type PhoneCountry = {
   providers?: Partial<Record<MobileMoneyProvider, string>>;
 };
 
-type MobileMoneyProvider = 'airtel' | 'mtn';
+type MobileMoneyProvider = "airtel" | "mtn";
 type DropdownPosition = {
   maxHeight: number;
   left: number;
@@ -24,81 +29,81 @@ type DropdownPosition = {
 
 const COUNTRIES: PhoneCountry[] = [
   {
-    code: 'UG',
-    dialCode: '256',
-    flag: '🇺🇬',
-    name: 'Uganda',
-    placeholder: '+256 700 000000',
+    code: "UG",
+    dialCode: "256",
+    flag: "🇺🇬",
+    name: "Uganda",
+    placeholder: "+256 700 000000",
     providers: {
-      airtel: '+256 759 000000',
-      mtn: '+256 773 000000',
+      airtel: "+256 759 000000",
+      mtn: "+256 773 000000",
     },
   },
   {
-    code: 'KE',
-    dialCode: '254',
-    flag: '🇰🇪',
-    name: 'Kenya',
-    placeholder: '+254 700 000000',
+    code: "KE",
+    dialCode: "254",
+    flag: "🇰🇪",
+    name: "Kenya",
+    placeholder: "+254 700 000000",
     providers: {
-      airtel: '+254 733 000000',
-      mtn: '+254 789 000000',
+      airtel: "+254 733 000000",
+      mtn: "+254 789 000000",
     },
   },
   {
-    code: 'TZ',
-    dialCode: '255',
-    flag: '🇹🇿',
-    name: 'Tanzania',
-    placeholder: '+255 700 000000',
+    code: "TZ",
+    dialCode: "255",
+    flag: "🇹🇿",
+    name: "Tanzania",
+    placeholder: "+255 700 000000",
     providers: {
-      airtel: '+255 784 000000',
-      mtn: '+255 670 000000',
+      airtel: "+255 784 000000",
+      mtn: "+255 670 000000",
     },
   },
   {
-    code: 'RW',
-    dialCode: '250',
-    flag: '🇷🇼',
-    name: 'Rwanda',
-    placeholder: '+250 700 000000',
+    code: "RW",
+    dialCode: "250",
+    flag: "🇷🇼",
+    name: "Rwanda",
+    placeholder: "+250 700 000000",
     providers: {
-      airtel: '+250 730 000000',
-      mtn: '+250 780 000000',
+      airtel: "+250 730 000000",
+      mtn: "+250 780 000000",
     },
   },
   {
-    code: 'BI',
-    dialCode: '257',
-    flag: '🇧🇮',
-    name: 'Burundi',
-    placeholder: '+257 700 00000',
+    code: "BI",
+    dialCode: "257",
+    flag: "🇧🇮",
+    name: "Burundi",
+    placeholder: "+257 700 00000",
   },
   {
-    code: 'SS',
-    dialCode: '211',
-    flag: '🇸🇸',
-    name: 'South Sudan',
-    placeholder: '+211 900 000000',
+    code: "SS",
+    dialCode: "211",
+    flag: "🇸🇸",
+    name: "South Sudan",
+    placeholder: "+211 900 000000",
   },
   {
-    code: 'US',
-    dialCode: '1',
-    flag: '🇺🇸',
-    name: 'United States',
-    placeholder: '+1 555 123 4567',
+    code: "US",
+    dialCode: "1",
+    flag: "🇺🇸",
+    name: "United States",
+    placeholder: "+1 555 123 4567",
   },
   {
-    code: 'GB',
-    dialCode: '44',
-    flag: '🇬🇧',
-    name: 'United Kingdom',
-    placeholder: '+44 7400 123456',
+    code: "GB",
+    dialCode: "44",
+    flag: "🇬🇧",
+    name: "United Kingdom",
+    placeholder: "+44 7400 123456",
   },
 ];
 
 function digitsOnly(value: string) {
-  return value.replace(/\D/g, '');
+  return value.replace(/\D/g, "");
 }
 
 function countryFromValue(value: string) {
@@ -128,10 +133,10 @@ function formatNationalNumber(value: string) {
 }
 
 function formatPhoneValue(value: string, country: PhoneCountry) {
-  if (!value) return '';
+  if (!value) return "";
 
   const national = nationalDigits(value, country);
-  return `+${country.dialCode}${national ? ` ${formatNationalNumber(national)}` : ''}`;
+  return `+${country.dialCode}${national ? ` ${formatNationalNumber(national)}` : ""}`;
 }
 
 export function PhoneNumberInput({
@@ -154,7 +159,7 @@ export function PhoneNumberInput({
   const [open, setOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] =
     useState<DropdownPosition | null>(null);
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const countryButtonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLSpanElement>(null);
   const listRef = useRef<HTMLSpanElement>(null);
@@ -175,7 +180,7 @@ export function PhoneNumberInput({
       return (
         country.name.toLowerCase().includes(normalizedQuery) ||
         country.code.toLowerCase().includes(normalizedQuery) ||
-        country.dialCode.includes(normalizedQuery.replace('+', ''))
+        country.dialCode.includes(normalizedQuery.replace("+", ""))
       );
     });
   }, [query]);
@@ -203,13 +208,13 @@ export function PhoneNumberInput({
       }
 
       setOpen(false);
-      setQuery('');
+      setQuery("");
     }
 
-    document.addEventListener('pointerdown', closeOnOutsidePointerDown, true);
+    document.addEventListener("pointerdown", closeOnOutsidePointerDown, true);
     return () =>
       document.removeEventListener(
-        'pointerdown',
+        "pointerdown",
         closeOnOutsidePointerDown,
         true,
       );
@@ -258,12 +263,12 @@ export function PhoneNumberInput({
     }
 
     updateDropdownPosition();
-    window.addEventListener('resize', updateDropdownPosition);
-    window.addEventListener('scroll', updateDropdownPosition, true);
+    window.addEventListener("resize", updateDropdownPosition);
+    window.addEventListener("scroll", updateDropdownPosition, true);
 
     return () => {
-      window.removeEventListener('resize', updateDropdownPosition);
-      window.removeEventListener('scroll', updateDropdownPosition, true);
+      window.removeEventListener("resize", updateDropdownPosition);
+      window.removeEventListener("scroll", updateDropdownPosition, true);
     };
   }, [open]);
 
@@ -302,9 +307,9 @@ export function PhoneNumberInput({
 
     setSelectedCountryCode(nextCountry.code);
     setOpen(false);
-    setQuery('');
+    setQuery("");
     onChange(
-      currentNational ? `+${nextCountry.dialCode}${currentNational}` : '',
+      currentNational ? `+${nextCountry.dialCode}${currentNational}` : "",
     );
   }
 
@@ -312,11 +317,11 @@ export function PhoneNumberInput({
     const rawValue = event.target.value.trim();
 
     if (!rawValue) {
-      onChange('');
+      onChange("");
       return;
     }
 
-    if (rawValue.startsWith('+')) {
+    if (rawValue.startsWith("+")) {
       onChange(`+${digitsOnly(rawValue)}`);
       return;
     }
@@ -325,20 +330,20 @@ export function PhoneNumberInput({
   }
 
   function handleSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key === 'Escape') {
+    if (event.key === "Escape") {
       setOpen(false);
-      setQuery('');
+      setQuery("");
       return;
     }
 
-    if (event.key !== 'Enter') return;
+    if (event.key !== "Enter") return;
 
     event.preventDefault();
     if (filteredCountries[0]) chooseCountry(filteredCountries[0]);
   }
 
   const dropdown =
-    open && dropdownPosition && typeof document !== 'undefined'
+    open && dropdownPosition && typeof document !== "undefined"
       ? createPortal(
           <>
             <span
@@ -346,19 +351,19 @@ export function PhoneNumberInput({
               className="fixed inset-0 z-[119]"
               onPointerDown={() => {
                 setOpen(false);
-                setQuery('');
+                setQuery("");
               }}
             />
             <span
-            className="fixed z-[120] grid grid-rows-[auto_minmax(0,1fr)] gap-2 overflow-hidden rounded-lg border border-border bg-surface-raised p-2 shadow-[0_18px_44px_rgb(18_24_31/18%)]"
-            onWheel={(event) => event.stopPropagation()}
-            ref={dropdownRef}
-            style={{
+              className="fixed z-[120] grid grid-rows-[auto_minmax(0,1fr)] gap-2 overflow-hidden rounded-lg border border-border bg-surface-raised p-2 shadow-[0_18px_44px_rgb(18_24_31/18%)]"
+              onWheel={(event) => event.stopPropagation()}
+              ref={dropdownRef}
+              style={{
                 height: dropdownPosition.maxHeight,
                 left: dropdownPosition.left,
                 top: dropdownPosition.top,
                 width: dropdownPosition.width,
-            }}
+              }}
             >
               <span className="grid min-h-10 grid-cols-[18px_minmax(0,1fr)] items-center gap-2 rounded-lg border border-border bg-surface-elevated px-2">
                 <Search
@@ -422,7 +427,9 @@ export function PhoneNumberInput({
   return (
     <>
       <span className="grid gap-[7px] text-[0.82rem] font-(--weight-semibold) text-text-muted">
-        <label htmlFor={inputId}>{label}</label>
+        <label htmlFor={inputId}>
+          {required ? <RequiredLabel>{label}</RequiredLabel> : label}
+        </label>
         <span className="grid min-h-11 grid-cols-[158px_minmax(0,1fr)] rounded-lg border border-border bg-surface-elevated focus-within:border-accent focus-within:outline-[3px_solid_rgb(22_125_119/18%)] max-[420px]:grid-cols-[136px_minmax(0,1fr)]">
           <span className="grid border-r border-border">
             <button
@@ -438,7 +445,7 @@ export function PhoneNumberInput({
               </span>
               <ChevronDown
                 aria-hidden="true"
-                className={`text-text-soft transition-transform ${open ? 'rotate-180' : ''}`}
+                className={`text-text-soft transition-transform ${open ? "rotate-180" : ""}`}
                 size={16}
               />
             </button>
@@ -448,7 +455,10 @@ export function PhoneNumberInput({
             className="min-h-11! rounded-none! border-0! bg-transparent! px-3! outline-none! focus:border-0! focus:outline-none!"
             id={inputId}
             inputMode="tel"
+            data-validation-label={label}
             onChange={updatePhoneNumber}
+            onInput={clearCustomValidity}
+            onInvalid={showCustomValidity}
             placeholder={placeholder}
             required={required}
             type="tel"

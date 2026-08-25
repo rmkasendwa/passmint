@@ -25,6 +25,11 @@ import { eventCategory, eventStatus, eventTone } from "../event-utils";
 import { dateTime, money } from "../formatters";
 import { useAppContext } from "./app-provider";
 import { EventImage } from "./event-image";
+import {
+  RequiredLabel,
+  requiredField,
+  requiredTextareaField,
+} from "./form-validation";
 import { PhoneNumberInput } from "./phone-number-input";
 
 const panel =
@@ -425,7 +430,7 @@ export function EventDetail({ event }: { event: Event }) {
               </div>
               <form className={formGrid} onSubmit={saveEvent}>
                 <label>
-                  Event name
+                  <RequiredLabel>Event name</RequiredLabel>
                   <input
                     value={draft.name}
                     onChange={(input) =>
@@ -434,11 +439,11 @@ export function EventDetail({ event }: { event: Event }) {
                         name: input.target.value,
                       }))
                     }
-                    required
+                    {...requiredField("Event name")}
                   />
                 </label>
                 <label>
-                  Description
+                  <RequiredLabel>Description</RequiredLabel>
                   <textarea
                     value={draft.description}
                     onChange={(input) =>
@@ -447,11 +452,11 @@ export function EventDetail({ event }: { event: Event }) {
                         description: input.target.value,
                       }))
                     }
-                    required
+                    {...requiredTextareaField("Description")}
                   />
                 </label>
                 <label>
-                  Venue
+                  <RequiredLabel>Venue</RequiredLabel>
                   <input
                     value={draft.venue}
                     onChange={(input) =>
@@ -460,7 +465,7 @@ export function EventDetail({ event }: { event: Event }) {
                         venue: input.target.value,
                       }))
                     }
-                    required
+                    {...requiredField("Venue")}
                   />
                 </label>
                 <label>
@@ -478,7 +483,7 @@ export function EventDetail({ event }: { event: Event }) {
                 </label>
                 <div className="grid grid-cols-3 gap-2.5 max-[820px]:grid-cols-1">
                   <label>
-                    Starts
+                    <RequiredLabel>Starts</RequiredLabel>
                     <input
                       type="datetime-local"
                       value={draft.startsAt}
@@ -488,11 +493,11 @@ export function EventDetail({ event }: { event: Event }) {
                           startsAt: input.target.value,
                         }))
                       }
-                      required
+                      {...requiredField("Starts")}
                     />
                   </label>
                   <label>
-                    Capacity
+                    <RequiredLabel>Capacity</RequiredLabel>
                     <input
                       min={1}
                       type="number"
@@ -503,11 +508,11 @@ export function EventDetail({ event }: { event: Event }) {
                           capacity: Number(input.target.value),
                         }))
                       }
-                      required
+                      {...requiredField("Capacity")}
                     />
                   </label>
                   <label>
-                    Price in UGX
+                    <RequiredLabel>Price in UGX</RequiredLabel>
                     <input
                       min={0}
                       type="number"
@@ -518,7 +523,7 @@ export function EventDetail({ event }: { event: Event }) {
                           priceCents: Number(input.target.value) * 100,
                         }))
                       }
-                      required
+                      {...requiredField("Price in UGX")}
                     />
                   </label>
                 </div>
@@ -722,16 +727,16 @@ export function EventDetail({ event }: { event: Event }) {
 
               <form onSubmit={buyTickets} className={formGrid}>
                 <label>
-                  Buyer name
+                  <RequiredLabel>Buyer name</RequiredLabel>
                   <input
                     value={buyerName}
                     onChange={(input) => setBuyerName(input.target.value)}
                     placeholder={session?.user.name ?? "Anonymous buyer name"}
-                    required
+                    {...requiredField("Buyer name")}
                   />
                 </label>
                 <label>
-                  Buyer email
+                  <RequiredLabel>Buyer email</RequiredLabel>
                   <input
                     type="email"
                     value={buyerEmail}
@@ -739,11 +744,11 @@ export function EventDetail({ event }: { event: Event }) {
                     placeholder={
                       session?.user.email ?? "Email for ticket delivery"
                     }
-                    required
+                    {...requiredField("Buyer email")}
                   />
                 </label>
                 <label>
-                  Quantity
+                  <RequiredLabel>Quantity</RequiredLabel>
                   <span className="quantity-stepper">
                     <button
                       type="button"
@@ -756,6 +761,7 @@ export function EventDetail({ event }: { event: Event }) {
                     <input
                       inputMode="numeric"
                       pattern="[0-9,]*"
+                      title="Enter a whole number."
                       value={formattedQuantity}
                       onChange={(input) =>
                         updateQuantityFromText(input.target.value)
@@ -773,7 +779,7 @@ export function EventDetail({ event }: { event: Event }) {
                         event.preventDefault();
                         stepQuantity(event.deltaY > 0 ? 1 : -1);
                       }}
-                      required
+                      {...requiredField("Quantity")}
                     />
                     <button
                       type="button"

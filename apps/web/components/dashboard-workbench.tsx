@@ -20,6 +20,11 @@ import {
 } from "../event-utils";
 import { useAppContext } from "./app-provider";
 import { EventThumbnail } from "./event-thumbnail";
+import {
+  RequiredLabel,
+  requiredField,
+  requiredTextareaField,
+} from "./form-validation";
 
 const sectionKicker =
   "mb-2 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-(color:--accent)";
@@ -132,36 +137,36 @@ export function DashboardWorkbench() {
           </div>
           <form className={formGrid} onSubmit={publishEvent}>
             <label>
-              Event name
+              <RequiredLabel>Event name</RequiredLabel>
               <input
                 value={hostEvent.name}
                 onChange={(event) =>
                   updateHostEvent("name", event.target.value)
                 }
                 placeholder="Kampala rooftop sessions"
-                required
+                {...requiredField("Event name")}
               />
             </label>
             <label>
-              Description
+              <RequiredLabel>Description</RequiredLabel>
               <textarea
                 value={hostEvent.description}
                 onChange={(event) =>
                   updateHostEvent("description", event.target.value)
                 }
                 placeholder="Short public summary"
-                required
+                {...requiredTextareaField("Description")}
               />
             </label>
             <label>
-              Venue
+              <RequiredLabel>Venue</RequiredLabel>
               <input
                 value={hostEvent.venue}
                 onChange={(event) =>
                   updateHostEvent("venue", event.target.value)
                 }
                 placeholder="Venue, city"
-                required
+                {...requiredField("Venue")}
               />
             </label>
             <label>
@@ -176,18 +181,18 @@ export function DashboardWorkbench() {
             </label>
             <div className="grid grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)] gap-2.5 max-[820px]:grid-cols-1">
               <label>
-                Starts
+                <RequiredLabel>Starts</RequiredLabel>
                 <input
                   type="datetime-local"
                   value={hostEvent.startsAt}
                   onChange={(event) =>
                     updateHostEvent("startsAt", event.target.value)
                   }
-                  required
+                  {...requiredField("Starts")}
                 />
               </label>
               <label>
-                Capacity
+                <RequiredLabel>Capacity</RequiredLabel>
                 <input
                   min={1}
                   type="number"
@@ -195,12 +200,12 @@ export function DashboardWorkbench() {
                   onChange={(event) =>
                     updateHostEvent("capacity", Number(event.target.value))
                   }
-                  required
+                  {...requiredField("Capacity")}
                 />
               </label>
             </div>
             <label>
-              Price in UGX
+              <RequiredLabel>Price in UGX</RequiredLabel>
               <input
                 min={0}
                 type="number"
@@ -211,7 +216,7 @@ export function DashboardWorkbench() {
                     Number(event.target.value) * 100,
                   )
                 }
-                required
+                {...requiredField("Price in UGX")}
               />
             </label>
             <label className="relative grid gap-[7px]">

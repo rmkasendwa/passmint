@@ -2,8 +2,20 @@
 
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
-import { type ChangeEventHandler, useState } from "react";
+import {
+  type ChangeEventHandler,
+  type FormEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useAppContext } from "./app-provider";
+import {
+  RequiredLabel,
+  clearCustomValidity,
+  requiredField,
+  showCustomValidity,
+} from "./form-validation";
 
 const formClass = "grid w-full max-w-[430px] gap-4 max-[820px]:max-w-none";
 const labelClass =
@@ -77,6 +89,7 @@ function getPasswordStrength(password: string) {
 
 type PasswordInputProps = {
   autoComplete: string;
+  customError?: string;
   id?: string;
   minLength?: number;
   onChange: ChangeEventHandler<HTMLInputElement>;
@@ -84,11 +97,13 @@ type PasswordInputProps = {
   revealed: boolean;
   required?: boolean;
   setRevealed: (revealed: boolean) => void;
+  validationLabel: string;
   value: string;
 };
 
 function PasswordInput({
   autoComplete,
+  customError,
   id,
   minLength,
   onChange,
@@ -96,15 +111,31 @@ function PasswordInput({
   revealed,
   required,
   setRevealed,
+  validationLabel,
   value,
 }: PasswordInputProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
   const Icon = revealed ? EyeOff : Eye;
   const label = revealed ? "Hide password" : "Reveal password";
+
+  useEffect(() => {
+    inputRef.current?.setCustomValidity(value ? (customError ?? "") : "");
+  }, [customError, value]);
+
+  function handleInvalid(event: FormEvent<HTMLInputElement>) {
+    if (customError && value) {
+      event.currentTarget.setCustomValidity(customError);
+      return;
+    }
+
+    showCustomValidity(event);
+  }
 
   return (
     <span className={passwordInputWrapClass}>
       <input
         id={id}
+        ref={inputRef}
         className={passwordInputClass}
         type={revealed ? "text" : "password"}
         minLength={minLength}
@@ -112,6 +143,9 @@ function PasswordInput({
         onChange={onChange}
         placeholder={placeholder}
         autoComplete={autoComplete}
+        data-validation-label={validationLabel}
+        onInput={clearCustomValidity}
+        onInvalid={handleInvalid}
         required={required}
       />
       <button
@@ -142,7 +176,7 @@ export function LoginForm() {
     <>
       <form className={formClass} onSubmit={submitAuth}>
         <label className={labelClass}>
-          Email
+          <RequiredLabel>Email</RequiredLabel>
           <input
             className={inputClass}
             type="email"
@@ -150,12 +184,12 @@ export function LoginForm() {
             onChange={(event) => setAuthEmail(event.target.value)}
             placeholder="you@example.com"
             autoComplete="email"
-            required
+            {...requiredField("Email")}
           />
         </label>
         <label className={labelClass} htmlFor="login-password">
           <span className={labelRowClass}>
-            Password
+            <RequiredLabel>Password</RequiredLabel>
             <Link className={textLinkClass} href="/forgot-password">
               Forgot password?
             </Link>
@@ -169,6 +203,7 @@ export function LoginForm() {
             autoComplete="current-password"
             revealed={passwordRevealed}
             setRevealed={setPasswordRevealed}
+            validationLabel="Password"
             required
           />
         </label>
@@ -202,24 +237,28 @@ export function RegisterForm() {
     submitAuth,
   } = useAppContext();
   const passwordStrength = getPasswordStrength(authPassword);
+  const confirmPasswordError =
+    authConfirmPassword && authPassword !== authConfirmPassword
+      ? "Passwords must match."
+      : "";
   const [passwordsRevealed, setPasswordsRevealed] = useState(false);
 
   return (
     <>
       <form className={formClass} onSubmit={submitAuth}>
         <label className={labelClass}>
-          Name
+          <RequiredLabel>Name</RequiredLabel>
           <input
             className={inputClass}
             value={authName}
             onChange={(event) => setAuthName(event.target.value)}
             placeholder="Full name"
             autoComplete="name"
-            required
+            {...requiredField("Name")}
           />
         </label>
         <label className={labelClass}>
-          Email
+          <RequiredLabel>Email</RequiredLabel>
           <input
             className={inputClass}
             type="email"
@@ -227,11 +266,11 @@ export function RegisterForm() {
             onChange={(event) => setAuthEmail(event.target.value)}
             placeholder="you@example.com"
             autoComplete="email"
-            required
+            {...requiredField("Email")}
           />
         </label>
         <label className={labelClass}>
-          Password
+          <RequiredLabel>Password</RequiredLabel>
           <PasswordInput
             minLength={8}
             value={authPassword}
@@ -240,6 +279,7 @@ export function RegisterForm() {
             autoComplete="new-password"
             revealed={passwordsRevealed}
             setRevealed={setPasswordsRevealed}
+            validationLabel="Password"
             required
           />
           <span className="grid gap-2" aria-live="polite">
@@ -262,8 +302,9 @@ export function RegisterForm() {
           </span>
         </label>
         <label className={labelClass}>
-          Confirm password
+          <RequiredLabel>Confirm password</RequiredLabel>
           <PasswordInput
+            customError={confirmPasswordError}
             minLength={8}
             value={authConfirmPassword}
             onChange={(event) => setAuthConfirmPassword(event.target.value)}
@@ -271,6 +312,7 @@ export function RegisterForm() {
             autoComplete="new-password"
             revealed={passwordsRevealed}
             setRevealed={setPasswordsRevealed}
+            validationLabel="Confirm password"
             required
           />
         </label>
@@ -298,7 +340,7 @@ export function ForgotPasswordForm() {
     <>
       <form className={formClass} onSubmit={submitForgotPassword}>
         <label className={labelClass}>
-          Email
+          <RequiredLabel>Email</RequiredLabel>
           <input
             className={inputClass}
             type="email"
@@ -306,7 +348,7 @@ export function ForgotPasswordForm() {
             onChange={(event) => setResetEmail(event.target.value)}
             placeholder="you@example.com"
             autoComplete="email"
-            required
+            {...requiredField("Email")}
           />
         </label>
         <button className={submitClass} type="submit">
@@ -334,13 +376,17 @@ export function ResetPasswordForm() {
     setResetPassword,
     submitResetPassword,
   } = useAppContext();
+  const confirmPasswordError =
+    resetConfirmPassword && resetPassword !== resetConfirmPassword
+      ? "Passwords must match."
+      : "";
   const [passwordsRevealed, setPasswordsRevealed] = useState(false);
 
   return (
     <>
       <form className={formClass} onSubmit={submitResetPassword}>
         <label className={labelClass}>
-          New password
+          <RequiredLabel>New password</RequiredLabel>
           <PasswordInput
             minLength={8}
             value={resetPassword}
@@ -349,12 +395,14 @@ export function ResetPasswordForm() {
             autoComplete="new-password"
             revealed={passwordsRevealed}
             setRevealed={setPasswordsRevealed}
+            validationLabel="New password"
             required
           />
         </label>
         <label className={labelClass}>
-          Confirm password
+          <RequiredLabel>Confirm password</RequiredLabel>
           <PasswordInput
+            customError={confirmPasswordError}
             minLength={8}
             value={resetConfirmPassword}
             onChange={(event) => setResetConfirmPassword(event.target.value)}
@@ -362,6 +410,7 @@ export function ResetPasswordForm() {
             autoComplete="new-password"
             revealed={passwordsRevealed}
             setRevealed={setPasswordsRevealed}
+            validationLabel="Confirm password"
             required
           />
         </label>
