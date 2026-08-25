@@ -5,44 +5,36 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
 import { randomUUID } from "crypto";
-import { Repository } from "typeorm";
 import { AuthUser } from "../auth/auth.types";
+import { prefixedId } from "../common/prefixed-id";
 import { EventsService } from "../events/events.service";
-import { User } from "../users/user.entity";
+import { PrismaService } from "../prisma/prisma.service";
 import { UserRole } from "../users/user-role.enum";
 import { CreateTicketDto } from "./dto/create-ticket.dto";
 import { TicketStatus } from "./ticket-status.enum";
-import { Ticket } from "./ticket.entity";
 import { toTicketResponse } from "./ticket-response";
 
 @Injectable()
 export class TicketsService {
   constructor(
-    @InjectRepository(Ticket)
-    private readonly ticketsRepository: Repository<Ticket>,
-    @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
+    private readonly prisma: PrismaService,
     private readonly eventsService: EventsService,
   ) {}
 
   async create(dto: CreateTicketDto, authUser?: AuthUser) {
     const event = await this.eventsService.findOneWithOwner(dto.eventId);
     const quantity = dto.quantity ?? 1;
-    const soldCount = await this.ticketsRepository.count({
-      where: { event: { id: event.id } },
+    const soldCount = await this.prisma.ticket.count({
+      where: { eventId: event.id },
     });
     const buyerEmail = dto.buyerEmail.trim().toLowerCase();
-    const existingEmailCount = await this.ticketsRepository.count({
+    const existingEmailCount = await this.prisma.ticket.count({
       where: {
-        event: { id: event.id },
+        eventId: event.id,
         buyerEmail,
       },
     });
-    const owner = authUser
-      ? await this.usersRepository.findOne({ where: { id: authUser.id } })
-      : null;
 
     if (soldCount + quantity > event.capacity) {
       throw new BadRequestException(
@@ -63,39 +55,48 @@ export class TicketsService {
       });
     }
 
-    const tickets = Array.from({ length: quantity }, () =>
-      this.ticketsRepository.create({
-        event,
-        buyerName: dto.buyerName,
-        buyerEmail,
-        code: randomUUID(),
-        owner,
-      }),
+    const tickets = await this.prisma.$transaction(
+      Array.from({ length: quantity }, () =>
+        this.prisma.ticket.create({
+          data: {
+            id: prefixedId("tkt"),
+            eventId: event.id,
+            ownerId: authUser?.id,
+            buyerName: dto.buyerName,
+            buyerEmail,
+            code: randomUUID(),
+          },
+          include: { event: true },
+        }),
+      ),
     );
 
-    const saved = await this.ticketsRepository.save(tickets);
-    return Promise.all(saved.map(toTicketResponse));
+    return Promise.all(tickets.map(toTicketResponse));
   }
 
   async findOne(id: string) {
-    const ticket = await this.ticketsRepository.findOne({ where: { id } });
+    const ticket = await this.prisma.ticket.findUnique({
+      where: { id },
+      include: { event: true },
+    });
     if (!ticket) throw new NotFoundException("Ticket not found");
     return toTicketResponse(ticket);
   }
 
   async findMine(userId: string) {
-    const tickets = await this.ticketsRepository.find({
-      where: { owner: { id: userId } },
-      order: { createdAt: "DESC" },
+    const tickets = await this.prisma.ticket.findMany({
+      where: { ownerId: userId },
+      orderBy: { createdAt: "desc" },
+      include: { event: true },
     });
 
     return Promise.all(tickets.map(toTicketResponse));
   }
 
   async scan(code: string, authUser: AuthUser) {
-    const ticket = await this.ticketsRepository.findOne({
+    const ticket = await this.prisma.ticket.findUnique({
       where: { code },
-      relations: { event: { owner: true } },
+      include: { event: { include: { owner: true } } },
     });
     if (!ticket) {
       throw new NotFoundException({
@@ -132,9 +133,14 @@ export class TicketsService {
       });
     }
 
-    ticket.status = TicketStatus.CheckedIn;
-    ticket.checkedInAt = new Date();
-    const saved = await this.ticketsRepository.save(ticket);
+    const saved = await this.prisma.ticket.update({
+      where: { id: ticket.id },
+      data: {
+        status: TicketStatus.CheckedIn,
+        checkedInAt: new Date(),
+      },
+      include: { event: true },
+    });
 
     return {
       result: "accepted",

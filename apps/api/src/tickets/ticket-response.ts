@@ -1,7 +1,9 @@
 import * as QRCode from "qrcode";
-import { Ticket } from "./ticket.entity";
+import { Event, Ticket } from "@prisma/client";
 
-function toPublicEvent(ticket: Ticket) {
+type TicketWithEvent = Ticket & { event: Event };
+
+function toPublicEvent(ticket: TicketWithEvent) {
   return {
     id: ticket.event.id,
     name: ticket.event.name,
@@ -14,7 +16,7 @@ function toPublicEvent(ticket: Ticket) {
   };
 }
 
-export async function toTicketResponse(ticket: Ticket) {
+export async function toTicketResponse(ticket: TicketWithEvent) {
   const qrPayload = ticket.code;
   const qrCodeDataUrl = await QRCode.toDataURL(qrPayload, {
     margin: 1,

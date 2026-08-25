@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "dev:db": "node scripts/run-with-env.mjs docker compose up postgres minio minio-init",
+    "db:generate": "node scripts/run-with-env.mjs prisma generate",
+    "db:push": "node scripts/run-with-env.mjs prisma db push",
     "db:studio": "node scripts/db-studio.mjs",
     "db:reset": "node scripts/run-with-env.mjs docker compose down -v --remove-orphans",
     "dev:api": "node scripts/run-with-env.mjs pnpm --filter @passmint/api dev",
@@ -17,6 +19,7 @@
     "format": "prettier --write ."
   },
   "devDependencies": {
+    "prisma": "^6.15.0",
     "prettier": "^3.3.3"
   }
 }

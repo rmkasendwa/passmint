@@ -4,14 +4,15 @@ import {
   NotFoundException,
   OnApplicationBootstrap,
 } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { In, Repository } from "typeorm";
+import { Event, User } from "@prisma/client";
 import { AuthUser } from "../auth/auth.types";
-import { User } from "../users/user.entity";
+import { prefixedId } from "../common/prefixed-id";
+import { PrismaService } from "../prisma/prisma.service";
 import { UserRole } from "../users/user-role.enum";
 import { CreateEventDto } from "./dto/create-event.dto";
 import { UpdateEventDto } from "./dto/update-event.dto";
-import { Event } from "./event.entity";
+
+type EventWithOwner = Event & { owner: User | null };
 
 function startsInDays(days: number, hour: number, minute = 0) {
   const date = new Date();
@@ -161,18 +162,13 @@ const seedEvents = [
 
 @Injectable()
 export class EventsService implements OnApplicationBootstrap {
-  constructor(
-    @InjectRepository(Event)
-    private readonly eventsRepository: Repository<Event>,
-    @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async onApplicationBootstrap() {
     const seededNames = seedEvents.map((event) => event.name);
-    const existingEvents = await this.eventsRepository.find({
-      select: ["id", "name", "thumbnailUrl", "mapLocation"],
-      where: { name: In(seededNames) },
+    const existingEvents = await this.prisma.event.findMany({
+      select: { id: true, name: true, thumbnailUrl: true, mapLocation: true },
+      where: { name: { in: seededNames } },
     });
     const existingNames = new Set(existingEvents.map((event) => event.name));
     const missingEvents = seedEvents.filter(
@@ -191,66 +187,77 @@ export class EventsService implements OnApplicationBootstrap {
           const seedEvent = seedEventByName.get(event.name);
           if (!seedEvent) return null;
 
-          return this.eventsRepository.update(event.id, {
-            ...(!event.thumbnailUrl && seedEvent.thumbnailUrl
-              ? { thumbnailUrl: seedEvent.thumbnailUrl }
-              : {}),
-            ...(!event.mapLocation && seedEvent.mapLocation
-              ? { mapLocation: seedEvent.mapLocation }
-              : {}),
+          return this.prisma.event.update({
+            where: { id: event.id },
+            data: {
+              ...(!event.thumbnailUrl && seedEvent.thumbnailUrl
+                ? { thumbnailUrl: seedEvent.thumbnailUrl }
+                : {}),
+              ...(!event.mapLocation && seedEvent.mapLocation
+                ? { mapLocation: seedEvent.mapLocation }
+                : {}),
+            },
           });
         }),
       );
     }
 
     if (missingEvents.length > 0) {
-      await this.eventsRepository.save(
-        this.eventsRepository.create(missingEvents),
-      );
+      await this.prisma.event.createMany({
+        data: missingEvents.map((event) => ({
+          id: prefixedId("evt"),
+          ...event,
+        })),
+      });
     }
   }
 
-  findAll() {
-    return this.eventsRepository.find({
-      order: { startsAt: "ASC" },
-      loadRelationIds: true,
+  async findAll() {
+    const events = await this.prisma.event.findMany({
+      orderBy: { startsAt: "asc" },
     });
+
+    return events.map((event) => this.toEventResponse(event));
   }
 
-  findMine(userId: string) {
-    return this.eventsRepository.find({
-      where: { owner: { id: userId } },
-      order: { startsAt: "ASC" },
-      loadRelationIds: true,
+  async findMine(userId: string) {
+    const events = await this.prisma.event.findMany({
+      where: { ownerId: userId },
+      orderBy: { startsAt: "asc" },
     });
+
+    return events.map((event) => this.toEventResponse(event));
   }
 
   async findOne(id: string) {
-    const event = await this.eventsRepository.findOne({
+    const event = await this.prisma.event.findUnique({
       where: { id },
-      loadRelationIds: true,
+      include: { owner: true },
     });
     if (!event) throw new NotFoundException("Event not found");
-    return event;
+    return this.toEventResponse(event);
   }
 
   async findOneWithOwner(id: string) {
-    const event = await this.eventsRepository.findOne({
+    const event = await this.prisma.event.findUnique({
       where: { id },
-      relations: { owner: true },
+      include: { owner: true },
     });
     if (!event) throw new NotFoundException("Event not found");
     return event;
   }
 
   async create(dto: CreateEventDto, authUser: AuthUser) {
-    const owner = await this.usersRepository.findOne({
-      where: { id: authUser.id },
+    const event = await this.prisma.event.create({
+      data: {
+        id: prefixedId("evt"),
+        ...dto,
+        ownerId: authUser.id,
+      },
+      include: { owner: true },
     });
 
-    return this.eventsRepository.save(
-      this.eventsRepository.create({ ...dto, owner }),
-    );
+    return this.toEventResponse(event);
   }
 
   async update(id: string, dto: UpdateEventDto, authUser: AuthUser) {
@@ -262,7 +269,21 @@ export class EventsService implements OnApplicationBootstrap {
       throw new ForbiddenException("You can only edit events you created.");
     }
 
-    Object.assign(event, dto);
-    return this.eventsRepository.save(event);
+    const updated = await this.prisma.event.update({
+      where: { id },
+      data: dto,
+      include: { owner: true },
+    });
+
+    return this.toEventResponse(updated);
+  }
+
+  private toEventResponse(event: Event | EventWithOwner) {
+    const owner = "owner" in event ? event.owner : event.ownerId;
+
+    return {
+      ...event,
+      owner,
+    };
   }
 }

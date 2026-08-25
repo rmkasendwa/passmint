@@ -1,9 +1,9 @@
 import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectRepository } from '@nestjs/typeorm';
+import { User } from '@prisma/client';
 import { createHmac, pbkdf2Sync, randomBytes, timingSafeEqual } from 'crypto';
-import { Repository } from 'typeorm';
-import { User } from '../users/user.entity';
+import { prefixedId } from '../common/prefixed-id';
+import { PrismaService } from '../prisma/prisma.service';
 import { UserRole } from '../users/user-role.enum';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -19,34 +19,34 @@ type TokenPayload = {
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
+    private readonly prisma: PrismaService,
     private readonly config: ConfigService,
   ) {}
 
   async register(dto: RegisterDto) {
     const email = dto.email.trim().toLowerCase();
-    const existing = await this.usersRepository.findOne({ where: { email } });
+    const existing = await this.prisma.user.findUnique({ where: { email } });
 
     if (existing) {
       throw new ConflictException('An account with this email already exists');
     }
 
-    const user = await this.usersRepository.save(
-      this.usersRepository.create({
+    const user = await this.prisma.user.create({
+      data: {
+        id: prefixedId('usr'),
         email,
         name: dto.name.trim(),
         passwordHash: this.hashPassword(dto.password),
         role: this.resolveRole(email),
-      }),
-    );
+      },
+    });
 
     return this.sessionFor(user);
   }
 
   async login(dto: LoginDto) {
     const email = dto.email.trim().toLowerCase();
-    const user = await this.usersRepository.findOne({ where: { email } });
+    const user = await this.prisma.user.findUnique({ where: { email } });
 
     if (!user || !this.verifyPassword(dto.password, user.passwordHash)) {
       throw new UnauthorizedException('Invalid email or password');
@@ -70,7 +70,7 @@ export class AuthService {
     const payload = JSON.parse(Buffer.from(payloadPart, 'base64url').toString('utf8')) as TokenPayload;
     if (payload.exp < Math.floor(Date.now() / 1000)) return null;
 
-    const user = await this.usersRepository.findOne({ where: { id: payload.sub } });
+    const user = await this.prisma.user.findUnique({ where: { id: payload.sub } });
     if (!user) return null;
 
     return this.publicUser(user);
@@ -81,7 +81,7 @@ export class AuthService {
       id: user.id,
       email: user.email,
       name: user.name,
-      role: user.role,
+      role: user.role as UserRole,
     };
   }
 
@@ -97,7 +97,7 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       name: user.name,
-      role: user.role,
+      role: user.role as UserRole,
       exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 14,
     };
     const payloadPart = Buffer.from(JSON.stringify(payload)).toString('base64url');

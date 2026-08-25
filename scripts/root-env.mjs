@@ -37,7 +37,6 @@ export function loadRootEnv() {
   process.env.POSTGRES_DB ??= 'passmint';
   process.env.POSTGRES_USER ??= 'passmint';
   process.env.POSTGRES_PASSWORD ??= 'passmint';
-  process.env.ADMINER_PORT ??= '8081';
   process.env.MINIO_API_PORT ??= '9000';
   process.env.MINIO_CONSOLE_PORT ??= '9001';
   process.env.MINIO_ROOT_USER ??= 'passmint';

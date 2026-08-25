@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  user
+  admin
+}
+
+enum TicketStatus {
+  issued
+  checked_in
+  cancelled
+}
+
+model User {
+  id           String   @id
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         UserRole @default(user)
+  tickets      Ticket[]
+  events       Event[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Event {
+  id           String   @id
+  name         String
+  description  String
+  venue        String
+  mapLocation  String?
+  startsAt     DateTime @db.Timestamptz
+  capacity     Int
+  priceCents   Int
+  thumbnailUrl String?
+  ownerId      String?
+  owner        User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  tickets      Ticket[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("events")
+}
+
+model Ticket {
+  id          String       @id
+  code        String       @unique
+  buyerName   String
+  buyerEmail  String
+  status      TicketStatus @default(issued)
+  checkedInAt DateTime?    @db.Timestamptz
+  eventId     String
+  event       Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  ownerId     String?
+  owner       User?        @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@map("tickets")
+}
