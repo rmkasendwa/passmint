@@ -11,9 +11,11 @@ import {
   Navigation,
   QrCode,
   Save,
+  Smartphone,
   Ticket as TicketIcon,
   UserPlus,
   Users,
+  X,
 } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { api, Event } from "../api";
@@ -89,6 +91,10 @@ export function EventDetail({ event }: { event: Event }) {
   const [displayEvent, setDisplayEvent] = useState(event);
   const [isEditing, setIsEditing] = useState(false);
   const [editState, setEditState] = useState("");
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [paymentProvider, setPaymentProvider] = useState<"airtel" | "mtn">(
+    "mtn",
+  );
   const [draft, setDraft] = useState({
     name: event.name,
     description: event.description,
@@ -126,6 +132,7 @@ export function EventDetail({ event }: { event: Event }) {
     return [...byId.values()];
   }, [relevantIssuedTickets, savedTicketsForEvent]);
   const checkoutEvent = displayEvent;
+  const ticketTotalCents = checkoutEvent.priceCents * quantity;
   const startsAt = new Date(displayEvent.startsAt);
   const mapQuery = displayEvent.mapLocation || displayEvent.venue;
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`;
@@ -186,6 +193,9 @@ export function EventDetail({ event }: { event: Event }) {
       className={`event-detail-page event-detail-page--${detailMood} mx-auto mt-5 grid w-[min(var(--content-max),calc(100%-var(--content-gutter)*2))] max-w-(--content-max) gap-5 text-text`}
     >
       <section className="event-detail-showcase">
+        <span className="event-detail-showcase__sheen" aria-hidden="true" />
+        <span className="event-detail-showcase__orb" aria-hidden="true" />
+        <span className="event-detail-showcase__arc" aria-hidden="true" />
         <div className="event-detail-poster">
           <EventImage
             src={displayEvent.thumbnailUrl}
@@ -570,8 +580,10 @@ export function EventDetail({ event }: { event: Event }) {
           </section>
 
           <section className={panelPadded}>
-            <div className="flex items-center gap-2.5 text-(color:--text) [&_svg]:text-(color:--accent)">
-              <TicketIcon size={22} />
+            <div className="select-ticket-heading">
+              <span className="select-ticket-heading__icon">
+                <TicketIcon size={22} />
+              </span>
               <div>
                 <p className={kicker}>Select tickets</p>
                 <h2 className="mb-0 text-[1.55rem]">1 ticket category available</h2>
@@ -594,6 +606,74 @@ export function EventDetail({ event }: { event: Event }) {
                 Displayed price
               </span>
             </div>
+            <button
+              className={primaryAction}
+              type="button"
+              onClick={() => setCheckoutOpen(true)}
+            >
+              <CircleDollarSign size={18} />
+              {checkoutEvent.priceCents === 0 ? "Get ticket" : "Pay now"}
+            </button>
+            {purchaseState && (
+              <p className="mb-0 rounded-lg bg-(color:--accent-soft) p-3 text-[0.92rem] font-(weight:--weight-medium) text-(color:--accent)">
+                {purchaseState}
+              </p>
+            )}
+          </section>
+        </aside>
+      </div>
+      {checkoutOpen && (
+        <div
+          className="checkout-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="checkout-dialog-title"
+        >
+          <button
+            className="checkout-dialog__backdrop"
+            type="button"
+            aria-label="Close checkout"
+            onClick={() => setCheckoutOpen(false)}
+          />
+          <section className="checkout-dialog__panel">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className={kicker}>Checkout</p>
+                <h2
+                  className="mb-0 text-[clamp(1.6rem,3vw,2.35rem)] leading-tight text-(color:--text)"
+                  id="checkout-dialog-title"
+                >
+                  {checkoutEvent.priceCents === 0
+                    ? "Get your ticket"
+                    : "Complete payment"}
+                </h2>
+              </div>
+              <button
+                className="grid size-10 shrink-0 place-items-center rounded-lg border border-(color:--border) bg-(color:--surface-muted) text-(color:--text)"
+                type="button"
+                aria-label="Close checkout"
+                onClick={() => setCheckoutOpen(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="grid gap-3 rounded-lg border border-(color:--border) bg-(color:--surface-muted) p-3">
+              <div className="flex items-start justify-between gap-3">
+                <strong className="text-(color:--text)">General admission</strong>
+                <strong className="text-(color:--price)">
+                  {money.format(ticketTotalCents / 100)}
+                </strong>
+              </div>
+              <span className="text-[0.9rem] text-(color:--text-muted)">
+                {quantity.toLocaleString("en-UG")} x{" "}
+                {money.format(checkoutEvent.priceCents / 100)}
+              </span>
+              <span className="text-[0.9rem] text-(color:--text-muted)">
+                {dateTime.format(new Date(checkoutEvent.startsAt))}
+              </span>
+            </div>
+
             <form onSubmit={buyTickets} className={formGrid}>
               <label>
                 Buyer name
@@ -625,24 +705,52 @@ export function EventDetail({ event }: { event: Event }) {
                   required
                 />
               </label>
+
               {checkoutEvent.priceCents > 0 && (
-                <label>
-                  Mobile money number
-                  <input
-                    value={mobileMoneyNumber}
-                    onChange={(input) =>
-                      setMobileMoneyNumber(input.target.value)
-                    }
-                    placeholder="256..."
-                    required
-                  />
-                </label>
+                <>
+                  <div>
+                    <p className={kicker}>Payment method</p>
+                    <div className="grid grid-cols-2 gap-2 max-[520px]:grid-cols-1">
+                      {[
+                        ["mtn", "MTN MoMo"],
+                        ["airtel", "Airtel Money"],
+                      ].map(([value, label]) => (
+                        <button
+                          className="payment-option"
+                          data-selected={paymentProvider === value}
+                          key={value}
+                          type="button"
+                          onClick={() =>
+                            setPaymentProvider(value as "airtel" | "mtn")
+                          }
+                        >
+                          <Smartphone size={18} />
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <label>
+                    Mobile money number
+                    <input
+                      value={mobileMoneyNumber}
+                      onChange={(input) =>
+                        setMobileMoneyNumber(input.target.value)
+                      }
+                      placeholder="256..."
+                      required
+                    />
+                  </label>
+                </>
               )}
+
               <button className={primaryAction} type="submit">
                 <CircleDollarSign size={18} />
                 {checkoutEvent.priceCents === 0
                   ? "Get ticket"
-                  : "Pay with mobile money"}
+                  : `Pay with ${
+                      paymentProvider === "mtn" ? "MTN MoMo" : "Airtel Money"
+                    }`}
               </button>
             </form>
             {purchaseState && (
@@ -651,8 +759,8 @@ export function EventDetail({ event }: { event: Event }) {
               </p>
             )}
           </section>
-        </aside>
-      </div>
+        </div>
+      )}
     </section>
   );
 }
