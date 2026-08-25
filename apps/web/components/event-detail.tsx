@@ -69,7 +69,8 @@ function ownerId(event: Event) {
 }
 
 function ownerName(event: Event) {
-  if (!event.owner || typeof event.owner === "string") return "Passmint organizer";
+  if (!event.owner || typeof event.owner === "string")
+    return "Passmint organizer";
   return event.owner.name;
 }
 
@@ -121,6 +122,17 @@ export function EventDetail({ event }: { event: Event }) {
     chooseEvent(event.id);
   }, [event.id]);
 
+  useEffect(() => {
+    if (!checkoutOpen) return;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [checkoutOpen]);
+
   const ownedBySession =
     Boolean(session && ownerId(displayEvent) === session.user.id) ||
     dashboardEvents.some((ownedEvent) => ownedEvent.id === displayEvent.id);
@@ -128,8 +140,7 @@ export function EventDetail({ event }: { event: Event }) {
     (ticket) => ticket.event.id === displayEvent.id,
   );
   const savedTicketsForEvent = useMemo(
-    () =>
-      ticketHistory.filter((ticket) => ticket.event.id === displayEvent.id),
+    () => ticketHistory.filter((ticket) => ticket.event.id === displayEvent.id),
     [displayEvent.id, ticketHistory],
   );
   const ticketsForEvent = useMemo(() => {
@@ -377,9 +388,18 @@ export function EventDetail({ event }: { event: Event }) {
             </div>
             <div className="grid grid-cols-3 gap-3 max-[820px]:grid-cols-1">
               {[
-                ["Bring your ticket QR", "Your purchased QR code appears here immediately after checkout."],
-                ["Arrive on time", `Doors are based around the ${eventTime.format(startsAt)} start time.`],
-                ["Check the venue", "Use the map link before leaving so your route is clear."],
+                [
+                  "Bring your ticket QR",
+                  "Your purchased QR code appears here immediately after checkout.",
+                ],
+                [
+                  "Arrive on time",
+                  `Doors are based around the ${eventTime.format(startsAt)} start time.`,
+                ],
+                [
+                  "Check the venue",
+                  "Use the map link before leaving so your route is clear.",
+                ],
               ].map(([title, copy]) => (
                 <article
                   className="rounded-lg border border-(color:--border) bg-(color:--surface-muted) p-4"
@@ -530,7 +550,9 @@ export function EventDetail({ event }: { event: Event }) {
           <section className={panelPadded}>
             <div className="flex items-center gap-2.5 text-(color:--text) [&_svg]:text-(color:--accent)">
               <QrCode size={22} />
-              <h2 className="mb-0 text-[1.55rem]">Your tickets for this event</h2>
+              <h2 className="mb-0 text-[1.55rem]">
+                Your tickets for this event
+              </h2>
             </div>
             {ticketsForEvent.length === 0 ? (
               <p className="mb-0 text-(color:--text-muted)">
@@ -538,31 +560,29 @@ export function EventDetail({ event }: { event: Event }) {
               </p>
             ) : (
               <div className="grid gap-3">
-                {ticketsForEvent.map(
-                  (ticket) => (
-                    <article
-                      className="grid grid-cols-[92px_1fr] items-center gap-3 rounded-lg border border-(color:--border) bg-(color:--surface-muted) p-3 max-[600px]:grid-cols-1"
-                      key={ticket.id}
-                    >
-                      <img
-                        className="size-[92px] rounded-lg bg-white p-1 max-[600px]:size-[132px]"
-                        src={ticket.qrCodeDataUrl}
-                        alt={`QR code for ${ticket.buyerName}`}
-                      />
-                      <div className="min-w-0">
-                        <h3 className="mb-1 truncate text-(color:--text)">
-                          {ticket.buyerName}
-                        </h3>
-                        <p className="mb-2 text-(color:--text-muted)">
-                          {ticket.status.replace("_", " ")}
-                        </p>
-                        <code className="rounded-md bg-(color:--surface-elevated) px-2 py-1 text-[0.78rem] text-(color:--accent)">
-                          {ticket.code}
-                        </code>
-                      </div>
-                    </article>
-                  ),
-                )}
+                {ticketsForEvent.map((ticket) => (
+                  <article
+                    className="grid grid-cols-[92px_1fr] items-center gap-3 rounded-lg border border-(color:--border) bg-(color:--surface-muted) p-3 max-[600px]:grid-cols-1"
+                    key={ticket.id}
+                  >
+                    <img
+                      className="size-[92px] rounded-lg bg-white p-1 max-[600px]:size-[132px]"
+                      src={ticket.qrCodeDataUrl}
+                      alt={`QR code for ${ticket.buyerName}`}
+                    />
+                    <div className="min-w-0">
+                      <h3 className="mb-1 truncate text-(color:--text)">
+                        {ticket.buyerName}
+                      </h3>
+                      <p className="mb-2 text-(color:--text-muted)">
+                        {ticket.status.replace("_", " ")}
+                      </p>
+                      <code className="rounded-md bg-(color:--surface-elevated) px-2 py-1 text-[0.78rem] text-(color:--accent)">
+                        {ticket.code}
+                      </code>
+                    </div>
+                  </article>
+                ))}
               </div>
             )}
           </section>
@@ -571,9 +591,13 @@ export function EventDetail({ event }: { event: Event }) {
         <aside className="sticky top-[94px] grid gap-5 max-[1120px]:static">
           <section className={panelPadded}>
             <div>
-              <p className={kicker}>{session ? "Signed in checkout" : "Guest checkout"}</p>
+              <p className={kicker}>
+                {session ? "Signed in checkout" : "Guest checkout"}
+              </p>
               <h2 className="mb-0 text-[1.55rem]">
-                {session ? `Buying as ${session.user.name}` : "Reserve your spot"}
+                {session
+                  ? `Buying as ${session.user.name}`
+                  : "Reserve your spot"}
               </h2>
             </div>
             {!session && (
@@ -605,12 +629,16 @@ export function EventDetail({ event }: { event: Event }) {
               </span>
               <div>
                 <p className={kicker}>Select tickets</p>
-                <h2 className="mb-0 text-[1.55rem]">1 ticket category available</h2>
+                <h2 className="mb-0 text-[1.55rem]">
+                  1 ticket category available
+                </h2>
               </div>
             </div>
             <div className="grid gap-3 rounded-lg border border-(color:--border) bg-(color:--surface-muted) p-3">
               <div className="flex items-start justify-between gap-3">
-                <strong className="text-(color:--text)">General admission</strong>
+                <strong className="text-(color:--text)">
+                  General admission
+                </strong>
                 <strong className="text-(color:--price)">
                   {money.format(checkoutEvent.priceCents / 100)}
                 </strong>
@@ -648,14 +676,9 @@ export function EventDetail({ event }: { event: Event }) {
           aria-modal="true"
           aria-labelledby="checkout-dialog-title"
         >
-          <button
-            className="checkout-dialog__backdrop"
-            type="button"
-            aria-label="Close checkout"
-            onClick={() => setCheckoutOpen(false)}
-          />
+          <div className="checkout-dialog__backdrop" aria-hidden="true" />
           <section className="checkout-dialog__panel">
-            <div className="flex items-start justify-between gap-4">
+            <div className="checkout-dialog__header">
               <div>
                 <p className={kicker}>Checkout</p>
                 <h2
@@ -677,157 +700,165 @@ export function EventDetail({ event }: { event: Event }) {
               </button>
             </div>
 
-            <div className="grid gap-3 rounded-lg border border-(color:--border) bg-(color:--surface-muted) p-3">
-              <div className="flex items-start justify-between gap-3">
-                <strong className="text-(color:--text)">General admission</strong>
-                <strong className="text-(color:--price)">
-                  {money.format(ticketTotalCents / 100)}
-                </strong>
+            <div className="checkout-dialog__body">
+              <div className="grid gap-3 rounded-lg border border-(color:--border) bg-(color:--surface-muted) p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <strong className="text-(color:--text)">
+                    General admission
+                  </strong>
+                  <strong className="text-(color:--price)">
+                    {money.format(ticketTotalCents / 100)}
+                  </strong>
+                </div>
+                <span className="text-[0.9rem] text-(color:--text-muted)">
+                  {quantity.toLocaleString("en-UG")} x{" "}
+                  {money.format(checkoutEvent.priceCents / 100)}
+                </span>
+                <span className="text-[0.9rem] text-(color:--text-muted)">
+                  {dateTime.format(new Date(checkoutEvent.startsAt))}
+                </span>
               </div>
-              <span className="text-[0.9rem] text-(color:--text-muted)">
-                {quantity.toLocaleString("en-UG")} x{" "}
-                {money.format(checkoutEvent.priceCents / 100)}
-              </span>
-              <span className="text-[0.9rem] text-(color:--text-muted)">
-                {dateTime.format(new Date(checkoutEvent.startsAt))}
-              </span>
-            </div>
 
-            <form onSubmit={buyTickets} className={formGrid}>
-              <label>
-                Buyer name
-                <input
-                  value={buyerName}
-                  onChange={(input) => setBuyerName(input.target.value)}
-                  placeholder={session?.user.name ?? "Anonymous buyer name"}
-                  required
-                />
-              </label>
-              <label>
-                Buyer email
-                <input
-                  type="email"
-                  value={buyerEmail}
-                  onChange={(input) => setBuyerEmail(input.target.value)}
-                  placeholder={session?.user.email ?? "Email for ticket delivery"}
-                  required
-                />
-              </label>
-              <label>
-                Quantity
-                <span
-                  className="quantity-stepper"
-                  onWheel={(event) => {
-                    event.preventDefault();
-                    stepQuantity(event.deltaY < 0 ? 1 : -1);
-                  }}
-                >
-                  <button
-                    type="button"
-                    aria-label="Decrease quantity"
-                    onClick={() => stepQuantity(-1)}
-                    disabled={quantity <= 1}
-                  >
-                    <Minus size={16} />
-                  </button>
+              <form onSubmit={buyTickets} className={formGrid}>
+                <label>
+                  Buyer name
                   <input
-                    inputMode="numeric"
-                    pattern="[0-9,]*"
-                    value={formattedQuantity}
-                    onChange={(input) =>
-                      updateQuantityFromText(input.target.value)
-                    }
-                    onKeyDown={(event) => {
-                      if (["e", "E", "+", "-", "."].includes(event.key)) {
-                        event.preventDefault();
-                      }
-                    }}
+                    value={buyerName}
+                    onChange={(input) => setBuyerName(input.target.value)}
+                    placeholder={session?.user.name ?? "Anonymous buyer name"}
                     required
                   />
-                  <button
-                    type="button"
-                    aria-label="Increase quantity"
-                    onClick={() => stepQuantity(1)}
-                    disabled={quantity >= 10}
-                  >
-                    <Plus size={16} />
-                  </button>
-                </span>
-              </label>
-
-              {checkoutEvent.priceCents > 0 && (
-                <>
-                  <div>
-                    <p className={kicker}>Payment method</p>
-                    <div className="grid grid-cols-2 gap-2 max-[520px]:grid-cols-1">
-                      {[
-                        {
-                          value: "mtn",
-                          label: "MTN MoMo",
-                          logo: "/payment/mtn-momo.svg",
-                        },
-                        {
-                          value: "airtel",
-                          label: "Airtel Money",
-                          logo: "/payment/airtel-money.svg",
-                        },
-                      ].map((option) => (
-                        <button
-                          className={`payment-option payment-option--${option.value}`}
-                          data-selected={paymentProvider === option.value}
-                          aria-pressed={paymentProvider === option.value}
-                          key={option.value}
-                          type="button"
-                          onClick={() =>
-                            setPaymentProvider(
-                              option.value as "airtel" | "mtn",
-                            )
-                          }
-                        >
-                          <span className="payment-option__poster">
-                            <img src={option.logo} alt="" />
-                          </span>
-                          <span className="payment-option__footer">
-                            <span>{option.label}</span>
-                            {paymentProvider === option.value && (
-                              <span className="payment-option__selected">
-                                <CheckCircle2 size={16} />
-                                Selected
-                              </span>
-                            )}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <label>
-                    Mobile money number
+                </label>
+                <label>
+                  Buyer email
+                  <input
+                    type="email"
+                    value={buyerEmail}
+                    onChange={(input) => setBuyerEmail(input.target.value)}
+                    placeholder={
+                      session?.user.email ?? "Email for ticket delivery"
+                    }
+                    required
+                  />
+                </label>
+                <label>
+                  Quantity
+                  <span className="quantity-stepper">
+                    <button
+                      type="button"
+                      aria-label="Decrease quantity"
+                      onClick={() => stepQuantity(-1)}
+                      disabled={quantity <= 1}
+                    >
+                      <Minus size={16} />
+                    </button>
                     <input
-                      value={mobileMoneyNumber}
+                      inputMode="numeric"
+                      pattern="[0-9,]*"
+                      value={formattedQuantity}
                       onChange={(input) =>
-                        setMobileMoneyNumber(input.target.value)
+                        updateQuantityFromText(input.target.value)
                       }
-                      placeholder="256..."
+                      onKeyDown={(event) => {
+                        if (["e", "E", "+", "-", "."].includes(event.key)) {
+                          event.preventDefault();
+                        }
+                      }}
+                      onWheel={(event) => {
+                        if (document.activeElement !== event.currentTarget) {
+                          return;
+                        }
+
+                        event.preventDefault();
+                        stepQuantity(event.deltaY > 0 ? 1 : -1);
+                      }}
                       required
                     />
-                  </label>
-                </>
-              )}
+                    <button
+                      type="button"
+                      aria-label="Increase quantity"
+                      onClick={() => stepQuantity(1)}
+                      disabled={quantity >= 10}
+                    >
+                      <Plus size={16} />
+                    </button>
+                  </span>
+                </label>
 
-              <button className={primaryAction} type="submit">
-                <CircleDollarSign size={18} />
-                {checkoutEvent.priceCents === 0
-                  ? "Get ticket"
-                  : `Pay with ${
-                      paymentProvider === "mtn" ? "MTN MoMo" : "Airtel Money"
-                    }`}
-              </button>
-            </form>
-            {purchaseState && (
-              <p className="mb-0 rounded-lg bg-(color:--accent-soft) p-3 text-[0.92rem] font-(weight:--weight-medium) text-(color:--accent)">
-                {purchaseState}
-              </p>
-            )}
+                {checkoutEvent.priceCents > 0 && (
+                  <>
+                    <div>
+                      <p className={kicker}>Payment method</p>
+                      <div className="grid grid-cols-2 gap-2 max-[520px]:grid-cols-1">
+                        {[
+                          {
+                            value: "mtn",
+                            label: "MTN MoMo",
+                            logo: "/payment/mtn-momo.svg",
+                          },
+                          {
+                            value: "airtel",
+                            label: "Airtel Money",
+                            logo: "/payment/airtel-money.svg",
+                          },
+                        ].map((option) => (
+                          <button
+                            className={`payment-option payment-option--${option.value}`}
+                            data-selected={paymentProvider === option.value}
+                            aria-pressed={paymentProvider === option.value}
+                            key={option.value}
+                            type="button"
+                            onClick={() =>
+                              setPaymentProvider(
+                                option.value as "airtel" | "mtn",
+                              )
+                            }
+                          >
+                            <span className="payment-option__poster">
+                              <img src={option.logo} alt="" />
+                            </span>
+                            <span className="payment-option__footer">
+                              <span>{option.label}</span>
+                              {paymentProvider === option.value && (
+                                <span className="payment-option__selected">
+                                  <CheckCircle2 size={16} />
+                                  Selected
+                                </span>
+                              )}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <label>
+                      Mobile money number
+                      <input
+                        value={mobileMoneyNumber}
+                        onChange={(input) =>
+                          setMobileMoneyNumber(input.target.value)
+                        }
+                        placeholder="256..."
+                        required
+                      />
+                    </label>
+                  </>
+                )}
+
+                <button className={primaryAction} type="submit">
+                  <CircleDollarSign size={18} />
+                  {checkoutEvent.priceCents === 0
+                    ? "Get ticket"
+                    : `Pay with ${
+                        paymentProvider === "mtn" ? "MTN MoMo" : "Airtel Money"
+                      }`}
+                </button>
+              </form>
+              {purchaseState && (
+                <p className="mb-0 rounded-lg bg-(color:--accent-soft) p-3 text-[0.92rem] font-(weight:--weight-medium) text-(color:--accent)">
+                  {purchaseState}
+                </p>
+              )}
+            </div>
           </section>
         </div>
       )}
