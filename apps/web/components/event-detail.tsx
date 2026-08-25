@@ -3,9 +3,12 @@
 import {
   CalendarDays,
   CircleDollarSign,
+  Clock,
   Edit3,
+  ExternalLink,
   LogIn,
   MapPin,
+  Navigation,
   QrCode,
   Save,
   Ticket as TicketIcon,
@@ -28,6 +31,21 @@ const secondaryAction =
   "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-(color:--border) bg-(color:--surface-muted) px-4 font-(weight:--weight-bold) text-(color:--text)";
 const formGrid =
   "grid gap-3 [&_label]:grid [&_label]:gap-[7px] [&_label]:text-[0.82rem] [&_label]:font-(weight:--weight-semibold) [&_label]:text-(color:--text-muted) [&_input]:min-h-11 [&_input]:w-full [&_input]:min-w-0 [&_input]:rounded-lg [&_input]:border [&_input]:border-(color:--border) [&_input]:bg-(color:--surface-elevated) [&_input]:px-3 [&_input]:text-(color:--text) [&_input]:focus:border-(color:--accent) [&_input]:focus:outline-[3px_solid_rgb(255_122_69/18%)] [&_textarea]:min-h-[112px] [&_textarea]:w-full [&_textarea]:min-w-0 [&_textarea]:resize-y [&_textarea]:rounded-lg [&_textarea]:border [&_textarea]:border-(color:--border) [&_textarea]:bg-(color:--surface-elevated) [&_textarea]:px-3 [&_textarea]:py-[11px] [&_textarea]:text-(color:--text) [&_textarea]:focus:border-(color:--accent) [&_textarea]:focus:outline-[3px_solid_rgb(255_122_69/18%)]";
+const sectionHeading =
+  "mb-0 text-[clamp(1.45rem,2vw,2rem)] font-(weight:--weight-bold) leading-tight text-(color:--text)";
+const kicker =
+  "mb-2 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-(color:--accent)";
+
+const eventDay = new Intl.DateTimeFormat("en-UG", {
+  day: "2-digit",
+});
+const eventMonth = new Intl.DateTimeFormat("en-UG", {
+  month: "short",
+});
+const eventTime = new Intl.DateTimeFormat("en-UG", {
+  hour: "2-digit",
+  minute: "2-digit",
+});
 
 function toLocalInputValue(value: string) {
   const date = new Date(value);
@@ -41,6 +59,11 @@ function toLocalInputValue(value: string) {
 function ownerId(event: Event) {
   if (!event.owner) return null;
   return typeof event.owner === "string" ? event.owner : event.owner.id;
+}
+
+function ownerName(event: Event) {
+  if (!event.owner || typeof event.owner === "string") return "Passmint organizer";
+  return event.owner.name;
 }
 
 export function EventDetail({ event }: { event: Event }) {
@@ -101,6 +124,10 @@ export function EventDetail({ event }: { event: Event }) {
     return [...byId.values()];
   }, [relevantIssuedTickets, savedTicketsForEvent]);
   const checkoutEvent = displayEvent;
+  const startsAt = new Date(displayEvent.startsAt);
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    displayEvent.venue,
+  )}`;
 
   async function saveEvent(eventForm: FormEvent<HTMLFormElement>) {
     eventForm.preventDefault();
@@ -144,46 +171,99 @@ export function EventDetail({ event }: { event: Event }) {
   }
 
   return (
-    <section className="mx-auto mt-6.5 grid w-[min(var(--content-max),calc(100%-var(--content-gutter)*2))] max-w-(--content-max) gap-5 text-text">
-      <section className="event-detail-hero">
-        <span className="event-detail-hero__media" aria-hidden="true">
+    <section className="mx-auto mt-5 grid w-[min(var(--content-max),calc(100%-var(--content-gutter)*2))] max-w-(--content-max) gap-5 text-text">
+      <section className="event-detail-showcase">
+        <div className="event-detail-poster">
           <EventImage
             src={displayEvent.thumbnailUrl}
             name={displayEvent.name}
-            fallbackClassName=""
+            fallbackClassName="event-detail-poster__fallback"
           />
-        </span>
-        <div className="event-detail-hero__copy">
+        </div>
+        <div className="event-detail-showcase__body">
           <div className="flex flex-wrap gap-2">
-            <span>{eventCategory(displayEvent)}</span>
-            <span>{eventStatus(displayEvent)}</span>
+            <span className="inline-flex min-h-[34px] items-center rounded-full border border-[rgb(255_255_255/16%)] bg-[rgb(255_255_255/10%)] px-3 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-white/85">
+              {eventCategory(displayEvent)}
+            </span>
+            <span className="inline-flex min-h-[34px] items-center rounded-full border border-[rgb(255_255_255/16%)] bg-[rgb(255_255_255/10%)] px-3 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-white/85">
+              {eventStatus(displayEvent)}
+            </span>
           </div>
-          <h1>{displayEvent.name}</h1>
-          <p>{displayEvent.description}</p>
-          <div className="event-detail-hero__meta">
+          <div>
+            <h1 className="mb-4 text-[clamp(2.7rem,6vw,6.4rem)] font-(weight:--weight-bold) leading-[0.94] text-white">
+              {displayEvent.name}
+            </h1>
+            <p className="mb-0 max-w-[720px] text-[1.08rem] leading-[1.6] text-white/76">
+              {displayEvent.description}
+            </p>
+          </div>
+          <div className="event-detail-showcase__facts">
             <span>
               <CalendarDays size={17} />
-              {dateTime.format(new Date(displayEvent.startsAt))}
+              {dateTime.format(startsAt)}
             </span>
             <span>
               <MapPin size={17} />
               {displayEvent.venue}
-            </span>
-            <span>
-              <Users size={17} />
-              {displayEvent.capacity.toLocaleString("en-UG")} spots
             </span>
             <strong>{money.format(displayEvent.priceCents / 100)}</strong>
           </div>
         </div>
       </section>
 
+      <section className="grid grid-cols-[150px_minmax(0,1fr)_auto] items-center gap-4 rounded-lg border border-(color:--border) bg-(color:--surface-raised) p-4 shadow-[0_18px_52px_rgb(0_0_0/12%)] max-[820px]:grid-cols-1">
+        <div className="grid min-h-[118px] place-items-center rounded-lg border border-(color:--border) bg-(color:--surface-muted) text-center">
+          <span className="text-[0.84rem] font-(weight:--weight-semibold) uppercase tracking-[0.12em] text-(color:--accent)">
+            {eventMonth.format(startsAt)}
+          </span>
+          <strong className="text-[3rem] font-(weight:--weight-bold) leading-none text-(color:--text)">
+            {eventDay.format(startsAt)}
+          </strong>
+          <span className="inline-flex items-center gap-1.5 text-[0.9rem] font-(weight:--weight-semibold) text-(color:--text-muted)">
+            <Clock size={14} />
+            {eventTime.format(startsAt)}
+          </span>
+        </div>
+        <div className="grid gap-3">
+          <div>
+            <p className={kicker}>Organized by</p>
+            <h2 className="mb-0 text-[1.35rem] font-(weight:--weight-bold) text-(color:--text)">
+              {ownerName(displayEvent)}
+            </h2>
+          </div>
+          <div className="grid gap-2 text-[0.98rem] text-(color:--text-muted) [&_span]:inline-flex [&_span]:items-start [&_span]:gap-2 [&_svg]:mt-[3px] [&_svg]:shrink-0 [&_svg]:text-(color:--accent)">
+            <span>
+              <MapPin size={16} />
+              {displayEvent.venue}
+            </span>
+            <span>
+              <Users size={16} />
+              {displayEvent.capacity.toLocaleString("en-UG")} total spots
+            </span>
+          </div>
+        </div>
+        <a
+          className={secondaryAction}
+          href={mapsUrl}
+          target="_blank"
+          rel="noreferrer"
+        >
+          <Navigation size={17} />
+          View map
+        </a>
+      </section>
+
       <div className="grid grid-cols-[minmax(0,1fr)_420px] items-start gap-5 max-[1120px]:grid-cols-1">
         <div className="grid gap-5">
           <section className={panelPadded}>
-            <div className="flex items-center gap-2.5 text-(color:--text) [&_svg]:text-(color:--accent)">
-              <TicketIcon size={22} />
-              <h2 className="mb-0 text-[1.55rem]">Event details</h2>
+            <div className="flex items-center justify-between gap-3 max-[700px]:grid">
+              <div>
+                <p className={kicker}>About this event</p>
+                <h2 className={sectionHeading}>Event details</h2>
+              </div>
+              <span className="inline-flex min-h-9 w-fit items-center rounded-full border border-(color:--border) bg-(color:--surface-muted) px-3 text-[0.84rem] font-(weight:--weight-semibold) text-(color:--text-muted)">
+                {eventStatus(displayEvent)}
+              </span>
             </div>
             <p className="mb-0 text-[1.02rem] leading-[1.65] text-(color:--text-muted)">
               {displayEvent.description}
@@ -198,6 +278,59 @@ export function EventDetail({ event }: { event: Event }) {
                 {isEditing ? "Close editor" : "Edit event"}
               </button>
             )}
+          </section>
+
+          <section className={panelPadded}>
+            <div>
+              <p className={kicker}>Location</p>
+              <h2 className={sectionHeading}>{displayEvent.venue}</h2>
+            </div>
+            <div className="grid min-h-[220px] place-items-center rounded-lg border border-(color:--border) bg-[linear-gradient(135deg,color-mix(in_srgb,var(--accent)_14%,var(--surface-muted)),var(--surface-elevated))] p-5 text-center">
+              <div className="grid max-w-[520px] place-items-center gap-3">
+                <span className="grid size-12 place-items-center rounded-full bg-(color:--accent-soft) text-(color:--accent)">
+                  <MapPin size={24} />
+                </span>
+                <p className="mb-0 text-(color:--text-muted)">
+                  Open the venue in Google Maps for directions and nearby points
+                  of interest.
+                </p>
+                <a
+                  className={secondaryAction}
+                  href={mapsUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <ExternalLink size={17} />
+                  View on Google Maps
+                </a>
+              </div>
+            </div>
+          </section>
+
+          <section className={panelPadded}>
+            <div>
+              <p className={kicker}>Plan your visit</p>
+              <h2 className={sectionHeading}>Before you go</h2>
+            </div>
+            <div className="grid grid-cols-3 gap-3 max-[820px]:grid-cols-1">
+              {[
+                ["Bring your ticket QR", "Your purchased QR code appears here immediately after checkout."],
+                ["Arrive on time", `Doors are based around the ${eventTime.format(startsAt)} start time.`],
+                ["Check the venue", "Use the map link before leaving so your route is clear."],
+              ].map(([title, copy]) => (
+                <article
+                  className="rounded-lg border border-(color:--border) bg-(color:--surface-muted) p-4"
+                  key={title}
+                >
+                  <h3 className="mb-2 text-[1rem] text-(color:--text)">
+                    {title}
+                  </h3>
+                  <p className="mb-0 text-[0.92rem] leading-[1.5] text-(color:--text-muted)">
+                    {copy}
+                  </p>
+                </article>
+              ))}
+            </div>
           </section>
 
           {ownedBySession && isEditing && (
@@ -362,9 +495,7 @@ export function EventDetail({ event }: { event: Event }) {
         <aside className="sticky top-[94px] grid gap-5 max-[1120px]:static">
           <section className={panelPadded}>
             <div>
-              <p className="mb-2 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-(color:--accent)">
-                {session ? "Signed in checkout" : "Guest checkout"}
-              </p>
+              <p className={kicker}>{session ? "Signed in checkout" : "Guest checkout"}</p>
               <h2 className="mb-0 text-[1.55rem]">
                 {session ? `Buying as ${session.user.name}` : "Reserve your spot"}
               </h2>
@@ -393,16 +524,27 @@ export function EventDetail({ event }: { event: Event }) {
 
           <section className={panelPadded}>
             <div className="flex items-center gap-2.5 text-(color:--text) [&_svg]:text-(color:--accent)">
-              <CircleDollarSign size={22} />
-              <h2 className="mb-0 text-[1.55rem]">Checkout</h2>
+              <TicketIcon size={22} />
+              <div>
+                <p className={kicker}>Select tickets</p>
+                <h2 className="mb-0 text-[1.55rem]">1 ticket category available</h2>
+              </div>
             </div>
-            <div className="grid gap-1 rounded-lg bg-(color:--surface-muted) p-3">
-              <strong className="text-(color:--text)">{checkoutEvent.name}</strong>
+            <div className="grid gap-3 rounded-lg border border-(color:--border) bg-(color:--surface-muted) p-3">
+              <div className="flex items-start justify-between gap-3">
+                <strong className="text-(color:--text)">General admission</strong>
+                <strong className="text-(color:--price)">
+                  {money.format(checkoutEvent.priceCents / 100)}
+                </strong>
+              </div>
               <span className="text-[0.9rem] text-(color:--text-muted)">
                 {dateTime.format(new Date(checkoutEvent.startsAt))}
               </span>
               <span className="text-[0.9rem] text-(color:--text-muted)">
                 {checkoutEvent.venue}
+              </span>
+              <span className="text-[0.86rem] font-(weight:--weight-semibold) text-(color:--text-soft)">
+                Displayed price
               </span>
             </div>
             <form onSubmit={buyTickets} className={formGrid}>
