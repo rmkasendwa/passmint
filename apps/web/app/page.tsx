@@ -8,6 +8,7 @@ import {
 import Link from 'next/link';
 import type { Event } from '../api';
 import { DiscoveryFilters } from '../components/discovery-filters';
+import { EventImage } from '../components/event-image';
 import { FeaturedEventCarousel } from '../components/featured-event-carousel';
 import {
   categories,
@@ -125,18 +126,11 @@ export default async function HomePage({
                       href={`/event/${event.id}`}
                     >
                       <span className="event-list-card__media" aria-hidden="true">
-                        {event.thumbnailUrl ? (
-                          <img src={event.thumbnailUrl} alt="" />
-                        ) : (
-                          <span className="event-list-card__fallback">
-                            {event.name
-                              .split(' ')
-                              .map((part) => part[0])
-                              .join('')
-                              .slice(0, 2)
-                              .toUpperCase()}
-                          </span>
-                        )}
+                        <EventImage
+                          src={event.thumbnailUrl}
+                          name={event.name}
+                          fallbackClassName="event-list-card__fallback"
+                        />
                       </span>
                       <span className="event-list-card__sheen" aria-hidden="true" />
                       <span className="event-list-card__orb" aria-hidden="true" />

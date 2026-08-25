@@ -17,6 +17,7 @@ import { api, Event } from "../api";
 import { eventCategory, eventStatus } from "../event-utils";
 import { dateTime, money } from "../formatters";
 import { useAppContext } from "./app-provider";
+import { EventImage } from "./event-image";
 
 const panel =
   "rounded-lg border border-(color:--border) bg-(color:--surface-raised) shadow-[0_18px_52px_rgb(0_0_0/14%)]";
@@ -146,11 +147,11 @@ export function EventDetail({ event }: { event: Event }) {
     <section className="mx-auto mt-6.5 grid w-[min(var(--content-max),calc(100%-var(--content-gutter)*2))] max-w-(--content-max) gap-5 text-text">
       <section className="event-detail-hero">
         <span className="event-detail-hero__media" aria-hidden="true">
-          {displayEvent.thumbnailUrl ? (
-            <img src={displayEvent.thumbnailUrl} alt="" />
-          ) : (
-            <span>{displayEvent.name.slice(0, 2).toUpperCase()}</span>
-          )}
+          <EventImage
+            src={displayEvent.thumbnailUrl}
+            name={displayEvent.name}
+            fallbackClassName=""
+          />
         </span>
         <div className="event-detail-hero__copy">
           <div className="flex flex-wrap gap-2">

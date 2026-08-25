@@ -16,6 +16,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Event } from '../api';
 import { eventCategory, eventStatus } from '../event-utils';
 import { chipDate, money } from '../formatters';
+import { EventImage } from './event-image';
 
 const primaryAction = 'featured-carousel__cta';
 
@@ -125,18 +126,11 @@ export function FeaturedEventCarousel({ events }: { events: Event[] }) {
             aria-hidden={!isActive}
           >
             <span className="featured-carousel__media" aria-hidden="true">
-              {event.thumbnailUrl ? (
-                <img src={event.thumbnailUrl} alt="" />
-              ) : (
-                <span className="featured-carousel__fallback">
-                  {event.name
-                    .split(' ')
-                    .map((part) => part[0])
-                    .join('')
-                    .slice(0, 2)
-                    .toUpperCase()}
-                </span>
-              )}
+              <EventImage
+                src={event.thumbnailUrl}
+                name={event.name}
+                fallbackClassName="featured-carousel__fallback"
+              />
             </span>
             <span className="featured-carousel__sheen" aria-hidden="true" />
             <span className="featured-carousel__orb" aria-hidden="true" />
