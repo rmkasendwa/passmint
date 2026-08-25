@@ -48,7 +48,7 @@ export function AuthFrame({
       >
         <div className="grid w-full max-w-[430px] gap-2.5 max-[820px]:max-w-none">
           {kicker && <p className={sectionKicker}>{kicker}</p>}
-          <h1 className="mb-0 text-[clamp(2.7rem,7vw,5.6rem)] font-(weight:--weight-bold) leading-[0.95] tracking-normal text-(color:--text) max-[820px]:text-[clamp(2rem,10vw,2.8rem)]">
+          <h1 className="mb-0 text-[clamp(2.25rem,5vw,3.9rem)] font-(weight:--weight-bold) leading-[1.02] tracking-normal text-(color:--text) max-[820px]:text-[clamp(1.9rem,8vw,2.45rem)]">
             {title}
           </h1>
           <p className="mb-0 text-[1.02rem] leading-[1.58] text-(color:--text-muted)">
