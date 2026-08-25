@@ -17,6 +17,57 @@ const stateClass =
   "mb-0 w-full max-w-[430px] rounded-lg bg-(color:--accent-soft) p-3 text-[0.92rem] font-(weight:--weight-medium) text-(color:--accent) max-[820px]:max-w-none";
 const switchClass =
   "w-full max-w-[430px] text-[0.96rem] text-(color:--text-muted) max-[820px]:max-w-none [&_a]:font-(weight:--weight-semibold) [&_a]:text-(color:--accent) [&_a:hover]:text-(color:--text) [&_p]:mb-0";
+const strengthTrackClass =
+  "h-2 overflow-hidden rounded-full bg-(color:--surface-muted)";
+const strengthBarClass =
+  "block h-full rounded-full transition-[width,background-color]";
+const strengthTextClass =
+  "flex items-center justify-between gap-3 text-[0.78rem] text-(color:--text-soft)";
+
+function getPasswordStrength(password: string) {
+  const checks = [
+    password.length >= 8,
+    password.length >= 12,
+    /[a-z]/.test(password) && /[A-Z]/.test(password),
+    /\d/.test(password),
+    /[^A-Za-z0-9]/.test(password),
+  ];
+  const score = checks.filter(Boolean).length;
+
+  if (!password) {
+    return {
+      label: "Enter a password",
+      hint: "Use 8+ characters with variety",
+      width: "0%",
+      color: "transparent",
+    };
+  }
+
+  if (score <= 2) {
+    return {
+      label: "Weak",
+      hint: "Add length, numbers, or symbols",
+      width: "34%",
+      color: "#ef4444",
+    };
+  }
+
+  if (score <= 4) {
+    return {
+      label: "Good",
+      hint: "A little more variety helps",
+      width: "68%",
+      color: "#f8c868",
+    };
+  }
+
+  return {
+    label: "Strong",
+    hint: "Looks solid",
+    width: "100%",
+    color: "#28c4b5",
+  };
+}
 
 export function LoginForm() {
   const {
@@ -80,15 +131,18 @@ export function LoginForm() {
 
 export function RegisterForm() {
   const {
+    authConfirmPassword,
     authEmail,
     authName,
     authPassword,
     authState,
+    setAuthConfirmPassword,
     setAuthEmail,
     setAuthName,
     setAuthPassword,
     submitAuth,
   } = useAppContext();
+  const passwordStrength = getPasswordStrength(authPassword);
 
   return (
     <>
@@ -125,6 +179,37 @@ export function RegisterForm() {
             value={authPassword}
             onChange={(event) => setAuthPassword(event.target.value)}
             placeholder="At least 8 characters"
+            autoComplete="new-password"
+            required
+          />
+          <span className="grid gap-2" aria-live="polite">
+            <span
+              className={strengthTrackClass}
+              aria-label={`Password strength: ${passwordStrength.label}`}
+            >
+              <span
+                className={strengthBarClass}
+                style={{
+                  width: passwordStrength.width,
+                  backgroundColor: passwordStrength.color,
+                }}
+              />
+            </span>
+            <span className={strengthTextClass}>
+              <span>{passwordStrength.label}</span>
+              <span>{passwordStrength.hint}</span>
+            </span>
+          </span>
+        </label>
+        <label className={labelClass}>
+          Confirm password
+          <input
+            className={inputClass}
+            type="password"
+            minLength={8}
+            value={authConfirmPassword}
+            onChange={(event) => setAuthConfirmPassword(event.target.value)}
+            placeholder="Repeat password"
             autoComplete="new-password"
             required
           />

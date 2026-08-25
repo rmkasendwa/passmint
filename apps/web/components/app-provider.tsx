@@ -30,6 +30,7 @@ import {
 type HostEvent = typeof emptyHostEvent;
 
 type AppContextValue = {
+  authConfirmPassword: string;
   authEmail: string;
   authMode: "login" | "register";
   authName: string;
@@ -77,6 +78,7 @@ type AppContextValue = {
   selectedEvent?: Event;
   selectedEventId: string;
   session: AuthSession | null;
+  setAuthConfirmPassword: (value: string) => void;
   setAuthEmail: (value: string) => void;
   setAuthName: (value: string) => void;
   setAuthPassword: (value: string) => void;
@@ -179,6 +181,7 @@ export function AppProvider({
   const [authName, setAuthName] = useState("");
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
+  const [authConfirmPassword, setAuthConfirmPassword] = useState("");
   const [authState, setAuthState] = useState("");
   const [resetEmail, setResetEmail] = useState("");
   const [resetPassword, setResetPassword] = useState("");
@@ -612,6 +615,12 @@ export function AppProvider({
 
   async function submitAuth(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (authMode === "register" && authPassword !== authConfirmPassword) {
+      setAuthState("Passwords do not match.");
+      return;
+    }
+
     setAuthState(
       authMode === "login" ? "Logging in..." : "Creating account...",
     );
@@ -629,6 +638,7 @@ export function AppProvider({
       setBuyerName(nextSession.user.name);
       setBuyerEmail(nextSession.user.email);
       setAuthPassword("");
+      setAuthConfirmPassword("");
       setAuthState(`Logged in as ${nextSession.user.role}.`);
       router.push("/dashboard");
     } catch (error) {
@@ -663,6 +673,7 @@ export function AppProvider({
   }
 
   const contextValue: AppContextValue = {
+    authConfirmPassword,
     authEmail,
     authMode,
     authName,
@@ -710,6 +721,7 @@ export function AppProvider({
     selectedEvent,
     selectedEventId,
     session,
+    setAuthConfirmPassword,
     setAuthEmail,
     setAuthName,
     setAuthPassword,
