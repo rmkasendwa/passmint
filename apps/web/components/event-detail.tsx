@@ -835,6 +835,7 @@ export function EventDetail({ event }: { event: Event }) {
                       label="Mobile money number"
                       value={mobileMoneyNumber}
                       onChange={setMobileMoneyNumber}
+                      paymentProvider={paymentProvider}
                       required
                     />
                   </>
