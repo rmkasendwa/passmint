@@ -1,15 +1,29 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 180" role="img" aria-labelledby="title desc">
   <title id="title">MoMo from MTN</title>
   <desc id="desc">MoMo from MTN payment brand mark.</desc>
-  <rect width="420" height="180" rx="28" fill="#004f71"/>
-  <rect x="24" y="24" width="372" height="132" rx="24" fill="#004f71"/>
-  <g transform="translate(48 35)">
-    <rect width="108" height="108" rx="16" fill="#005a7a"/>
-    <path d="M0 93h108v15H0z" fill="#ffc400"/>
-    <path d="M23 68c11-27 27-46 49-61 22 30 31 59 31 91-18-19-43-32-80-30z" fill="#ffc400"/>
-    <circle cx="55" cy="56" r="18" fill="#005a7a"/>
-    <path d="M70 7c18 20 29 43 32 70-10-25-24-43-44-56L70 7z" fill="#ffc400"/>
+  <defs>
+    <linearGradient id="momoTileBlue" x1="8" x2="94" y1="8" y2="104" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#006b8f"/>
+      <stop offset=".58" stop-color="#005372"/>
+      <stop offset="1" stop-color="#003a58"/>
+    </linearGradient>
+    <clipPath id="momoTileClip">
+      <rect width="108" height="108" rx="17"/>
+    </clipPath>
+    <filter id="momoTileShadow" x="-20%" y="-18%" width="140%" height="145%">
+      <feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#001522" flood-opacity=".34"/>
+    </filter>
+  </defs>
+  <g transform="translate(48 35)" filter="url(#momoTileShadow)">
+    <g clip-path="url(#momoTileClip)">
+      <rect width="108" height="108" fill="url(#momoTileBlue)"/>
+      <path d="M0 94h108v14H0z" fill="#ffc400"/>
+      <path d="M0 94h108v4H0z" fill="#e4ae00" opacity=".72"/>
+      <path d="M22 64c7-20 22-39 42-55 23 31 35 60 34 91C80 80 56 64 22 64z" fill="#ffc400"/>
+      <path d="M64 9c18 21 29 45 33 74C87 57 73 37 53 23L64 9z" fill="#ffc400"/>
+      <circle cx="55" cy="52" r="16.5" fill="#005372"/>
+    </g>
   </g>
-  <text x="176" y="86" fill="#ffc400" font-family="Arial, Helvetica, sans-serif" font-size="68" font-weight="900" letter-spacing="-4">MoMo</text>
-  <text x="181" y="124" fill="#ffc400" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="800">from MTN</text>
+  <text x="176" y="86" fill="#004f71" font-family="Arial, Helvetica, sans-serif" font-size="68" font-weight="900" letter-spacing="-4">MoMo</text>
+  <text x="181" y="124" fill="#004f71" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="800">from MTN</text>
 </svg>
