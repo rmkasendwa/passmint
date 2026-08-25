@@ -4,11 +4,7 @@ import { Check, ChevronDown, Search } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
-import {
-  RequiredLabel,
-  clearCustomValidity,
-  showCustomValidity,
-} from "./form-validation";
+import { FieldMessage, RequiredLabel, getFieldError } from "./form-validation";
 
 type PhoneCountry = {
   code: string;
@@ -160,6 +156,7 @@ export function PhoneNumberInput({
   const [dropdownPosition, setDropdownPosition] =
     useState<DropdownPosition | null>(null);
   const [query, setQuery] = useState("");
+  const [touched, setTouched] = useState(false);
   const countryButtonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLSpanElement>(null);
   const listRef = useRef<HTMLSpanElement>(null);
@@ -185,6 +182,14 @@ export function PhoneNumberInput({
     });
   }, [query]);
   const formattedValue = formatPhoneValue(value, selectedCountry);
+  const error =
+    touched || value
+      ? getFieldError({
+          label,
+          required,
+          value,
+        })
+      : "";
   const placeholder =
     (paymentProvider ? selectedCountry.providers?.[paymentProvider] : null) ??
     selectedCountry.placeholder;
@@ -456,15 +461,22 @@ export function PhoneNumberInput({
             id={inputId}
             inputMode="tel"
             data-validation-label={label}
-            onChange={updatePhoneNumber}
-            onInput={clearCustomValidity}
-            onInvalid={showCustomValidity}
+            onBlur={() => setTouched(true)}
+            onChange={(event) => {
+              setTouched(true);
+              updatePhoneNumber(event);
+            }}
+            onInvalid={(event) => {
+              event.preventDefault();
+              setTouched(true);
+            }}
             placeholder={placeholder}
             required={required}
             type="tel"
             value={formattedValue}
           />
         </span>
+        <FieldMessage error={error} />
       </span>
       {dropdown}
     </>

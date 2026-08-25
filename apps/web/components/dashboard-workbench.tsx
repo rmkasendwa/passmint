@@ -21,9 +21,11 @@ import {
 import { useAppContext } from "./app-provider";
 import { EventThumbnail } from "./event-thumbnail";
 import {
+  FieldMessage,
   RequiredLabel,
   requiredField,
   requiredTextareaField,
+  useInlineFormValidation,
 } from "./form-validation";
 
 const sectionKicker =
@@ -71,6 +73,39 @@ export function DashboardWorkbench() {
     updateHostEvent,
     videoRef,
   } = useAppContext();
+  const validation = useInlineFormValidation();
+  const eventNameError = validation.fieldError({
+    label: "Event name",
+    required: true,
+    value: hostEvent.name,
+  });
+  const descriptionError = validation.fieldError({
+    label: "Description",
+    required: true,
+    value: hostEvent.description,
+  });
+  const venueError = validation.fieldError({
+    label: "Venue",
+    required: true,
+    value: hostEvent.venue,
+  });
+  const startsError = validation.fieldError({
+    label: "Starts",
+    required: true,
+    value: hostEvent.startsAt,
+  });
+  const capacityError = validation.fieldError({
+    label: "Capacity",
+    min: 1,
+    required: true,
+    value: hostEvent.capacity,
+  });
+  const priceError = validation.fieldError({
+    label: "Price in UGX",
+    min: 0,
+    required: true,
+    value: hostEvent.priceCents / 100,
+  });
 
   if (!session) return null;
 
@@ -135,10 +170,12 @@ export function DashboardWorkbench() {
               variant="preview"
             />
           </div>
-          <form className={formGrid} onSubmit={publishEvent}>
+          <form className={formGrid} {...validation.formProps(publishEvent)}>
             <label>
               <RequiredLabel>Event name</RequiredLabel>
               <input
+                aria-describedby="host-event-name-error"
+                aria-invalid={Boolean(eventNameError) || undefined}
                 value={hostEvent.name}
                 onChange={(event) =>
                   updateHostEvent("name", event.target.value)
@@ -146,10 +183,13 @@ export function DashboardWorkbench() {
                 placeholder="Kampala rooftop sessions"
                 {...requiredField("Event name")}
               />
+              <FieldMessage error={eventNameError} id="host-event-name-error" />
             </label>
             <label>
               <RequiredLabel>Description</RequiredLabel>
               <textarea
+                aria-describedby="host-description-error"
+                aria-invalid={Boolean(descriptionError) || undefined}
                 value={hostEvent.description}
                 onChange={(event) =>
                   updateHostEvent("description", event.target.value)
@@ -157,10 +197,16 @@ export function DashboardWorkbench() {
                 placeholder="Short public summary"
                 {...requiredTextareaField("Description")}
               />
+              <FieldMessage
+                error={descriptionError}
+                id="host-description-error"
+              />
             </label>
             <label>
               <RequiredLabel>Venue</RequiredLabel>
               <input
+                aria-describedby="host-venue-error"
+                aria-invalid={Boolean(venueError) || undefined}
                 value={hostEvent.venue}
                 onChange={(event) =>
                   updateHostEvent("venue", event.target.value)
@@ -168,6 +214,7 @@ export function DashboardWorkbench() {
                 placeholder="Venue, city"
                 {...requiredField("Venue")}
               />
+              <FieldMessage error={venueError} id="host-venue-error" />
             </label>
             <label>
               Map location
@@ -183,6 +230,8 @@ export function DashboardWorkbench() {
               <label>
                 <RequiredLabel>Starts</RequiredLabel>
                 <input
+                  aria-describedby="host-starts-error"
+                  aria-invalid={Boolean(startsError) || undefined}
                   type="datetime-local"
                   value={hostEvent.startsAt}
                   onChange={(event) =>
@@ -190,10 +239,13 @@ export function DashboardWorkbench() {
                   }
                   {...requiredField("Starts")}
                 />
+                <FieldMessage error={startsError} id="host-starts-error" />
               </label>
               <label>
                 <RequiredLabel>Capacity</RequiredLabel>
                 <input
+                  aria-describedby="host-capacity-error"
+                  aria-invalid={Boolean(capacityError) || undefined}
                   min={1}
                   type="number"
                   value={hostEvent.capacity}
@@ -202,11 +254,14 @@ export function DashboardWorkbench() {
                   }
                   {...requiredField("Capacity")}
                 />
+                <FieldMessage error={capacityError} id="host-capacity-error" />
               </label>
             </div>
             <label>
               <RequiredLabel>Price in UGX</RequiredLabel>
               <input
+                aria-describedby="host-price-error"
+                aria-invalid={Boolean(priceError) || undefined}
                 min={0}
                 type="number"
                 value={hostEvent.priceCents / 100}
@@ -218,6 +273,7 @@ export function DashboardWorkbench() {
                 }
                 {...requiredField("Price in UGX")}
               />
+              <FieldMessage error={priceError} id="host-price-error" />
             </label>
             <label className="relative grid gap-[7px]">
               <span>Event artwork photo</span>

@@ -15,7 +15,12 @@ import { EventThumbnail } from "./event-thumbnail";
 import { eventTone } from "../event-utils";
 import { dateTime, money, shortDate } from "../formatters";
 import { PhoneNumberInput } from "./phone-number-input";
-import { RequiredLabel, requiredField } from "./form-validation";
+import {
+  FieldMessage,
+  RequiredLabel,
+  requiredField,
+  useInlineFormValidation,
+} from "./form-validation";
 
 const sectionKicker =
   "mb-2 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-(color:--accent)";
@@ -61,6 +66,25 @@ export function TicketsCheckout() {
     visibleEvents,
     buyTickets,
   } = useAppContext();
+  const validation = useInlineFormValidation();
+  const buyerNameError = validation.fieldError({
+    label: "Buyer name",
+    required: true,
+    value: buyerName,
+  });
+  const buyerEmailError = validation.fieldError({
+    label: "Buyer email",
+    required: true,
+    type: "email",
+    value: buyerEmail,
+  });
+  const quantityError = validation.fieldError({
+    label: "Quantity",
+    max: 10,
+    min: 1,
+    required: true,
+    value: quantity,
+  });
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)_420px] items-start gap-[18px] max-[1120px]:grid-cols-1">
@@ -171,29 +195,43 @@ export function TicketsCheckout() {
               </span>
             </div>
           )}
-          <form onSubmit={buyTickets} className={formGrid}>
+          <form className={formGrid} {...validation.formProps(buyTickets)}>
             <label>
               <RequiredLabel>Buyer name</RequiredLabel>
               <input
+                aria-describedby="tickets-buyer-name-error"
+                aria-invalid={Boolean(buyerNameError) || undefined}
                 value={buyerName}
                 onChange={(event) => setBuyerName(event.target.value)}
                 placeholder={session?.user.name ?? "Anonymous buyer name"}
                 {...requiredField("Buyer name")}
               />
+              <FieldMessage
+                error={buyerNameError}
+                id="tickets-buyer-name-error"
+              />
             </label>
             <label>
               <RequiredLabel>Buyer email</RequiredLabel>
               <input
+                aria-describedby="tickets-buyer-email-error"
+                aria-invalid={Boolean(buyerEmailError) || undefined}
                 type="email"
                 value={buyerEmail}
                 onChange={(event) => setBuyerEmail(event.target.value)}
                 placeholder={session?.user.email ?? "Email for ticket delivery"}
                 {...requiredField("Buyer email")}
               />
+              <FieldMessage
+                error={buyerEmailError}
+                id="tickets-buyer-email-error"
+              />
             </label>
             <label>
               <RequiredLabel>Quantity</RequiredLabel>
               <input
+                aria-describedby="tickets-quantity-error"
+                aria-invalid={Boolean(quantityError) || undefined}
                 min={1}
                 max={10}
                 type="number"
@@ -201,6 +239,7 @@ export function TicketsCheckout() {
                 onChange={(event) => setQuantity(Number(event.target.value))}
                 {...requiredField("Quantity")}
               />
+              <FieldMessage error={quantityError} id="tickets-quantity-error" />
             </label>
             {selectedEvent && selectedEvent.priceCents > 0 && (
               <PhoneNumberInput

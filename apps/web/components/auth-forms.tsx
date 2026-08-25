@@ -2,19 +2,13 @@
 
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
-import {
-  type ChangeEventHandler,
-  type FormEvent,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { type ChangeEventHandler, type FormEvent, useState } from "react";
 import { useAppContext } from "./app-provider";
 import {
+  FieldMessage,
   RequiredLabel,
-  clearCustomValidity,
   requiredField,
-  showCustomValidity,
+  useInlineFormValidation,
 } from "./form-validation";
 
 const formClass = "grid w-full max-w-[430px] gap-4 max-[820px]:max-w-none";
@@ -88,9 +82,10 @@ function getPasswordStrength(password: string) {
 }
 
 type PasswordInputProps = {
+  ariaDescribedBy?: string;
   autoComplete: string;
-  customError?: string;
   id?: string;
+  invalid?: boolean;
   minLength?: number;
   onChange: ChangeEventHandler<HTMLInputElement>;
   placeholder: string;
@@ -102,9 +97,10 @@ type PasswordInputProps = {
 };
 
 function PasswordInput({
+  ariaDescribedBy,
   autoComplete,
-  customError,
   id,
+  invalid,
   minLength,
   onChange,
   placeholder,
@@ -114,28 +110,15 @@ function PasswordInput({
   validationLabel,
   value,
 }: PasswordInputProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
   const Icon = revealed ? EyeOff : Eye;
   const label = revealed ? "Hide password" : "Reveal password";
-
-  useEffect(() => {
-    inputRef.current?.setCustomValidity(value ? (customError ?? "") : "");
-  }, [customError, value]);
-
-  function handleInvalid(event: FormEvent<HTMLInputElement>) {
-    if (customError && value) {
-      event.currentTarget.setCustomValidity(customError);
-      return;
-    }
-
-    showCustomValidity(event);
-  }
 
   return (
     <span className={passwordInputWrapClass}>
       <input
         id={id}
-        ref={inputRef}
+        aria-describedby={ariaDescribedBy}
+        aria-invalid={invalid || undefined}
         className={passwordInputClass}
         type={revealed ? "text" : "password"}
         minLength={minLength}
@@ -144,8 +127,6 @@ function PasswordInput({
         placeholder={placeholder}
         autoComplete={autoComplete}
         data-validation-label={validationLabel}
-        onInput={clearCustomValidity}
-        onInvalid={handleInvalid}
         required={required}
       />
       <button
@@ -170,14 +151,29 @@ export function LoginForm() {
     setAuthPassword,
     submitAuth,
   } = useAppContext();
+  const validation = useInlineFormValidation();
   const [passwordRevealed, setPasswordRevealed] = useState(false);
+  const emailError = validation.fieldError({
+    label: "Email",
+    required: true,
+    type: "email",
+    value: authEmail,
+  });
+  const passwordError = validation.fieldError({
+    label: "Password",
+    minLength: 8,
+    required: true,
+    value: authPassword,
+  });
 
   return (
     <>
-      <form className={formClass} onSubmit={submitAuth}>
+      <form className={formClass} {...validation.formProps(submitAuth)}>
         <label className={labelClass}>
           <RequiredLabel>Email</RequiredLabel>
           <input
+            aria-describedby="login-email-error"
+            aria-invalid={Boolean(emailError) || undefined}
             className={inputClass}
             type="email"
             value={authEmail}
@@ -186,6 +182,7 @@ export function LoginForm() {
             autoComplete="email"
             {...requiredField("Email")}
           />
+          <FieldMessage error={emailError} id="login-email-error" />
         </label>
         <label className={labelClass} htmlFor="login-password">
           <span className={labelRowClass}>
@@ -195,7 +192,9 @@ export function LoginForm() {
             </Link>
           </span>
           <PasswordInput
+            ariaDescribedBy="login-password-error"
             id="login-password"
+            invalid={Boolean(passwordError)}
             minLength={8}
             value={authPassword}
             onChange={(event) => setAuthPassword(event.target.value)}
@@ -206,6 +205,7 @@ export function LoginForm() {
             validationLabel="Password"
             required
           />
+          <FieldMessage error={passwordError} id="login-password-error" />
         </label>
         <button className={submitClass} type="submit">
           Sign in
@@ -242,13 +242,49 @@ export function RegisterForm() {
       ? "Passwords must match."
       : "";
   const [passwordsRevealed, setPasswordsRevealed] = useState(false);
+  const validation = useInlineFormValidation();
+  const nameError = validation.fieldError({
+    label: "Name",
+    required: true,
+    value: authName,
+  });
+  const emailError = validation.fieldError({
+    label: "Email",
+    required: true,
+    type: "email",
+    value: authEmail,
+  });
+  const passwordError = validation.fieldError({
+    label: "Password",
+    minLength: 8,
+    required: true,
+    value: authPassword,
+  });
+  const confirmError = validation.fieldError({
+    customError: confirmPasswordError,
+    label: "Confirm password",
+    minLength: 8,
+    required: true,
+    value: authConfirmPassword,
+  });
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    if (confirmPasswordError) {
+      event.preventDefault();
+      return;
+    }
+
+    submitAuth(event);
+  }
 
   return (
     <>
-      <form className={formClass} onSubmit={submitAuth}>
+      <form className={formClass} {...validation.formProps(handleSubmit)}>
         <label className={labelClass}>
           <RequiredLabel>Name</RequiredLabel>
           <input
+            aria-describedby="register-name-error"
+            aria-invalid={Boolean(nameError) || undefined}
             className={inputClass}
             value={authName}
             onChange={(event) => setAuthName(event.target.value)}
@@ -256,10 +292,13 @@ export function RegisterForm() {
             autoComplete="name"
             {...requiredField("Name")}
           />
+          <FieldMessage error={nameError} id="register-name-error" />
         </label>
         <label className={labelClass}>
           <RequiredLabel>Email</RequiredLabel>
           <input
+            aria-describedby="register-email-error"
+            aria-invalid={Boolean(emailError) || undefined}
             className={inputClass}
             type="email"
             value={authEmail}
@@ -268,10 +307,13 @@ export function RegisterForm() {
             autoComplete="email"
             {...requiredField("Email")}
           />
+          <FieldMessage error={emailError} id="register-email-error" />
         </label>
         <label className={labelClass}>
           <RequiredLabel>Password</RequiredLabel>
           <PasswordInput
+            ariaDescribedBy="register-password-error"
+            invalid={Boolean(passwordError)}
             minLength={8}
             value={authPassword}
             onChange={(event) => setAuthPassword(event.target.value)}
@@ -282,6 +324,7 @@ export function RegisterForm() {
             validationLabel="Password"
             required
           />
+          <FieldMessage error={passwordError} id="register-password-error" />
           <span className="grid gap-2" aria-live="polite">
             <span
               className={strengthTrackClass}
@@ -304,7 +347,8 @@ export function RegisterForm() {
         <label className={labelClass}>
           <RequiredLabel>Confirm password</RequiredLabel>
           <PasswordInput
-            customError={confirmPasswordError}
+            ariaDescribedBy="register-confirm-password-error"
+            invalid={Boolean(confirmError)}
             minLength={8}
             value={authConfirmPassword}
             onChange={(event) => setAuthConfirmPassword(event.target.value)}
@@ -314,6 +358,10 @@ export function RegisterForm() {
             setRevealed={setPasswordsRevealed}
             validationLabel="Confirm password"
             required
+          />
+          <FieldMessage
+            error={confirmError}
+            id="register-confirm-password-error"
           />
         </label>
         <button className={submitClass} type="submit">
@@ -335,13 +383,25 @@ export function RegisterForm() {
 export function ForgotPasswordForm() {
   const { resetEmail, resetState, setResetEmail, submitForgotPassword } =
     useAppContext();
+  const validation = useInlineFormValidation();
+  const emailError = validation.fieldError({
+    label: "Email",
+    required: true,
+    type: "email",
+    value: resetEmail,
+  });
 
   return (
     <>
-      <form className={formClass} onSubmit={submitForgotPassword}>
+      <form
+        className={formClass}
+        {...validation.formProps(submitForgotPassword)}
+      >
         <label className={labelClass}>
           <RequiredLabel>Email</RequiredLabel>
           <input
+            aria-describedby="forgot-email-error"
+            aria-invalid={Boolean(emailError) || undefined}
             className={inputClass}
             type="email"
             value={resetEmail}
@@ -350,6 +410,7 @@ export function ForgotPasswordForm() {
             autoComplete="email"
             {...requiredField("Email")}
           />
+          <FieldMessage error={emailError} id="forgot-email-error" />
         </label>
         <button className={submitClass} type="submit">
           Send reset link
@@ -381,13 +442,38 @@ export function ResetPasswordForm() {
       ? "Passwords must match."
       : "";
   const [passwordsRevealed, setPasswordsRevealed] = useState(false);
+  const validation = useInlineFormValidation();
+  const passwordError = validation.fieldError({
+    label: "New password",
+    minLength: 8,
+    required: true,
+    value: resetPassword,
+  });
+  const confirmError = validation.fieldError({
+    customError: confirmPasswordError,
+    label: "Confirm password",
+    minLength: 8,
+    required: true,
+    value: resetConfirmPassword,
+  });
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    if (confirmPasswordError) {
+      event.preventDefault();
+      return;
+    }
+
+    submitResetPassword(event);
+  }
 
   return (
     <>
-      <form className={formClass} onSubmit={submitResetPassword}>
+      <form className={formClass} {...validation.formProps(handleSubmit)}>
         <label className={labelClass}>
           <RequiredLabel>New password</RequiredLabel>
           <PasswordInput
+            ariaDescribedBy="reset-password-error"
+            invalid={Boolean(passwordError)}
             minLength={8}
             value={resetPassword}
             onChange={(event) => setResetPassword(event.target.value)}
@@ -398,11 +484,13 @@ export function ResetPasswordForm() {
             validationLabel="New password"
             required
           />
+          <FieldMessage error={passwordError} id="reset-password-error" />
         </label>
         <label className={labelClass}>
           <RequiredLabel>Confirm password</RequiredLabel>
           <PasswordInput
-            customError={confirmPasswordError}
+            ariaDescribedBy="reset-confirm-password-error"
+            invalid={Boolean(confirmError)}
             minLength={8}
             value={resetConfirmPassword}
             onChange={(event) => setResetConfirmPassword(event.target.value)}
@@ -412,6 +500,10 @@ export function ResetPasswordForm() {
             setRevealed={setPasswordsRevealed}
             validationLabel="Confirm password"
             required
+          />
+          <FieldMessage
+            error={confirmError}
+            id="reset-confirm-password-error"
           />
         </label>
         <button className={submitClass} type="submit">

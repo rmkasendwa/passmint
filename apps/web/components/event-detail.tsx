@@ -26,9 +26,11 @@ import { dateTime, money } from "../formatters";
 import { useAppContext } from "./app-provider";
 import { EventImage } from "./event-image";
 import {
+  FieldMessage,
   RequiredLabel,
   requiredField,
   requiredTextareaField,
+  useInlineFormValidation,
 } from "./form-validation";
 import { PhoneNumberInput } from "./phone-number-input";
 
@@ -123,6 +125,8 @@ export function EventDetail({ event }: { event: Event }) {
     priceCents: event.priceCents,
     thumbnailUrl: event.thumbnailUrl ?? "",
   });
+  const editValidation = useInlineFormValidation();
+  const checkoutValidation = useInlineFormValidation();
 
   useEffect(() => {
     chooseEvent(event.id);
@@ -172,6 +176,59 @@ export function EventDetail({ event }: { event: Event }) {
   );
   const detailMood = eventIndex === 0 ? "gold" : "green";
   const detailTone = eventTone(Math.max(eventIndex, 0));
+  const editNameError = editValidation.fieldError({
+    label: "Event name",
+    required: true,
+    value: draft.name,
+  });
+  const editDescriptionError = editValidation.fieldError({
+    label: "Description",
+    required: true,
+    value: draft.description,
+  });
+  const editVenueError = editValidation.fieldError({
+    label: "Venue",
+    required: true,
+    value: draft.venue,
+  });
+  const editStartsError = editValidation.fieldError({
+    label: "Starts",
+    required: true,
+    value: draft.startsAt,
+  });
+  const editCapacityError = editValidation.fieldError({
+    label: "Capacity",
+    min: 1,
+    required: true,
+    value: draft.capacity,
+  });
+  const editPriceError = editValidation.fieldError({
+    label: "Price in UGX",
+    min: 0,
+    required: true,
+    value: draft.priceCents / 100,
+  });
+  const checkoutBuyerNameError = checkoutValidation.fieldError({
+    label: "Buyer name",
+    required: true,
+    value: buyerName,
+  });
+  const checkoutBuyerEmailError = checkoutValidation.fieldError({
+    label: "Buyer email",
+    required: true,
+    type: "email",
+    value: buyerEmail,
+  });
+  const checkoutQuantityError = checkoutValidation.fieldError({
+    label: "Quantity",
+    max: 10,
+    min: 1,
+    pattern: /^[0-9,]+$/,
+    required: true,
+    title: "Enter a whole number.",
+    value: formattedQuantity,
+  });
+
   function updateQuantityFromText(value: string) {
     const digits = value.replace(/\D/g, "");
     setQuantity(normalizeQuantity(Number(digits || "1")));
@@ -428,10 +485,15 @@ export function EventDetail({ event }: { event: Event }) {
                 <Edit3 size={22} />
                 <h2 className="mb-0 text-[1.55rem]">Edit event</h2>
               </div>
-              <form className={formGrid} onSubmit={saveEvent}>
+              <form
+                className={formGrid}
+                {...editValidation.formProps(saveEvent)}
+              >
                 <label>
                   <RequiredLabel>Event name</RequiredLabel>
                   <input
+                    aria-describedby="edit-event-name-error"
+                    aria-invalid={Boolean(editNameError) || undefined}
                     value={draft.name}
                     onChange={(input) =>
                       setDraft((current) => ({
@@ -441,10 +503,16 @@ export function EventDetail({ event }: { event: Event }) {
                     }
                     {...requiredField("Event name")}
                   />
+                  <FieldMessage
+                    error={editNameError}
+                    id="edit-event-name-error"
+                  />
                 </label>
                 <label>
                   <RequiredLabel>Description</RequiredLabel>
                   <textarea
+                    aria-describedby="edit-description-error"
+                    aria-invalid={Boolean(editDescriptionError) || undefined}
                     value={draft.description}
                     onChange={(input) =>
                       setDraft((current) => ({
@@ -454,10 +522,16 @@ export function EventDetail({ event }: { event: Event }) {
                     }
                     {...requiredTextareaField("Description")}
                   />
+                  <FieldMessage
+                    error={editDescriptionError}
+                    id="edit-description-error"
+                  />
                 </label>
                 <label>
                   <RequiredLabel>Venue</RequiredLabel>
                   <input
+                    aria-describedby="edit-venue-error"
+                    aria-invalid={Boolean(editVenueError) || undefined}
                     value={draft.venue}
                     onChange={(input) =>
                       setDraft((current) => ({
@@ -467,6 +541,7 @@ export function EventDetail({ event }: { event: Event }) {
                     }
                     {...requiredField("Venue")}
                   />
+                  <FieldMessage error={editVenueError} id="edit-venue-error" />
                 </label>
                 <label>
                   Map location
@@ -485,6 +560,8 @@ export function EventDetail({ event }: { event: Event }) {
                   <label>
                     <RequiredLabel>Starts</RequiredLabel>
                     <input
+                      aria-describedby="edit-starts-error"
+                      aria-invalid={Boolean(editStartsError) || undefined}
                       type="datetime-local"
                       value={draft.startsAt}
                       onChange={(input) =>
@@ -495,10 +572,16 @@ export function EventDetail({ event }: { event: Event }) {
                       }
                       {...requiredField("Starts")}
                     />
+                    <FieldMessage
+                      error={editStartsError}
+                      id="edit-starts-error"
+                    />
                   </label>
                   <label>
                     <RequiredLabel>Capacity</RequiredLabel>
                     <input
+                      aria-describedby="edit-capacity-error"
+                      aria-invalid={Boolean(editCapacityError) || undefined}
                       min={1}
                       type="number"
                       value={draft.capacity}
@@ -510,10 +593,16 @@ export function EventDetail({ event }: { event: Event }) {
                       }
                       {...requiredField("Capacity")}
                     />
+                    <FieldMessage
+                      error={editCapacityError}
+                      id="edit-capacity-error"
+                    />
                   </label>
                   <label>
                     <RequiredLabel>Price in UGX</RequiredLabel>
                     <input
+                      aria-describedby="edit-price-error"
+                      aria-invalid={Boolean(editPriceError) || undefined}
                       min={0}
                       type="number"
                       value={draft.priceCents / 100}
@@ -524,6 +613,10 @@ export function EventDetail({ event }: { event: Event }) {
                         }))
                       }
                       {...requiredField("Price in UGX")}
+                    />
+                    <FieldMessage
+                      error={editPriceError}
+                      id="edit-price-error"
                     />
                   </label>
                 </div>
@@ -725,19 +818,30 @@ export function EventDetail({ event }: { event: Event }) {
                 </span>
               </div>
 
-              <form onSubmit={buyTickets} className={formGrid}>
+              <form
+                className={formGrid}
+                {...checkoutValidation.formProps(buyTickets)}
+              >
                 <label>
                   <RequiredLabel>Buyer name</RequiredLabel>
                   <input
+                    aria-describedby="detail-buyer-name-error"
+                    aria-invalid={Boolean(checkoutBuyerNameError) || undefined}
                     value={buyerName}
                     onChange={(input) => setBuyerName(input.target.value)}
                     placeholder={session?.user.name ?? "Anonymous buyer name"}
                     {...requiredField("Buyer name")}
                   />
+                  <FieldMessage
+                    error={checkoutBuyerNameError}
+                    id="detail-buyer-name-error"
+                  />
                 </label>
                 <label>
                   <RequiredLabel>Buyer email</RequiredLabel>
                   <input
+                    aria-describedby="detail-buyer-email-error"
+                    aria-invalid={Boolean(checkoutBuyerEmailError) || undefined}
                     type="email"
                     value={buyerEmail}
                     onChange={(input) => setBuyerEmail(input.target.value)}
@@ -745,6 +849,10 @@ export function EventDetail({ event }: { event: Event }) {
                       session?.user.email ?? "Email for ticket delivery"
                     }
                     {...requiredField("Buyer email")}
+                  />
+                  <FieldMessage
+                    error={checkoutBuyerEmailError}
+                    id="detail-buyer-email-error"
                   />
                 </label>
                 <label>
@@ -759,6 +867,8 @@ export function EventDetail({ event }: { event: Event }) {
                       <Minus size={16} />
                     </button>
                     <input
+                      aria-describedby="detail-quantity-error"
+                      aria-invalid={Boolean(checkoutQuantityError) || undefined}
                       inputMode="numeric"
                       pattern="[0-9,]*"
                       title="Enter a whole number."
@@ -790,6 +900,10 @@ export function EventDetail({ event }: { event: Event }) {
                       <Plus size={16} />
                     </button>
                   </span>
+                  <FieldMessage
+                    error={checkoutQuantityError}
+                    id="detail-quantity-error"
+                  />
                 </label>
 
                 {checkoutEvent.priceCents > 0 && (
