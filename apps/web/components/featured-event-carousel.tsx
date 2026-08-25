@@ -17,14 +17,12 @@ import type { Event } from '../api';
 import { eventCategory, eventStatus } from '../event-utils';
 import { chipDate, money } from '../formatters';
 
-const primaryAction =
-  'featured-carousel__cta';
+const primaryAction = 'featured-carousel__cta';
 
 const sectionKicker =
   'mb-2 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-[rgb(255_246_226/62%)]';
 
-const ticketBadge =
-  'featured-carousel__badge';
+const ticketBadge = 'featured-carousel__badge';
 
 export function FeaturedEventCarousel({ events }: { events: Event[] }) {
   const featuredEvents = useMemo(() => events.slice(0, 5), [events]);
@@ -50,49 +48,49 @@ export function FeaturedEventCarousel({ events }: { events: Event[] }) {
     const CategoryIcon = category === 'Music' ? Music2 : TicketIcon;
 
     return (
-    <>
-      <div className="mb-4 flex flex-wrap gap-2">
-        <span className="featured-carousel__chip">
-          <CategoryIcon size={18} />
-          {category}
-        </span>
-        <span className={ticketBadge}>
-          <CalendarDays size={15} />
-          {eventStatus(event)}
-        </span>
-        <span className={ticketBadge}>
-          {chipDate.format(new Date(event.startsAt))}
-        </span>
-      </div>
-      <p className={sectionKicker}>Featured event</p>
-      <h2
-        className="mb-0 line-clamp-2 max-w-230 text-[clamp(3.1rem,6.2vw,5.6rem)] font-(--weight-bold) leading-[0.96] text-white max-[820px]:max-w-[min(100%,620px)] max-[820px]:text-5xl max-[820px]:leading-[1.02]"
-        title={event.name}
-      >
-        {event.name}
-      </h2>
-      <p className="mb-0 mt-3 line-clamp-2 max-w-147.5 text-[1.08rem] leading-normal text-[rgb(255_255_255/82%)]">
-        {event.description}
-      </p>
-      <div className="featured-carousel__meta">
-        <span>
-          <MapPin size={16} />
-          {event.venue}
-        </span>
-        <span>
-          <CircleDollarSign size={16} />
-          {money.format(event.priceCents / 100)}
-        </span>
-        <span>
-          <Users size={16} />
-          {event.capacity.toLocaleString('en-UG')} spots
-        </span>
-      </div>
-      <Link className={primaryAction} href={`/event/${event.id}`}>
-        Get tickets
-        <ArrowRight size={18} />
-      </Link>
-    </>
+      <>
+        <div className="mb-4 flex flex-wrap gap-2">
+          <span className="featured-carousel__chip">
+            <CategoryIcon size={18} />
+            {category}
+          </span>
+          <span className={ticketBadge}>
+            <CalendarDays size={15} />
+            {eventStatus(event)}
+          </span>
+          <span className={ticketBadge}>
+            {chipDate.format(new Date(event.startsAt))}
+          </span>
+        </div>
+        <p className={sectionKicker}>Featured event</p>
+        <h2
+          className="mb-0 line-clamp-2 max-w-230 text-[clamp(3.1rem,6.2vw,5.6rem)] font-(--weight-bold) leading-[1.2] text-white max-[820px]:max-w-[min(100%,620px)] max-[820px]:text-5xl max-[820px]:leading-[1.08]"
+          title={event.name}
+        >
+          {event.name}
+        </h2>
+        <p className="mb-0 mt-3 line-clamp-2 max-w-147.5 text-[1.08rem] leading-normal text-[rgb(255_255_255/82%)]">
+          {event.description}
+        </p>
+        <div className="featured-carousel__meta">
+          <span>
+            <MapPin size={16} />
+            {event.venue}
+          </span>
+          <span>
+            <CircleDollarSign size={16} />
+            {money.format(event.priceCents / 100)}
+          </span>
+          <span>
+            <Users size={16} />
+            {event.capacity.toLocaleString('en-UG')} spots
+          </span>
+        </div>
+        <Link className={primaryAction} href={`/event/${event.id}`}>
+          Get tickets
+          <ArrowRight size={18} />
+        </Link>
+      </>
     );
   };
 

@@ -1,9 +1,9 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme inline {
   --font-sans:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
+    'Segoe UI', sans-serif;
   --color-page: var(--page-solid);
   --color-surface: var(--surface);
   --color-surface-raised: var(--surface-raised);
@@ -44,7 +44,11 @@
   --auth-media-overlay:
     linear-gradient(90deg, rgb(5 5 6 / 4%), rgb(5 5 6 / 66%) 100%),
     linear-gradient(180deg, rgb(0 0 0 / 0%), rgb(0 0 0 / 62%));
-  --auth-media-card-bg: linear-gradient(0deg, rgb(5 5 6 / 74%), rgb(5 5 6 / 0%));
+  --auth-media-card-bg: linear-gradient(
+    0deg,
+    rgb(5 5 6 / 74%),
+    rgb(5 5 6 / 0%)
+  );
   color: var(--text);
   background: var(--page-solid);
   font-family:
@@ -53,13 +57,13 @@
     system-ui,
     -apple-system,
     BlinkMacSystemFont,
-    "Segoe UI",
+    'Segoe UI',
     sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
 
-html[data-theme="light"] {
+html[data-theme='light'] {
   --page-solid: #f7f6f2;
   --page-bg:
     radial-gradient(circle at 14% -8%, rgb(255 122 69 / 18%), transparent 24%),
@@ -83,14 +87,18 @@ html[data-theme="light"] {
   --auth-media-overlay:
     linear-gradient(90deg, rgb(255 255 255 / 8%), rgb(255 255 255 / 42%) 100%),
     linear-gradient(180deg, rgb(255 255 255 / 0%), rgb(17 18 23 / 44%));
-  --auth-media-card-bg: linear-gradient(0deg, rgb(17 18 23 / 70%), rgb(17 18 23 / 0%));
+  --auth-media-card-bg: linear-gradient(
+    0deg,
+    rgb(17 18 23 / 70%),
+    rgb(17 18 23 / 0%)
+  );
 }
 
-html[data-theme="dark"] {
+html[data-theme='dark'] {
   color-scheme: dark;
 }
 
-html[data-theme="light"] {
+html[data-theme='light'] {
   color-scheme: light;
 }
 
@@ -139,19 +147,19 @@ button:disabled {
   color: var(--text);
 }
 
-.category-pill[data-selected="true"] {
+.category-pill[data-selected='true'] {
   border-color: color-mix(in srgb, var(--accent) 56%, var(--border));
   background: color-mix(in srgb, var(--accent) 16%, var(--surface-raised));
   color: var(--text);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
-.category-pill[data-selected="true"] svg {
+.category-pill[data-selected='true'] svg {
   background: var(--accent);
   color: #081010;
 }
 
-.category-pill[data-selected="true"] strong {
+.category-pill[data-selected='true'] strong {
   font-weight: var(--weight-semibold);
 }
 
@@ -168,26 +176,50 @@ button:disabled {
   --card-line: rgb(94 226 204 / 18%);
   --card-price: #f6c866;
   --card-arc: rgb(94 226 204 / 22%);
-  --card-orb:
-    radial-gradient(circle at 42% 40%, rgb(111 246 220 / 20%), rgb(38 197 169 / 9%) 42%, transparent 72%);
+  --card-orb: radial-gradient(
+    circle at 42% 40%,
+    rgb(111 246 220 / 20%),
+    rgb(38 197 169 / 9%) 42%,
+    transparent 72%
+  );
   --card-sheen:
     radial-gradient(circle at 82% 2%, rgb(132 255 236 / 34%), transparent 24%),
     radial-gradient(circle at 50% 38%, rgb(38 197 169 / 20%), transparent 35%),
-    linear-gradient(115deg, transparent 0%, rgb(132 255 236 / 12%) 43%, transparent 58%);
+    linear-gradient(
+      115deg,
+      transparent 0%,
+      rgb(132 255 236 / 12%) 43%,
+      transparent 58%
+    );
   --media-overlay:
-    linear-gradient(180deg, rgb(2 18 16 / 8%) 0%, rgb(2 24 22 / 18%) 30%, rgb(0 48 41 / 58%) 58%, rgb(6 16 15 / 92%) 78%, #06100f 100%),
-    linear-gradient(180deg, transparent 0%, rgb(6 16 15 / 30%) 42%, #06100f 100%),
+    linear-gradient(
+      180deg,
+      rgb(2 18 16 / 8%) 0%,
+      rgb(2 24 22 / 18%) 30%,
+      rgb(0 48 41 / 58%) 58%,
+      rgb(6 16 15 / 92%) 78%,
+      #06100f 100%
+    ),
+    linear-gradient(
+      180deg,
+      transparent 0%,
+      rgb(6 16 15 / 30%) 42%,
+      #06100f 100%
+    ),
     radial-gradient(circle at 58% 76%, rgb(28 166 143 / 36%), transparent 50%);
   --cta-bg: linear-gradient(180deg, #2a9383 0%, #126d60 55%, #0a4c43 100%);
-  --cta-bg-hover: linear-gradient(180deg, #329a8a 0%, #177668 56%, #0c5248 100%);
+  --cta-bg-hover: linear-gradient(
+    180deg,
+    #329a8a 0%,
+    #177668 56%,
+    #0c5248 100%
+  );
   --cta-border: rgb(139 255 235 / 25%);
   --cta-text: #ecfffb;
   --cta-text-hover: #ecfffb;
   --cta-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 26%),
-    inset 0 -3px 7px rgb(0 20 18 / 26%),
-    0 16px 28px rgb(0 0 0 / 28%),
-    0 4px 0 rgb(0 48 42 / 48%);
+    inset 0 1px 0 rgb(255 255 255 / 26%), inset 0 -3px 7px rgb(0 20 18 / 26%),
+    0 16px 28px rgb(0 0 0 / 28%), 0 4px 0 rgb(0 48 42 / 48%);
   position: relative;
   isolation: isolate;
   display: flex;
@@ -226,26 +258,51 @@ button:disabled {
   --card-meta: rgb(255 246 226 / 78%);
   --card-line: rgb(246 181 61 / 24%);
   --card-arc: rgb(246 181 61 / 48%);
-  --card-orb:
-    radial-gradient(circle at 58% 42%, rgb(255 214 126 / 48%), rgb(246 181 61 / 24%) 34%, rgb(246 181 61 / 8%) 54%, transparent 72%);
+  --card-orb: radial-gradient(
+    circle at 58% 42%,
+    rgb(255 214 126 / 48%),
+    rgb(246 181 61 / 24%) 34%,
+    rgb(246 181 61 / 8%) 54%,
+    transparent 72%
+  );
   --card-sheen:
     radial-gradient(circle at 86% 0%, rgb(255 226 160 / 68%), transparent 26%),
     radial-gradient(circle at 45% 42%, rgb(246 181 61 / 42%), transparent 34%),
-    linear-gradient(115deg, transparent 0%, rgb(255 232 184 / 18%) 44%, transparent 60%);
+    linear-gradient(
+      115deg,
+      transparent 0%,
+      rgb(255 232 184 / 18%) 44%,
+      transparent 60%
+    );
   --media-overlay:
-    linear-gradient(180deg, rgb(249 193 91 / 18%) 0%, rgb(40 24 9 / 10%) 28%, rgb(76 43 13 / 48%) 54%, rgb(18 14 10 / 92%) 78%, #0f0d0b 100%),
-    linear-gradient(180deg, transparent 0%, rgb(18 14 10 / 34%) 42%, #0f0d0b 100%),
+    linear-gradient(
+      180deg,
+      rgb(249 193 91 / 18%) 0%,
+      rgb(40 24 9 / 10%) 28%,
+      rgb(76 43 13 / 48%) 54%,
+      rgb(18 14 10 / 92%) 78%,
+      #0f0d0b 100%
+    ),
+    linear-gradient(
+      180deg,
+      transparent 0%,
+      rgb(18 14 10 / 34%) 42%,
+      #0f0d0b 100%
+    ),
     radial-gradient(circle at 64% 78%, rgb(246 181 61 / 62%), transparent 50%);
   --cta-bg: linear-gradient(180deg, #ffd978 0%, #f4b33f 52%, #d98c22 100%);
-  --cta-bg-hover: linear-gradient(180deg, #ffe39a 0%, #f7bd4f 56%, #df9628 100%);
+  --cta-bg-hover: linear-gradient(
+    180deg,
+    #ffe39a 0%,
+    #f7bd4f 56%,
+    #df9628 100%
+  );
   --cta-border: rgb(255 238 181 / 42%);
   --cta-text: #1a1207;
   --cta-text-hover: #1a1207;
   --cta-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 58%),
-    inset 0 -3px 6px rgb(107 57 8 / 24%),
-    0 18px 30px rgb(246 181 61 / 24%),
-    0 5px 0 rgb(116 66 12 / 28%);
+    inset 0 1px 0 rgb(255 255 255 / 58%), inset 0 -3px 6px rgb(107 57 8 / 24%),
+    0 18px 30px rgb(246 181 61 / 24%), 0 5px 0 rgb(116 66 12 / 28%);
   background:
     radial-gradient(circle at 72% 30%, rgb(246 181 61 / 28%), transparent 34%),
     radial-gradient(circle at 20% 100%, rgb(246 181 61 / 14%), transparent 34%),
@@ -285,7 +342,7 @@ button:disabled {
 .event-list-card__media::after {
   position: absolute;
   inset: 0;
-  content: "";
+  content: '';
   background: var(--media-overlay);
 }
 
@@ -395,12 +452,13 @@ button:disabled {
   grid-template-rows: auto auto 1fr auto;
   gap: 16px;
   padding: clamp(250px, 38%, 290px) 26px 26px;
+  align-items: end;
 }
 
 .event-list-card__title {
   min-height: 2.04em;
   color: var(--card-title);
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: Georgia, 'Times New Roman', serif;
   font-size: clamp(2rem, 2.5vw, 3.15rem);
   font-weight: 720;
   line-height: 1.02;
@@ -475,7 +533,7 @@ button:disabled {
   color: var(--cta-text-hover);
 }
 
-html[data-theme="light"] .event-list-card {
+html[data-theme='light'] .event-list-card {
   --card-bg: #f7fbf8;
   --card-border: rgb(22 125 119 / 18%);
   --card-border-hover: rgb(22 125 119 / 28%);
@@ -488,26 +546,50 @@ html[data-theme="light"] .event-list-card {
   --card-line: rgb(22 125 119 / 16%);
   --card-price: #9b6100;
   --card-arc: rgb(22 125 119 / 18%);
-  --card-orb:
-    radial-gradient(circle at 42% 40%, rgb(22 125 119 / 12%), rgb(22 125 119 / 6%) 44%, transparent 72%);
+  --card-orb: radial-gradient(
+    circle at 42% 40%,
+    rgb(22 125 119 / 12%),
+    rgb(22 125 119 / 6%) 44%,
+    transparent 72%
+  );
   --card-sheen:
     radial-gradient(circle at 82% 2%, rgb(22 125 119 / 14%), transparent 24%),
     radial-gradient(circle at 50% 38%, rgb(244 198 104 / 14%), transparent 35%),
-    linear-gradient(115deg, transparent 0%, rgb(255 255 255 / 32%) 43%, transparent 58%);
+    linear-gradient(
+      115deg,
+      transparent 0%,
+      rgb(255 255 255 / 32%) 43%,
+      transparent 58%
+    );
   --media-overlay:
-    linear-gradient(180deg, rgb(248 252 250 / 10%) 0%, rgb(247 251 248 / 30%) 30%, rgb(237 248 244 / 70%) 58%, rgb(247 251 248 / 94%) 80%, #f7fbf8 100%),
-    linear-gradient(180deg, transparent 0%, rgb(247 251 248 / 40%) 44%, #f7fbf8 100%),
+    linear-gradient(
+      180deg,
+      rgb(248 252 250 / 10%) 0%,
+      rgb(247 251 248 / 30%) 30%,
+      rgb(237 248 244 / 70%) 58%,
+      rgb(247 251 248 / 94%) 80%,
+      #f7fbf8 100%
+    ),
+    linear-gradient(
+      180deg,
+      transparent 0%,
+      rgb(247 251 248 / 40%) 44%,
+      #f7fbf8 100%
+    ),
     radial-gradient(circle at 58% 76%, rgb(22 125 119 / 13%), transparent 50%);
   --cta-bg: linear-gradient(180deg, #2f9a8b 0%, #197a6e 56%, #0f665d 100%);
-  --cta-bg-hover: linear-gradient(180deg, #36a394 0%, #1f8174 56%, #126b61 100%);
+  --cta-bg-hover: linear-gradient(
+    180deg,
+    #36a394 0%,
+    #1f8174 56%,
+    #126b61 100%
+  );
   --cta-border: rgb(22 125 119 / 24%);
   --cta-text: #ffffff;
   --cta-text-hover: #ffffff;
   --cta-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 36%),
-    inset 0 -2px 5px rgb(5 54 48 / 22%),
-    0 12px 20px rgb(16 94 84 / 16%),
-    0 3px 0 rgb(9 79 70 / 24%);
+    inset 0 1px 0 rgb(255 255 255 / 36%), inset 0 -2px 5px rgb(5 54 48 / 22%),
+    0 12px 20px rgb(16 94 84 / 16%), 0 3px 0 rgb(9 79 70 / 24%);
   background:
     radial-gradient(circle at 82% 18%, rgb(22 125 119 / 10%), transparent 30%),
     linear-gradient(180deg, #fbfdfb, var(--card-bg));
@@ -516,7 +598,7 @@ html[data-theme="light"] .event-list-card {
     inset 0 1px 0 rgb(255 255 255 / 18%);
 }
 
-html[data-theme="light"] .event-list-card--gold {
+html[data-theme='light'] .event-list-card--gold {
   --card-bg: #fff8e8;
   --card-border: rgb(168 100 0 / 22%);
   --card-border-hover: rgb(168 100 0 / 34%);
@@ -527,54 +609,78 @@ html[data-theme="light"] .event-list-card--gold {
   --card-meta: rgb(62 50 32 / 72%);
   --card-line: rgb(168 100 0 / 18%);
   --card-arc: rgb(168 100 0 / 20%);
-  --card-orb:
-    radial-gradient(circle at 58% 42%, rgb(246 181 61 / 22%), rgb(246 181 61 / 11%) 38%, transparent 72%);
+  --card-orb: radial-gradient(
+    circle at 58% 42%,
+    rgb(246 181 61 / 22%),
+    rgb(246 181 61 / 11%) 38%,
+    transparent 72%
+  );
   --card-sheen:
     radial-gradient(circle at 86% 0%, rgb(255 226 160 / 38%), transparent 26%),
     radial-gradient(circle at 45% 42%, rgb(246 181 61 / 22%), transparent 34%),
-    linear-gradient(115deg, transparent 0%, rgb(255 255 255 / 30%) 44%, transparent 60%);
+    linear-gradient(
+      115deg,
+      transparent 0%,
+      rgb(255 255 255 / 30%) 44%,
+      transparent 60%
+    );
   --media-overlay:
-    linear-gradient(180deg, rgb(255 248 232 / 12%) 0%, rgb(255 248 232 / 28%) 28%, rgb(255 239 201 / 68%) 56%, rgb(255 248 232 / 94%) 80%, #fff8e8 100%),
-    linear-gradient(180deg, transparent 0%, rgb(255 248 232 / 42%) 44%, #fff8e8 100%),
+    linear-gradient(
+      180deg,
+      rgb(255 248 232 / 12%) 0%,
+      rgb(255 248 232 / 28%) 28%,
+      rgb(255 239 201 / 68%) 56%,
+      rgb(255 248 232 / 94%) 80%,
+      #fff8e8 100%
+    ),
+    linear-gradient(
+      180deg,
+      transparent 0%,
+      rgb(255 248 232 / 42%) 44%,
+      #fff8e8 100%
+    ),
     radial-gradient(circle at 64% 78%, rgb(246 181 61 / 26%), transparent 50%);
   --cta-bg: linear-gradient(180deg, #ffd874 0%, #efb345 55%, #cc8420 100%);
-  --cta-bg-hover: linear-gradient(180deg, #ffe096 0%, #f2bb55 55%, #d18b27 100%);
+  --cta-bg-hover: linear-gradient(
+    180deg,
+    #ffe096 0%,
+    #f2bb55 55%,
+    #d18b27 100%
+  );
   --cta-border: rgb(168 100 0 / 24%);
   --cta-text: #2a1904;
   --cta-text-hover: #2a1904;
   --cta-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 58%),
-    inset 0 -2px 5px rgb(116 66 12 / 18%),
-    0 12px 20px rgb(168 100 0 / 16%),
-    0 3px 0 rgb(137 84 11 / 22%);
+    inset 0 1px 0 rgb(255 255 255 / 58%), inset 0 -2px 5px rgb(116 66 12 / 18%),
+    0 12px 20px rgb(168 100 0 / 16%), 0 3px 0 rgb(137 84 11 / 22%);
   background:
     radial-gradient(circle at 72% 30%, rgb(246 181 61 / 18%), transparent 34%),
     radial-gradient(circle at 20% 100%, rgb(22 125 119 / 8%), transparent 34%),
     linear-gradient(180deg, #fffdfa, var(--card-bg));
 }
 
-html[data-theme="light"] .event-list-card:hover {
+html[data-theme='light'] .event-list-card:hover {
   box-shadow:
     0 30px 84px rgb(16 24 40 / 20%),
     0 0 0 1px rgb(22 125 119 / 12%);
 }
 
-html[data-theme="light"] .event-list-card--gold:hover {
+html[data-theme='light'] .event-list-card--gold:hover {
   box-shadow:
     0 30px 84px rgb(84 52 4 / 16%),
     0 0 0 1px rgb(168 100 0 / 12%);
 }
 
-html[data-theme="light"] .event-list-card__media img {
+html[data-theme='light'] .event-list-card__media img {
   opacity: 0.7;
 }
 
-html[data-theme="light"] .event-list-card__sheen {
+html[data-theme='light'] .event-list-card__sheen {
   mix-blend-mode: normal;
   opacity: 0.98;
 }
 
-html[data-theme="light"] .event-list-card__frame {
+html[data-theme='light'] .event-list-card__frame {
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 42%),
     0 0 0 1px rgb(255 255 255 / 20%);
@@ -643,10 +749,21 @@ html[data-theme="light"] .event-list-card__frame {
 .featured-carousel__media::after {
   position: absolute;
   inset: 0;
-  content: "";
+  content: '';
   background:
-    linear-gradient(90deg, rgb(7 13 12 / 82%) 0%, rgb(7 13 12 / 52%) 40%, rgb(7 13 12 / 18%) 100%),
-    linear-gradient(180deg, rgb(249 193 91 / 16%) 0%, rgb(20 13 8 / 18%) 34%, rgb(10 13 12 / 76%) 72%, #07100f 100%),
+    linear-gradient(
+      90deg,
+      rgb(7 13 12 / 82%) 0%,
+      rgb(7 13 12 / 52%) 40%,
+      rgb(7 13 12 / 18%) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgb(249 193 91 / 16%) 0%,
+      rgb(20 13 8 / 18%) 34%,
+      rgb(10 13 12 / 76%) 72%,
+      #07100f 100%
+    ),
     radial-gradient(circle at 54% 76%, rgb(246 181 61 / 42%), transparent 44%);
 }
 
@@ -674,7 +791,12 @@ html[data-theme="light"] .event-list-card__frame {
   background:
     radial-gradient(circle at 84% 0%, rgb(255 226 160 / 50%), transparent 24%),
     radial-gradient(circle at 46% 64%, rgb(246 181 61 / 26%), transparent 36%),
-    linear-gradient(115deg, transparent 0%, rgb(255 232 184 / 14%) 45%, transparent 62%);
+    linear-gradient(
+      115deg,
+      transparent 0%,
+      rgb(255 232 184 / 14%) 45%,
+      transparent 62%
+    );
   mix-blend-mode: screen;
 }
 
@@ -685,8 +807,13 @@ html[data-theme="light"] .event-list-card__frame {
   width: clamp(330px, 38vw, 540px);
   height: clamp(330px, 38vw, 540px);
   border-radius: 999px;
-  background:
-    radial-gradient(circle at 58% 42%, rgb(255 214 126 / 34%), rgb(246 181 61 / 16%) 36%, rgb(246 181 61 / 6%) 56%, transparent 74%);
+  background: radial-gradient(
+    circle at 58% 42%,
+    rgb(255 214 126 / 34%),
+    rgb(246 181 61 / 16%) 36%,
+    rgb(246 181 61 / 6%) 56%,
+    transparent 74%
+  );
   filter: blur(1px);
 }
 
@@ -969,7 +1096,12 @@ html[data-theme="light"] .event-list-card__frame {
   border: 1px solid var(--border);
   border-radius: 8px;
   background:
-    linear-gradient(115deg, rgb(9 10 16 / 90%) 0%, rgb(9 10 16 / 56%) 48%, rgb(9 10 16 / 24%) 100%),
+    linear-gradient(
+      115deg,
+      rgb(9 10 16 / 90%) 0%,
+      rgb(9 10 16 / 56%) 48%,
+      rgb(9 10 16 / 24%) 100%
+    ),
     var(--surface-raised);
   box-shadow:
     0 26px 84px rgb(0 0 0 / 34%),
@@ -996,9 +1128,14 @@ html[data-theme="light"] .event-list-card__frame {
 .event-detail-hero__media::after {
   position: absolute;
   inset: 0;
-  content: "";
+  content: '';
   background:
-    linear-gradient(90deg, rgb(9 10 16 / 92%) 0%, rgb(9 10 16 / 62%) 48%, rgb(9 10 16 / 20%) 100%),
+    linear-gradient(
+      90deg,
+      rgb(9 10 16 / 92%) 0%,
+      rgb(9 10 16 / 62%) 48%,
+      rgb(9 10 16 / 20%) 100%
+    ),
     linear-gradient(180deg, transparent 0%, rgb(9 10 16 / 82%) 100%);
 }
 
@@ -1079,7 +1216,7 @@ html[data-theme="light"] .event-list-card__frame {
   color: #f8c868;
 }
 
-html[data-theme="light"] .next-event-panel {
+html[data-theme='light'] .next-event-panel {
   border-color: rgb(22 125 119 / 16%);
   background:
     radial-gradient(circle at 9% 18%, rgb(22 125 119 / 12%), transparent 24%),
@@ -1092,39 +1229,39 @@ html[data-theme="light"] .next-event-panel {
     inset 0 1px 0 rgb(255 255 255 / 14%);
 }
 
-html[data-theme="light"] .next-event-panel__sheen {
+html[data-theme='light'] .next-event-panel__sheen {
   background:
     radial-gradient(circle at 0% 0%, rgb(22 125 119 / 14%), transparent 28%),
     linear-gradient(115deg, rgb(255 255 255 / 52%), transparent 36%);
   mix-blend-mode: normal;
 }
 
-html[data-theme="light"] .next-event-panel__arc {
+html[data-theme='light'] .next-event-panel__arc {
   border-color: rgb(168 100 0 / 15%);
   box-shadow: 0 0 42px rgb(168 100 0 / 8%);
 }
 
-html[data-theme="light"] .next-event-panel__kicker {
+html[data-theme='light'] .next-event-panel__kicker {
   color: rgb(34 58 53 / 52%);
 }
 
-html[data-theme="light"] .next-event-panel__title {
+html[data-theme='light'] .next-event-panel__title {
   color: #14201d;
 }
 
-html[data-theme="light"] .next-event-panel__meta span {
+html[data-theme='light'] .next-event-panel__meta span {
   border-color: rgb(22 125 119 / 16%);
   background: rgb(255 255 255 / 54%);
   color: rgb(34 58 53 / 74%);
 }
 
-html[data-theme="light"] .next-event-panel__meta strong {
+html[data-theme='light'] .next-event-panel__meta strong {
   border-color: rgb(168 100 0 / 18%);
   background: rgb(246 181 61 / 16%);
   color: #8f5900;
 }
 
-html[data-theme="light"] .next-event-panel__cta {
+html[data-theme='light'] .next-event-panel__cta {
   border-color: rgb(22 125 119 / 24%);
   background: linear-gradient(180deg, #2f9a8b 0%, #197a6e 56%, #0f665d 100%);
   color: #ffffff;
@@ -1135,7 +1272,7 @@ html[data-theme="light"] .next-event-panel__cta {
     0 3px 0 rgb(9 79 70 / 24%);
 }
 
-html[data-theme="light"] .featured-carousel {
+html[data-theme='light'] .featured-carousel {
   border-color: rgb(168 100 0 / 22%);
   background:
     radial-gradient(circle at 76% 12%, rgb(246 181 61 / 18%), transparent 32%),
@@ -1147,38 +1284,54 @@ html[data-theme="light"] .featured-carousel {
     inset 0 1px 0 rgb(255 255 255 / 18%);
 }
 
-html[data-theme="light"] .featured-carousel__media img {
+html[data-theme='light'] .featured-carousel__media img {
   opacity: 0.7;
 }
 
-html[data-theme="light"] .featured-carousel__media::after {
+html[data-theme='light'] .featured-carousel__media::after {
   background:
-    linear-gradient(90deg, rgb(255 253 250 / 88%) 0%, rgb(255 253 250 / 58%) 42%, rgb(255 253 250 / 24%) 100%),
-    linear-gradient(180deg, rgb(255 248 232 / 24%) 0%, rgb(255 253 250 / 26%) 34%, rgb(239 248 244 / 80%) 74%, #eef8f4 100%),
+    linear-gradient(
+      90deg,
+      rgb(255 253 250 / 88%) 0%,
+      rgb(255 253 250 / 58%) 42%,
+      rgb(255 253 250 / 24%) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgb(255 248 232 / 24%) 0%,
+      rgb(255 253 250 / 26%) 34%,
+      rgb(239 248 244 / 80%) 74%,
+      #eef8f4 100%
+    ),
     radial-gradient(circle at 54% 76%, rgb(246 181 61 / 24%), transparent 44%);
 }
 
-html[data-theme="light"] .featured-carousel__sheen {
+html[data-theme='light'] .featured-carousel__sheen {
   background:
     radial-gradient(circle at 84% 0%, rgb(255 226 160 / 32%), transparent 24%),
     radial-gradient(circle at 46% 64%, rgb(246 181 61 / 18%), transparent 36%),
-    linear-gradient(115deg, transparent 0%, rgb(255 255 255 / 38%) 45%, transparent 62%);
+    linear-gradient(
+      115deg,
+      transparent 0%,
+      rgb(255 255 255 / 38%) 45%,
+      transparent 62%
+    );
   mix-blend-mode: normal;
 }
 
-html[data-theme="light"] .featured-carousel h2,
-html[data-theme="light"] .featured-carousel p {
+html[data-theme='light'] .featured-carousel h2,
+html[data-theme='light'] .featured-carousel p {
   color: #14201d;
 }
 
-html[data-theme="light"] .featured-carousel__chip,
-html[data-theme="light"] .featured-carousel__badge {
+html[data-theme='light'] .featured-carousel__chip,
+html[data-theme='light'] .featured-carousel__badge {
   border-color: rgb(168 100 0 / 22%);
   background: rgb(255 251 241 / 68%);
   color: #8e5900;
 }
 
-html[data-theme="light"] .featured-carousel__cta {
+html[data-theme='light'] .featured-carousel__cta {
   border-color: rgb(168 100 0 / 24%);
   background: linear-gradient(180deg, #ffd874 0%, #efb345 55%, #cc8420 100%);
   color: #2a1904;
@@ -1189,34 +1342,39 @@ html[data-theme="light"] .featured-carousel__cta {
     0 3px 0 rgb(137 84 11 / 22%);
 }
 
-html[data-theme="light"] .featured-carousel__cta:hover {
+html[data-theme='light'] .featured-carousel__cta:hover {
   background: linear-gradient(180deg, #ffe096 0%, #f2bb55 55%, #d18b27 100%);
 }
 
-html[data-theme="light"] .featured-carousel__meta span {
+html[data-theme='light'] .featured-carousel__meta span {
   border: 1px solid rgb(22 125 119 / 12%);
   background: rgb(255 255 255 / 50%);
   color: rgb(34 58 53 / 74%);
 }
 
-html[data-theme="light"] .featured-carousel__meta svg {
+html[data-theme='light'] .featured-carousel__meta svg {
   color: #167d77;
 }
 
-html[data-theme="light"] .event-detail-hero {
+html[data-theme='light'] .event-detail-hero {
   background: var(--surface-raised);
   box-shadow:
     0 26px 78px rgb(16 24 40 / 16%),
     inset 0 1px 0 rgb(255 255 255 / 24%);
 }
 
-html[data-theme="light"] .event-detail-hero__media img {
+html[data-theme='light'] .event-detail-hero__media img {
   opacity: 0.5;
 }
 
-html[data-theme="light"] .event-detail-hero__media::after {
+html[data-theme='light'] .event-detail-hero__media::after {
   background:
-    linear-gradient(90deg, rgb(20 18 17 / 88%) 0%, rgb(20 18 17 / 54%) 48%, rgb(20 18 17 / 18%) 100%),
+    linear-gradient(
+      90deg,
+      rgb(20 18 17 / 88%) 0%,
+      rgb(20 18 17 / 54%) 48%,
+      rgb(20 18 17 / 18%) 100%
+    ),
     linear-gradient(180deg, transparent 0%, rgb(20 18 17 / 64%) 100%);
 }
 
@@ -1234,7 +1392,13 @@ html[data-theme="light"] .event-detail-hero__media::after {
 
   .featured-carousel__media::after {
     background:
-      linear-gradient(180deg, rgb(7 13 12 / 10%) 0%, rgb(7 13 12 / 38%) 34%, rgb(10 13 12 / 88%) 78%, #07100f 100%),
+      linear-gradient(
+        180deg,
+        rgb(7 13 12 / 10%) 0%,
+        rgb(7 13 12 / 38%) 34%,
+        rgb(10 13 12 / 88%) 78%,
+        #07100f 100%
+      ),
       radial-gradient(circle at 56% 72%, rgb(246 181 61 / 38%), transparent 46%);
   }
 
