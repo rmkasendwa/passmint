@@ -1,7 +1,7 @@
 'use client';
 
 import { Check, ChevronDown, Search } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent, KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -147,6 +147,7 @@ export function PhoneNumberInput({
   required?: boolean;
   value: string;
 }) {
+  const inputId = useId();
   const [selectedCountryCode, setSelectedCountryCode] = useState(
     () => countryFromValue(value).code,
   );
@@ -156,7 +157,10 @@ export function PhoneNumberInput({
   const [query, setQuery] = useState('');
   const countryButtonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLSpanElement>(null);
+  const listRef = useRef<HTMLSpanElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const selectedOptionRef = useRef<HTMLButtonElement>(null);
+  const scrolledToSelectedRef = useRef(false);
   const selectedCountry = useMemo(
     () =>
       COUNTRIES.find((country) => country.code === selectedCountryCode) ??
@@ -189,7 +193,7 @@ export function PhoneNumberInput({
   useEffect(() => {
     if (!open) return;
 
-    function closeOnOutsideClick(event: MouseEvent) {
+    function closeOnOutsidePointerDown(event: PointerEvent) {
       const target = event.target as Node;
       if (
         dropdownRef.current?.contains(target) ||
@@ -202,14 +206,22 @@ export function PhoneNumberInput({
       setQuery('');
     }
 
-    document.addEventListener('mousedown', closeOnOutsideClick);
-    return () => document.removeEventListener('mousedown', closeOnOutsideClick);
+    document.addEventListener('pointerdown', closeOnOutsidePointerDown, true);
+    return () =>
+      document.removeEventListener(
+        'pointerdown',
+        closeOnOutsidePointerDown,
+        true,
+      );
   }, [open]);
 
   useEffect(() => {
     if (!open) return;
 
-    function updateDropdownPosition() {
+    function updateDropdownPosition(event?: Event) {
+      const eventTarget = event?.target as Node | null;
+      if (eventTarget && dropdownRef.current?.contains(eventTarget)) return;
+
       const rect = countryButtonRef.current?.getBoundingClientRect();
       if (!rect) return;
 
@@ -260,6 +272,29 @@ export function PhoneNumberInput({
     searchRef.current?.focus();
   }, [open]);
 
+  useEffect(() => {
+    if (!open) {
+      scrolledToSelectedRef.current = false;
+      return;
+    }
+
+    if (!dropdownPosition || query || scrolledToSelectedRef.current) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      const list = listRef.current;
+      const selectedOption = selectedOptionRef.current;
+      if (!list || !selectedOption) return;
+
+      list.scrollTop = Math.max(
+        0,
+        selectedOption.offsetTop - list.offsetTop - 8,
+      );
+      scrolledToSelectedRef.current = true;
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [dropdownPosition, open, query, selectedCountryCode]);
+
   function chooseCountry(country: PhoneCountry) {
     const nextCountry =
       COUNTRIES.find((option) => option.code === country.code) ?? COUNTRIES[0];
@@ -305,65 +340,89 @@ export function PhoneNumberInput({
   const dropdown =
     open && dropdownPosition && typeof document !== 'undefined'
       ? createPortal(
-          <span
-            className="fixed z-120 grid grid-rows-[auto_minmax(0,1fr)] gap-2 overflow-hidden rounded-lg border border-border bg-surface-raised p-2 shadow-[0_18px_44px_rgb(18_24_31/18%)]"
+          <>
+            <span
+              aria-hidden="true"
+              className="fixed inset-0 z-[119]"
+              onPointerDown={() => {
+                setOpen(false);
+                setQuery('');
+              }}
+            />
+            <span
+            className="fixed z-[120] grid grid-rows-[auto_minmax(0,1fr)] gap-2 overflow-hidden rounded-lg border border-border bg-surface-raised p-2 shadow-[0_18px_44px_rgb(18_24_31/18%)]"
+            onWheel={(event) => event.stopPropagation()}
             ref={dropdownRef}
             style={{
-              left: dropdownPosition.left,
-              maxHeight: dropdownPosition.maxHeight,
-              top: dropdownPosition.top,
-              width: dropdownPosition.width,
+                height: dropdownPosition.maxHeight,
+                left: dropdownPosition.left,
+                top: dropdownPosition.top,
+                width: dropdownPosition.width,
             }}
-          >
-            <span className="grid min-h-10 grid-cols-[18px_minmax(0,1fr)] items-center gap-2 rounded-lg border border-border bg-surface-elevated px-2">
-              <Search aria-hidden="true" className="text-text-soft" size={16} />
-              <input
-                autoComplete="off"
-                className="min-h-10 w-full min-w-0 border-0 bg-transparent px-0 text-[0.94rem] text-text outline-none placeholder:text-text-soft"
-                onChange={(event) => setQuery(event.target.value)}
-                onKeyDown={handleSearchKeyDown}
-                placeholder="Search country"
-                ref={searchRef}
-                value={query}
-              />
-            </span>
-            <span className="grid min-h-0 overflow-y-auto" role="listbox">
-              {filteredCountries.map((country) => (
-                <button
-                  aria-selected={country.code === selectedCountry.code}
-                  className="grid min-h-10 grid-cols-[minmax(0,1fr)_18px] items-center gap-3 rounded-md px-2 text-left text-[0.94rem] font-(--weight-medium) text-text hover:bg-surface-muted"
-                  key={country.code}
-                  onClick={() => chooseCountry(country)}
-                  role="option"
-                  type="button"
-                >
-                  <span className="truncate">
-                    {country.flag} {country.name}
+            >
+              <span className="grid min-h-10 grid-cols-[18px_minmax(0,1fr)] items-center gap-2 rounded-lg border border-border bg-surface-elevated px-2">
+                <Search
+                  aria-hidden="true"
+                  className="text-text-soft"
+                  size={16}
+                />
+                <input
+                  autoComplete="off"
+                  className="min-h-10 w-full min-w-0 border-0 bg-transparent px-0 text-[0.94rem] text-text outline-none placeholder:text-text-soft"
+                  onChange={(event) => setQuery(event.target.value)}
+                  onKeyDown={handleSearchKeyDown}
+                  placeholder="Search country"
+                  ref={searchRef}
+                  value={query}
+                />
+              </span>
+              <span
+                className="grid min-h-0 touch-pan-y overflow-y-auto overscroll-contain"
+                ref={listRef}
+                role="listbox"
+              >
+                {filteredCountries.map((country) => (
+                  <button
+                    aria-selected={country.code === selectedCountry.code}
+                    className="grid min-h-10 grid-cols-[minmax(0,1fr)_18px] items-center gap-3 rounded-md px-2 text-left text-[0.94rem] font-(--weight-medium) text-text hover:bg-surface-muted"
+                    key={country.code}
+                    onClick={() => chooseCountry(country)}
+                    ref={
+                      country.code === selectedCountry.code
+                        ? selectedOptionRef
+                        : null
+                    }
+                    role="option"
+                    type="button"
+                  >
+                    <span className="truncate">
+                      {country.flag} {country.name}
+                    </span>
+                    {country.code === selectedCountry.code && (
+                      <Check
+                        aria-hidden="true"
+                        className="text-accent"
+                        size={16}
+                      />
+                    )}
+                  </button>
+                ))}
+                {filteredCountries.length === 0 && (
+                  <span className="px-2 py-3 text-[0.92rem] text-text-muted">
+                    No countries found
                   </span>
-                  {country.code === selectedCountry.code && (
-                    <Check
-                      aria-hidden="true"
-                      className="text-accent"
-                      size={16}
-                    />
-                  )}
-                </button>
-              ))}
-              {filteredCountries.length === 0 && (
-                <span className="px-2 py-3 text-[0.92rem] text-text-muted">
-                  No countries found
-                </span>
-              )}
+                )}
+              </span>
             </span>
-          </span>,
+          </>,
           document.body,
         )
       : null;
 
   return (
     <>
-      <label>
-        {label}
+      <span className="grid gap-[7px] text-[0.82rem] font-(--weight-semibold) text-text-muted">
+        <label htmlFor={inputId}>{label}</label>
         <span className="grid min-h-11 grid-cols-[158px_minmax(0,1fr)] rounded-lg border border-border bg-surface-elevated focus-within:border-accent focus-within:outline-[3px_solid_rgb(22_125_119/18%)] max-[420px]:grid-cols-[136px_minmax(0,1fr)]">
           <span className="grid border-r border-border">
             <button
@@ -387,6 +446,7 @@ export function PhoneNumberInput({
           <input
             autoComplete="tel"
             className="min-h-11! rounded-none! border-0! bg-transparent! px-3! outline-none! focus:border-0! focus:outline-none!"
+            id={inputId}
             inputMode="tel"
             onChange={updatePhoneNumber}
             placeholder={placeholder}
@@ -395,7 +455,7 @@ export function PhoneNumberInput({
             value={formattedValue}
           />
         </span>
-      </label>
+      </span>
       {dropdown}
     </>
   );
