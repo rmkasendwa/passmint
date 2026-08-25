@@ -144,7 +144,7 @@ export function PhoneNumberInput({
   return (
     <label>
       {label}
-      <span className="grid min-h-11 grid-cols-[126px_minmax(0,1fr)] overflow-hidden rounded-lg border border-(color:--border) bg-(color:--surface-elevated) focus-within:border-(color:--accent) focus-within:outline-[3px_solid_rgb(22_125_119/18%)] max-[420px]:grid-cols-[112px_minmax(0,1fr)]">
+      <span className="grid min-h-11 grid-cols-[158px_minmax(0,1fr)] overflow-hidden rounded-lg border border-(color:--border) bg-(color:--surface-elevated) focus-within:border-(color:--accent) focus-within:outline-[3px_solid_rgb(22_125_119/18%)] max-[420px]:grid-cols-[136px_minmax(0,1fr)]">
         <span className="relative grid border-r border-(color:--border)">
           <select
             aria-label="Country code"
@@ -154,7 +154,7 @@ export function PhoneNumberInput({
           >
             {COUNTRIES.map((country) => (
               <option key={country.code} value={country.code}>
-                {country.flag} +{country.dialCode}
+                {country.flag} {country.name}
               </option>
             ))}
           </select>
