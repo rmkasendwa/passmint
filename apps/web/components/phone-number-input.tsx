@@ -3,6 +3,7 @@
 import { Check, ChevronDown, Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, KeyboardEvent } from "react";
+import { createPortal } from "react-dom";
 
 type PhoneCountry = {
   code: string;
@@ -14,6 +15,11 @@ type PhoneCountry = {
 };
 
 type MobileMoneyProvider = "airtel" | "mtn";
+type DropdownPosition = {
+  left: number;
+  top: number;
+  width: number;
+};
 
 const COUNTRIES: PhoneCountry[] = [
   {
@@ -144,8 +150,12 @@ export function PhoneNumberInput({
     () => countryFromValue(value).code,
   );
   const [open, setOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] =
+    useState<DropdownPosition | null>(null);
   const [query, setQuery] = useState("");
+  const countryButtonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLSpanElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
   const selectedCountry = useMemo(
     () =>
       COUNTRIES.find((country) => country.code === selectedCountryCode) ??
@@ -179,14 +189,56 @@ export function PhoneNumberInput({
     if (!open) return;
 
     function closeOnOutsideClick(event: MouseEvent) {
-      if (!dropdownRef.current?.contains(event.target as Node)) {
-        setOpen(false);
-        setQuery("");
+      const target = event.target as Node;
+      if (
+        dropdownRef.current?.contains(target) ||
+        countryButtonRef.current?.contains(target)
+      ) {
+        return;
       }
+
+      setOpen(false);
+      setQuery("");
     }
 
     document.addEventListener("mousedown", closeOnOutsideClick);
     return () => document.removeEventListener("mousedown", closeOnOutsideClick);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function updateDropdownPosition() {
+      const rect = countryButtonRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const viewportPadding = 16;
+      const width = Math.min(320, window.innerWidth - viewportPadding * 2);
+      const left = Math.min(
+        Math.max(viewportPadding, rect.left),
+        window.innerWidth - width - viewportPadding,
+      );
+
+      setDropdownPosition({
+        left,
+        top: rect.bottom + 8,
+        width,
+      });
+    }
+
+    updateDropdownPosition();
+    window.addEventListener("resize", updateDropdownPosition);
+    window.addEventListener("scroll", updateDropdownPosition, true);
+
+    return () => {
+      window.removeEventListener("resize", updateDropdownPosition);
+      window.removeEventListener("scroll", updateDropdownPosition, true);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    searchRef.current?.focus();
   }, [open]);
 
   function chooseCountry(country: PhoneCountry) {
@@ -229,92 +281,104 @@ export function PhoneNumberInput({
     if (filteredCountries[0]) chooseCountry(filteredCountries[0]);
   }
 
-  return (
-    <label>
-      {label}
-      <span className="grid min-h-11 grid-cols-[158px_minmax(0,1fr)] rounded-lg border border-(color:--border) bg-(color:--surface-elevated) focus-within:border-(color:--accent) focus-within:outline-[3px_solid_rgb(22_125_119/18%)] max-[420px]:grid-cols-[136px_minmax(0,1fr)]">
-        <span
-          className="relative grid border-r border-(color:--border)"
-          ref={dropdownRef}
-        >
-          <button
-            aria-expanded={open}
-            aria-haspopup="listbox"
-            className="grid h-full min-h-11 grid-cols-[minmax(0,1fr)_16px] items-center gap-2 bg-transparent py-0 pl-3 pr-2 text-left text-[0.95rem] font-(weight:--weight-semibold) text-(color:--text) outline-none"
-            onClick={() => setOpen((current) => !current)}
-            type="button"
+  const dropdown =
+    open && dropdownPosition && typeof document !== "undefined"
+      ? createPortal(
+          <span
+            className="fixed z-[120] grid gap-2 rounded-lg border border-(color:--border) bg-(color:--surface-raised) p-2 shadow-[0_18px_44px_rgb(18_24_31/18%)]"
+            ref={dropdownRef}
+            style={{
+              left: dropdownPosition.left,
+              top: dropdownPosition.top,
+              width: dropdownPosition.width,
+            }}
           >
-            <span className="truncate">
-              {selectedCountry.flag} {selectedCountry.name}
+            <span className="grid min-h-10 grid-cols-[18px_minmax(0,1fr)] items-center gap-2 rounded-lg border border-(color:--border) bg-(color:--surface-elevated) px-2">
+              <Search
+                aria-hidden="true"
+                className="text-(color:--text-soft)"
+                size={16}
+              />
+              <input
+                autoComplete="off"
+                className="min-h-10 w-full min-w-0 border-0 bg-transparent px-0 text-[0.94rem] text-(color:--text) outline-none placeholder:text-(color:--text-soft)"
+                onChange={(event) => setQuery(event.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                placeholder="Search country"
+                ref={searchRef}
+                value={query}
+              />
             </span>
-            <ChevronDown
-              aria-hidden="true"
-              className={`text-(color:--text-soft) transition-transform ${open ? "rotate-180" : ""}`}
-              size={16}
-            />
-          </button>
-          {open && (
-            <span className="absolute left-0 top-[calc(100%+8px)] z-30 grid w-[min(320px,calc(100vw-32px))] gap-2 rounded-lg border border-(color:--border) bg-(color:--surface-raised) p-2 shadow-[0_18px_44px_rgb(18_24_31/18%)]">
-              <span className="grid min-h-10 grid-cols-[18px_minmax(0,1fr)] items-center gap-2 rounded-lg border border-(color:--border) bg-(color:--surface-elevated) px-2">
-                <Search
-                  aria-hidden="true"
-                  className="text-(color:--text-soft)"
-                  size={16}
-                />
-                <input
-                  autoComplete="off"
-                  className="!min-h-10 !rounded-none !border-0 !bg-transparent !px-0 !text-[0.94rem] !outline-none focus:!border-0 focus:!outline-none"
-                  onChange={(event) => setQuery(event.target.value)}
-                  onKeyDown={handleSearchKeyDown}
-                  placeholder="Search country"
-                  value={query}
-                />
-              </span>
-              <span
-                className="grid max-h-[240px] overflow-y-auto"
-                role="listbox"
-              >
-                {filteredCountries.map((country) => (
-                  <button
-                    aria-selected={country.code === selectedCountry.code}
-                    className="grid min-h-10 grid-cols-[minmax(0,1fr)_18px] items-center gap-3 rounded-md px-2 text-left text-[0.94rem] font-(weight:--weight-medium) text-(color:--text) hover:bg-(color:--surface-muted)"
-                    key={country.code}
-                    onClick={() => chooseCountry(country)}
-                    role="option"
-                    type="button"
-                  >
-                    <span className="truncate">
-                      {country.flag} {country.name}
-                    </span>
-                    {country.code === selectedCountry.code && (
-                      <Check
-                        aria-hidden="true"
-                        className="text-(color:--accent)"
-                        size={16}
-                      />
-                    )}
-                  </button>
-                ))}
-                {filteredCountries.length === 0 && (
-                  <span className="px-2 py-3 text-[0.92rem] text-(color:--text-muted)">
-                    No countries found
+            <span className="grid max-h-[240px] overflow-y-auto" role="listbox">
+              {filteredCountries.map((country) => (
+                <button
+                  aria-selected={country.code === selectedCountry.code}
+                  className="grid min-h-10 grid-cols-[minmax(0,1fr)_18px] items-center gap-3 rounded-md px-2 text-left text-[0.94rem] font-(weight:--weight-medium) text-(color:--text) hover:bg-(color:--surface-muted)"
+                  key={country.code}
+                  onClick={() => chooseCountry(country)}
+                  role="option"
+                  type="button"
+                >
+                  <span className="truncate">
+                    {country.flag} {country.name}
                   </span>
-                )}
-              </span>
+                  {country.code === selectedCountry.code && (
+                    <Check
+                      aria-hidden="true"
+                      className="text-(color:--accent)"
+                      size={16}
+                    />
+                  )}
+                </button>
+              ))}
+              {filteredCountries.length === 0 && (
+                <span className="px-2 py-3 text-[0.92rem] text-(color:--text-muted)">
+                  No countries found
+                </span>
+              )}
             </span>
-          )}
+          </span>,
+          document.body,
+        )
+      : null;
+
+  return (
+    <>
+      <label>
+        {label}
+        <span className="grid min-h-11 grid-cols-[158px_minmax(0,1fr)] rounded-lg border border-(color:--border) bg-(color:--surface-elevated) focus-within:border-(color:--accent) focus-within:outline-[3px_solid_rgb(22_125_119/18%)] max-[420px]:grid-cols-[136px_minmax(0,1fr)]">
+          <span className="grid border-r border-(color:--border)">
+            <button
+              aria-expanded={open}
+              aria-haspopup="listbox"
+              className="grid h-full min-h-11 grid-cols-[minmax(0,1fr)_16px] items-center gap-2 bg-transparent py-0 pl-3 pr-2 text-left text-[0.95rem] font-(weight:--weight-semibold) text-(color:--text) outline-none"
+              onClick={() => setOpen((current) => !current)}
+              ref={countryButtonRef}
+              type="button"
+            >
+              <span className="truncate">
+                {selectedCountry.flag} {selectedCountry.name}
+              </span>
+              <ChevronDown
+                aria-hidden="true"
+                className={`text-(color:--text-soft) transition-transform ${open ? "rotate-180" : ""}`}
+                size={16}
+              />
+            </button>
+          </span>
+          <input
+            autoComplete="tel"
+            className="!min-h-11 !rounded-none !border-0 !bg-transparent !px-3 !outline-none focus:!border-0 focus:!outline-none"
+            inputMode="tel"
+            onChange={updatePhoneNumber}
+            placeholder={placeholder}
+            required={required}
+            type="tel"
+            value={formattedValue}
+          />
         </span>
-        <input
-          autoComplete="tel"
-          className="!min-h-11 !rounded-none !border-0 !bg-transparent !px-3 !outline-none focus:!border-0 focus:!outline-none"
-          inputMode="tel"
-          onChange={updatePhoneNumber}
-          placeholder={placeholder}
-          required={required}
-          type="tel"
-          value={formattedValue}
-        />
-      </span>
-    </label>
+      </label>
+      {dropdown}
+    </>
   );
 }
