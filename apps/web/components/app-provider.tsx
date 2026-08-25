@@ -354,6 +354,12 @@ export function AppProvider({
   );
   const nextEvent = upcomingEvents[0] ?? visibleEvents[0];
   const authMode = pathname === "/register" ? "register" : "login";
+  const isAuthPage = [
+    "/forgot-password",
+    "/login",
+    "/register",
+    "/reset-password",
+  ].includes(pathname);
   const dashboardEvents = hostedEvents;
   const dashboardUpcomingCount = dashboardEvents.filter(
     (event) => eventStatus(event) === "Upcoming",
@@ -735,6 +741,7 @@ export function AppProvider({
   return (
     <AppContext.Provider value={contextValue}>
       <AppShell
+        isAuthPage={isAuthPage}
         logout={logout}
         onHostEvents={() => router.push("/login")}
         openAuth={openAuth}
