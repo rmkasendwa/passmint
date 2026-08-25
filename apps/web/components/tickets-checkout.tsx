@@ -14,6 +14,7 @@ import { useAppContext } from "./app-provider";
 import { EventThumbnail } from "./event-thumbnail";
 import { eventTone } from "../event-utils";
 import { dateTime, money, shortDate } from "../formatters";
+import { PhoneNumberInput } from "./phone-number-input";
 
 const sectionKicker =
   "mb-2 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-(color:--accent)";
@@ -192,17 +193,12 @@ export function TicketsCheckout() {
                 />
               </label>
               {selectedEvent && selectedEvent.priceCents > 0 && (
-                <label>
-                  Mobile money number
-                  <input
-                    value={mobileMoneyNumber}
-                    onChange={(event) =>
-                      setMobileMoneyNumber(event.target.value)
-                    }
-                    placeholder="256..."
-                    required
-                  />
-                </label>
+                <PhoneNumberInput
+                  label="Mobile money number"
+                  value={mobileMoneyNumber}
+                  onChange={setMobileMoneyNumber}
+                  required
+                />
               )}
               <button
                 className={primaryAction}

@@ -25,6 +25,7 @@ import { eventCategory, eventStatus, eventTone } from "../event-utils";
 import { dateTime, money } from "../formatters";
 import { useAppContext } from "./app-provider";
 import { EventImage } from "./event-image";
+import { PhoneNumberInput } from "./phone-number-input";
 
 const panel =
   "rounded-lg border border-(color:--border) bg-(color:--surface-raised) shadow-[0_18px_52px_rgb(0_0_0/14%)]";
@@ -830,17 +831,12 @@ export function EventDetail({ event }: { event: Event }) {
                         ))}
                       </div>
                     </div>
-                    <label>
-                      Mobile money number
-                      <input
-                        value={mobileMoneyNumber}
-                        onChange={(input) =>
-                          setMobileMoneyNumber(input.target.value)
-                        }
-                        placeholder="256..."
-                        required
-                      />
-                    </label>
+                    <PhoneNumberInput
+                      label="Mobile money number"
+                      value={mobileMoneyNumber}
+                      onChange={setMobileMoneyNumber}
+                      required
+                    />
                   </>
                 )}
 
