@@ -29,6 +29,7 @@ Then open:
 
 - Web app: http://localhost:8088
 - API health: http://localhost:3000/health
+- Database studio: http://localhost:8081
 - MinIO console: http://localhost:9001
 
 The default local setup uses Docker only for PostgreSQL. The API and web app run as independent local workspaces.
@@ -78,11 +79,14 @@ See [docs/product-flow.md](docs/product-flow.md) for the fuller product model.
 ```bash
 pnpm run dev       # run API and web locally
 pnpm run dev:db    # run PostgreSQL in Docker
+pnpm run db:studio # open the local PostgreSQL database with Adminer
 pnpm run dev:api   # run only the API
 pnpm run dev:web   # run only the Next.js app
 pnpm run build     # build all workspaces locally
 pnpm run lint      # type-check all workspaces
 ```
+
+`pnpm run db:studio` starts PostgreSQL and Adminer in Docker, then opens Adminer in your browser. Adminer uses the same local database defaults as the API: server `postgres`, user `passmint`, password `passmint`, and database `passmint`.
 
 ## Docker Image
 
