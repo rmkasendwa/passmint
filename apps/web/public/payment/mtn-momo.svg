@@ -1,10 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 180" role="img" aria-labelledby="title desc">
-  <title id="title">MTN MoMo</title>
-  <desc id="desc">MTN Mobile Money payment brand mark.</desc>
-  <rect width="420" height="180" rx="28" fill="#ffcc00"/>
-  <ellipse cx="144" cy="74" rx="78" ry="38" fill="none" stroke="#111111" stroke-width="8"/>
-  <text x="144" y="88" fill="#111111" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="900" letter-spacing="-2" text-anchor="middle">MTN</text>
-  <text x="210" y="136" fill="#111111" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="900" letter-spacing="-2" text-anchor="middle">MoMo</text>
-  <circle cx="326" cy="58" r="20" fill="#1d4ed8"/>
-  <circle cx="346" cy="84" r="12" fill="#1d4ed8"/>
+  <title id="title">MoMo from MTN</title>
+  <desc id="desc">MoMo from MTN payment brand mark.</desc>
+  <rect width="420" height="180" rx="28" fill="#004f71"/>
+  <rect x="24" y="24" width="372" height="132" rx="24" fill="#004f71"/>
+  <g transform="translate(48 35)">
+    <rect width="108" height="108" rx="16" fill="#005a7a"/>
+    <path d="M0 93h108v15H0z" fill="#ffc400"/>
+    <path d="M23 68c11-27 27-46 49-61 22 30 31 59 31 91-18-19-43-32-80-30z" fill="#ffc400"/>
+    <circle cx="55" cy="56" r="18" fill="#005a7a"/>
+    <path d="M70 7c18 20 29 43 32 70-10-25-24-43-44-56L70 7z" fill="#ffc400"/>
+  </g>
+  <text x="176" y="86" fill="#ffc400" font-family="Arial, Helvetica, sans-serif" font-size="68" font-weight="900" letter-spacing="-4">MoMo</text>
+  <text x="181" y="124" fill="#ffc400" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="800">from MTN</text>
 </svg>

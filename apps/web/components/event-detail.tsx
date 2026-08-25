@@ -2,6 +2,7 @@
 
 import {
   CalendarDays,
+  CheckCircle2,
   CircleDollarSign,
   Clock,
   Edit3,
@@ -774,6 +775,7 @@ export function EventDetail({ event }: { event: Event }) {
                         <button
                           className={`payment-option payment-option--${option.value}`}
                           data-selected={paymentProvider === option.value}
+                          aria-pressed={paymentProvider === option.value}
                           key={option.value}
                           type="button"
                           onClick={() =>
@@ -785,7 +787,15 @@ export function EventDetail({ event }: { event: Event }) {
                           <span className="payment-option__poster">
                             <img src={option.logo} alt="" />
                           </span>
-                          <span>{option.label}</span>
+                          <span className="payment-option__footer">
+                            <span>{option.label}</span>
+                            {paymentProvider === option.value && (
+                              <span className="payment-option__selected">
+                                <CheckCircle2 size={16} />
+                                Selected
+                              </span>
+                            )}
+                          </span>
                         </button>
                       ))}
                     </div>

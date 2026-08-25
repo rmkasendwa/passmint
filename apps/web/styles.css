@@ -1483,20 +1483,22 @@ html[data-theme='light'] .event-list-card__frame {
 }
 
 .payment-option {
+  position: relative;
   display: grid;
   min-height: 138px;
   align-content: space-between;
   gap: 10px;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--provider-color, var(--event-detail-accent)) 26%, var(--border));
+  border: 1px solid color-mix(in srgb, var(--provider-color, var(--event-detail-accent)) 20%, var(--border));
   border-radius: 8px;
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--provider-color, var(--event-detail-accent)) 14%, transparent), transparent 58%),
+    linear-gradient(180deg, color-mix(in srgb, var(--provider-color, var(--event-detail-accent)) 8%, transparent), transparent 58%),
     var(--surface-muted);
   padding: 10px;
-  color: var(--text);
+  color: color-mix(in srgb, var(--text) 80%, transparent);
   font-weight: var(--weight-bold);
   text-align: left;
+  opacity: 0.72;
 }
 
 .payment-option--mtn {
@@ -1510,6 +1512,7 @@ html[data-theme='light'] .event-list-card__frame {
 .payment-option:hover {
   transform: translateY(-2px);
   border-color: color-mix(in srgb, var(--provider-color) 54%, var(--border));
+  opacity: 1;
 }
 
 .payment-option__poster {
@@ -1518,29 +1521,67 @@ html[data-theme='light'] .event-list-card__frame {
   place-items: center;
   overflow: hidden;
   border-radius: 8px;
-  background: color-mix(in srgb, var(--provider-color) 18%, #ffffff);
+  background: var(--provider-color);
 }
 
 .payment-option__poster img {
-  width: min(180px, 88%);
-  height: 64px;
+  width: 100%;
+  height: 82px;
   object-fit: contain;
-  filter: drop-shadow(0 8px 16px rgb(0 0 0 / 18%));
+  filter: drop-shadow(0 8px 16px rgb(0 0 0 / 16%));
 }
 
-.payment-option > span:last-child {
+.payment-option__footer {
+  display: flex;
+  min-height: 30px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   padding-inline: 2px;
 }
 
 .payment-option[data-selected='true'] {
-  border-color: color-mix(in srgb, var(--provider-color) 70%, var(--border));
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--provider-color) 88%, white);
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--provider-color) 22%, transparent), transparent 62%),
+    linear-gradient(180deg, color-mix(in srgb, var(--provider-color) 28%, transparent), transparent 62%),
+    linear-gradient(135deg, color-mix(in srgb, var(--provider-color) 18%, transparent), transparent 42%),
     var(--surface-muted);
   color: var(--text);
+  opacity: 1;
   box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--provider-color) 24%, transparent),
-    0 16px 40px color-mix(in srgb, var(--provider-color) 14%, transparent);
+    inset 0 0 0 2px color-mix(in srgb, var(--provider-color) 40%, transparent),
+    0 18px 46px color-mix(in srgb, var(--provider-color) 22%, transparent);
+}
+
+.payment-option[data-selected='true']::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--provider-color) 18%, transparent), transparent 38%),
+    radial-gradient(circle at 88% 8%, color-mix(in srgb, var(--provider-color) 34%, transparent), transparent 26%);
+  content: '';
+}
+
+.payment-option[data-selected='true'] .payment-option__poster {
+  background: var(--provider-color);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--provider-color) 16%, transparent);
+}
+
+.payment-option__selected {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--provider-color) 24%, #ffffff);
+  padding: 0 9px;
+  color: #12131a;
+  font-size: 0.76rem;
+  font-weight: var(--weight-bold);
+  white-space: nowrap;
 }
 
 .quantity-stepper {
