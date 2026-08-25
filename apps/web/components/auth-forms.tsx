@@ -1,6 +1,8 @@
 "use client";
 
+import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
+import { type ChangeEventHandler, useState } from "react";
 import { useAppContext } from "./app-provider";
 
 const formClass = "grid w-full max-w-[430px] gap-4 max-[820px]:max-w-none";
@@ -8,6 +10,10 @@ const labelClass =
   "grid gap-[7px] text-[0.82rem] font-(weight:--weight-semibold) text-(color:--text-muted)";
 const inputClass =
   "min-h-[52px] w-full min-w-0 rounded-lg border border-(color:--border) bg-(color:--surface-elevated) px-3 text-(color:--text) hover:border-(color:--border-strong) focus:border-(color:--accent) focus:outline-[3px_solid_rgb(22_125_119/18%)] placeholder:text-(color:--text-soft)";
+const passwordInputClass = `${inputClass} pr-12`;
+const passwordInputWrapClass = "relative block";
+const passwordToggleClass =
+  "absolute right-2 top-1/2 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-md text-(color:--text-soft) hover:bg-(color:--surface-muted) hover:text-(color:--text) focus:outline-[3px_solid_rgb(22_125_119/18%)]";
 const labelRowClass = "flex items-center justify-between gap-3";
 const textLinkClass =
   "font-(weight:--weight-semibold) text-(color:--accent) hover:text-(color:--text)";
@@ -69,6 +75,58 @@ function getPasswordStrength(password: string) {
   };
 }
 
+type PasswordInputProps = {
+  autoComplete: string;
+  id?: string;
+  minLength?: number;
+  onChange: ChangeEventHandler<HTMLInputElement>;
+  placeholder: string;
+  revealed: boolean;
+  required?: boolean;
+  setRevealed: (revealed: boolean) => void;
+  value: string;
+};
+
+function PasswordInput({
+  autoComplete,
+  id,
+  minLength,
+  onChange,
+  placeholder,
+  revealed,
+  required,
+  setRevealed,
+  value,
+}: PasswordInputProps) {
+  const Icon = revealed ? EyeOff : Eye;
+  const label = revealed ? "Hide password" : "Reveal password";
+
+  return (
+    <span className={passwordInputWrapClass}>
+      <input
+        id={id}
+        className={passwordInputClass}
+        type={revealed ? "text" : "password"}
+        minLength={minLength}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        autoComplete={autoComplete}
+        required={required}
+      />
+      <button
+        type="button"
+        className={passwordToggleClass}
+        onClick={() => setRevealed(!revealed)}
+        aria-label={label}
+        title={label}
+      >
+        <Icon aria-hidden="true" size={18} strokeWidth={2.2} />
+      </button>
+    </span>
+  );
+}
+
 export function LoginForm() {
   const {
     authEmail,
@@ -78,6 +136,7 @@ export function LoginForm() {
     setAuthPassword,
     submitAuth,
   } = useAppContext();
+  const [passwordRevealed, setPasswordRevealed] = useState(false);
 
   return (
     <>
@@ -101,15 +160,15 @@ export function LoginForm() {
               Forgot password?
             </Link>
           </span>
-          <input
+          <PasswordInput
             id="login-password"
-            className={inputClass}
-            type="password"
             minLength={8}
             value={authPassword}
             onChange={(event) => setAuthPassword(event.target.value)}
             placeholder="At least 8 characters"
             autoComplete="current-password"
+            revealed={passwordRevealed}
+            setRevealed={setPasswordRevealed}
             required
           />
         </label>
@@ -143,6 +202,7 @@ export function RegisterForm() {
     submitAuth,
   } = useAppContext();
   const passwordStrength = getPasswordStrength(authPassword);
+  const [passwordsRevealed, setPasswordsRevealed] = useState(false);
 
   return (
     <>
@@ -172,14 +232,14 @@ export function RegisterForm() {
         </label>
         <label className={labelClass}>
           Password
-          <input
-            className={inputClass}
-            type="password"
+          <PasswordInput
             minLength={8}
             value={authPassword}
             onChange={(event) => setAuthPassword(event.target.value)}
             placeholder="At least 8 characters"
             autoComplete="new-password"
+            revealed={passwordsRevealed}
+            setRevealed={setPasswordsRevealed}
             required
           />
           <span className="grid gap-2" aria-live="polite">
@@ -203,14 +263,14 @@ export function RegisterForm() {
         </label>
         <label className={labelClass}>
           Confirm password
-          <input
-            className={inputClass}
-            type="password"
+          <PasswordInput
             minLength={8}
             value={authConfirmPassword}
             onChange={(event) => setAuthConfirmPassword(event.target.value)}
             placeholder="Repeat password"
             autoComplete="new-password"
+            revealed={passwordsRevealed}
+            setRevealed={setPasswordsRevealed}
             required
           />
         </label>
@@ -274,33 +334,34 @@ export function ResetPasswordForm() {
     setResetPassword,
     submitResetPassword,
   } = useAppContext();
+  const [passwordsRevealed, setPasswordsRevealed] = useState(false);
 
   return (
     <>
       <form className={formClass} onSubmit={submitResetPassword}>
         <label className={labelClass}>
           New password
-          <input
-            className={inputClass}
-            type="password"
+          <PasswordInput
             minLength={8}
             value={resetPassword}
             onChange={(event) => setResetPassword(event.target.value)}
             placeholder="At least 8 characters"
             autoComplete="new-password"
+            revealed={passwordsRevealed}
+            setRevealed={setPasswordsRevealed}
             required
           />
         </label>
         <label className={labelClass}>
           Confirm password
-          <input
-            className={inputClass}
-            type="password"
+          <PasswordInput
             minLength={8}
             value={resetConfirmPassword}
             onChange={(event) => setResetConfirmPassword(event.target.value)}
             placeholder="Repeat new password"
             autoComplete="new-password"
+            revealed={passwordsRevealed}
+            setRevealed={setPasswordsRevealed}
             required
           />
         </label>
