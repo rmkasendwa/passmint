@@ -239,7 +239,7 @@ export function RegisterForm() {
   const passwordStrength = getPasswordStrength(authPassword);
   const confirmPasswordError =
     authConfirmPassword && authPassword !== authConfirmPassword
-      ? "Passwords must match."
+      ? "Please make sure your passwords match."
       : "";
   const [passwordsRevealed, setPasswordsRevealed] = useState(false);
   const validation = useInlineFormValidation();
@@ -439,7 +439,7 @@ export function ResetPasswordForm() {
   } = useAppContext();
   const confirmPasswordError =
     resetConfirmPassword && resetPassword !== resetConfirmPassword
-      ? "Passwords must match."
+      ? "Please make sure your passwords match."
       : "";
   const [passwordsRevealed, setPasswordsRevealed] = useState(false);
   const validation = useInlineFormValidation();

@@ -225,7 +225,7 @@ export function EventDetail({ event }: { event: Event }) {
     min: 1,
     pattern: /^[0-9,]+$/,
     required: true,
-    title: "Enter a whole number.",
+    title: "Please enter a whole number.",
     value: formattedQuantity,
   });
 
@@ -871,7 +871,7 @@ export function EventDetail({ event }: { event: Event }) {
                       aria-invalid={Boolean(checkoutQuantityError) || undefined}
                       inputMode="numeric"
                       pattern="[0-9,]*"
-                      title="Enter a whole number."
+                      title="Please enter a whole number."
                       value={formattedQuantity}
                       onChange={(input) =>
                         updateQuantityFromText(input.target.value)

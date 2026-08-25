@@ -41,6 +41,32 @@ function stringValue(value: string | number) {
   return String(value ?? '').trim();
 }
 
+function fieldSubject(label: string) {
+  const subjects: Record<string, string> = {
+    Capacity: 'the capacity',
+    Description: 'a description',
+    Email: 'your email address',
+    'Buyer email': 'your email address',
+    'Buyer name': 'your name',
+    'Confirm password': 'your password again',
+    'Event name': 'the event name',
+    Name: 'your name',
+    Password: 'your password',
+    'New password': 'your new password',
+    'Mobile money number': 'your mobile money number',
+    'Price in UGX': 'the price',
+    Quantity: 'the ticket quantity',
+    Starts: 'a start date and time',
+    Venue: 'the venue',
+  };
+
+  return subjects[label] ?? label.toLowerCase();
+}
+
+function requiredMessage(label: string) {
+  return `Please enter ${fieldSubject(label)}.`;
+}
+
 export function getFieldError({
   customError,
   label,
@@ -55,30 +81,30 @@ export function getFieldError({
 }: ValidationRules) {
   const normalizedValue = stringValue(value);
 
-  if (required && !normalizedValue) return `${label} is required.`;
+  if (required && !normalizedValue) return requiredMessage(label);
   if (!normalizedValue) return '';
   if (customError) return customError;
   if (type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedValue)) {
-    return 'Enter a valid email address.';
+    return 'Please enter a valid email address.';
   }
   if (type === 'url') {
     try {
       new URL(normalizedValue);
     } catch {
-      return 'Enter a valid URL.';
+      return 'Please enter a valid URL.';
     }
   }
   if (minLength && normalizedValue.length < minLength) {
-    return `${label} must be at least ${minLength} characters.`;
+    return `Please enter at least ${minLength} characters.`;
   }
   if (typeof min === 'number' && Number(normalizedValue) < min) {
-    return `${label} must be ${min} or more.`;
+    return `Please enter ${min} or more.`;
   }
   if (typeof max === 'number' && Number(normalizedValue) > max) {
-    return `${label} must be ${max} or less.`;
+    return `Please enter ${max} or less.`;
   }
   if (pattern && !pattern.test(normalizedValue)) {
-    return title ?? `${label} is invalid.`;
+    return title ?? `Please enter a valid ${fieldSubject(label)}.`;
   }
 
   return '';
