@@ -28,6 +28,7 @@ export const emptyHostEvent = {
   name: "",
   description: "",
   venue: "",
+  mapLocation: "",
   startsAt: "",
   capacity: 120,
   priceCents: 0,
@@ -48,6 +49,7 @@ export const demoEvents: Event[] = [
     description:
       "A sunny food, music, and lifestyle ticket for weekend crowds.",
     venue: "The Line, Los Angeles",
+    mapLocation: "The Line Los Angeles",
     startsAt: daysFromNow(5, 11),
     capacity: 800,
     priceCents: 8500000,
@@ -59,6 +61,7 @@ export const demoEvents: Event[] = [
     name: "JavaScript Builders Meetup",
     description: "Talks, demos, and community networking for product builders.",
     venue: "Village Underground, London",
+    mapLocation: "Village Underground London",
     startsAt: daysFromNow(8, 15),
     capacity: 220,
     priceCents: 0,
@@ -70,6 +73,7 @@ export const demoEvents: Event[] = [
     name: "City FC vs United FC",
     description: "Matchday tickets with fast QR entry for football fans.",
     venue: "National Stadium, Singapore",
+    mapLocation: "National Stadium Singapore",
     startsAt: daysFromNow(12, 13),
     capacity: 4500,
     priceCents: 3000000,
@@ -82,6 +86,7 @@ export const demoEvents: Event[] = [
     description:
       "A live conversation and social evening for the next generation of leaders.",
     venue: "House of Yes, Brooklyn",
+    mapLocation: "House of Yes Brooklyn",
     startsAt: daysFromNow(17, 16),
     capacity: 180,
     priceCents: 5000000,
@@ -94,6 +99,7 @@ export const demoEvents: Event[] = [
     description:
       "Student founders, investors, product demos, and campus energy.",
     venue: "TU Berlin, Germany",
+    mapLocation: "TU Berlin Germany",
     startsAt: daysFromNow(24, 9),
     capacity: 600,
     priceCents: 2000000,
@@ -106,6 +112,7 @@ export const demoEvents: Event[] = [
     description:
       "Courtside tickets for the first night of the city league season.",
     venue: "Ginásio do Ibirapuera, São Paulo",
+    mapLocation: "Ginásio do Ibirapuera São Paulo",
     startsAt: daysFromNow(31, 17),
     capacity: 1200,
     priceCents: 2500000,

@@ -25,6 +25,7 @@ const seedEvents = [
     name: "Kampala Tech Night",
     description: "A practical evening of demos, talks, and networking.",
     venue: "Innovation Village, Ntinda",
+    mapLocation: "Innovation Village Ntinda Kampala",
     startsAt: startsInDays(11, 18, 30),
     capacity: 250,
     priceCents: 2500000,
@@ -35,6 +36,7 @@ const seedEvents = [
     name: "Lakeside Music Weekend",
     description: "Two stages, local food vendors, and live performances.",
     venue: "Munyonyo Lake Grounds",
+    mapLocation: "Munyonyo Lake Grounds Kampala",
     startsAt: startsInDays(19, 15),
     capacity: 1000,
     priceCents: 5000000,
@@ -46,6 +48,7 @@ const seedEvents = [
     description:
       "Early coffee, investor office hours, and crisp startup talks.",
     venue: "Design Hub Kampala",
+    mapLocation: "Design Hub Kampala",
     startsAt: startsInDays(4, 8),
     capacity: 120,
     priceCents: 1500000,
@@ -56,6 +59,7 @@ const seedEvents = [
     name: "Afro House Rooftop Sessions",
     description: "Sunset DJ sets, rooftop views, and a late-night dance floor.",
     venue: "The Villa, Bukoto",
+    mapLocation: "The Villa Bukoto Kampala",
     startsAt: startsInDays(7, 19),
     capacity: 420,
     priceCents: 3500000,
@@ -66,6 +70,7 @@ const seedEvents = [
     name: "Women in Product Summit",
     description: "Panels, workshops, and mentorship for product teams.",
     venue: "Motiv, Bugolobi",
+    mapLocation: "MoTIV Bugolobi Kampala",
     startsAt: startsInDays(14, 9),
     capacity: 300,
     priceCents: 4000000,
@@ -77,6 +82,7 @@ const seedEvents = [
     description:
       "Local makers, food stalls, family activities, and acoustic music.",
     venue: "Ndere Cultural Centre",
+    mapLocation: "Ndere Cultural Centre Kampala",
     startsAt: startsInDays(20, 10),
     capacity: 650,
     priceCents: 1000000,
@@ -87,6 +93,7 @@ const seedEvents = [
     name: "Kampala Comedy Showcase",
     description: "A fast-paced evening with stand-up sets and surprise guests.",
     venue: "National Theatre",
+    mapLocation: "Uganda National Theatre Kampala",
     startsAt: startsInDays(25, 20),
     capacity: 500,
     priceCents: 3000000,
@@ -97,6 +104,7 @@ const seedEvents = [
     name: "Startup Pitch Arena",
     description: "Ten companies pitch live to operators, angels, and founders.",
     venue: "MoTIV Warehouse",
+    mapLocation: "MoTIV Warehouse Kampala",
     startsAt: startsInDays(32, 17, 30),
     capacity: 380,
     priceCents: 2000000,
@@ -108,6 +116,7 @@ const seedEvents = [
     description:
       "Hardware demos, robotics, design booths, and family workshops.",
     venue: "UMA Show Grounds",
+    mapLocation: "UMA Show Grounds Kampala",
     startsAt: startsInDays(38, 11),
     capacity: 1200,
     priceCents: 2500000,
@@ -118,6 +127,7 @@ const seedEvents = [
     name: "Indie Film Night",
     description: "Short films, director Q&A, and a relaxed lobby mixer.",
     venue: "Century Cinemax Acacia",
+    mapLocation: "Century Cinemax Acacia Kampala",
     startsAt: startsInDays(44, 18),
     capacity: 180,
     priceCents: 2200000,
@@ -129,6 +139,7 @@ const seedEvents = [
     description:
       "Yoga, guided breathwork, nutrition talks, and recovery sessions.",
     venue: "Forest Park Resort",
+    mapLocation: "Forest Park Resort Kampala",
     startsAt: startsInDays(52, 7, 30),
     capacity: 240,
     priceCents: 4500000,
@@ -139,6 +150,7 @@ const seedEvents = [
     name: "Basketball Opening Night",
     description: "City league tip-off with courtside access and halftime acts.",
     venue: "Lugogo Indoor Arena",
+    mapLocation: "Lugogo Indoor Arena Kampala",
     startsAt: startsInDays(60, 19, 30),
     capacity: 900,
     priceCents: 3000000,
@@ -159,7 +171,7 @@ export class EventsService implements OnApplicationBootstrap {
   async onApplicationBootstrap() {
     const seededNames = seedEvents.map((event) => event.name);
     const existingEvents = await this.eventsRepository.find({
-      select: ["id", "name", "thumbnailUrl"],
+      select: ["id", "name", "thumbnailUrl", "mapLocation"],
       where: { name: In(seededNames) },
     });
     const existingNames = new Set(existingEvents.map((event) => event.name));
@@ -169,18 +181,23 @@ export class EventsService implements OnApplicationBootstrap {
     const seedEventByName = new Map(
       seedEvents.map((event) => [event.name, event]),
     );
-    const eventsMissingImages = existingEvents.filter(
-      (event) => !event.thumbnailUrl,
+    const eventsMissingSeedDetails = existingEvents.filter(
+      (event) => !event.thumbnailUrl || !event.mapLocation,
     );
 
-    if (eventsMissingImages.length > 0) {
+    if (eventsMissingSeedDetails.length > 0) {
       await Promise.all(
-        eventsMissingImages.map((event) => {
+        eventsMissingSeedDetails.map((event) => {
           const seedEvent = seedEventByName.get(event.name);
-          if (!seedEvent?.thumbnailUrl) return null;
+          if (!seedEvent) return null;
 
           return this.eventsRepository.update(event.id, {
-            thumbnailUrl: seedEvent.thumbnailUrl,
+            ...(!event.thumbnailUrl && seedEvent.thumbnailUrl
+              ? { thumbnailUrl: seedEvent.thumbnailUrl }
+              : {}),
+            ...(!event.mapLocation && seedEvent.mapLocation
+              ? { mapLocation: seedEvent.mapLocation }
+              : {}),
           });
         }),
       );

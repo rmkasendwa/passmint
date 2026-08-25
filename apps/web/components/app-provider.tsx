@@ -373,6 +373,7 @@ export function AppProvider({
       hostEvent.description ||
       "Upload a photo or let Passmint design the event artwork.",
     venue: hostEvent.venue || "Venue to be announced",
+    mapLocation: hostEvent.mapLocation || null,
     startsAt: hostEvent.startsAt
       ? new Date(hostEvent.startsAt).toISOString()
       : new Date().toISOString(),
@@ -573,6 +574,9 @@ export function AppProvider({
           name: hostEvent.name,
           description: hostEvent.description,
           venue: hostEvent.venue,
+          ...(hostEvent.mapLocation
+            ? { mapLocation: hostEvent.mapLocation }
+            : {}),
           startsAt: new Date(hostEvent.startsAt).toISOString(),
           capacity: hostEvent.capacity,
           priceCents: hostEvent.priceCents,

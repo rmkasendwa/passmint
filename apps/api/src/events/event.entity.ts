@@ -27,6 +27,9 @@ export class Event {
   @Column()
   venue: string;
 
+  @Column({ type: "text", nullable: true })
+  mapLocation?: string | null;
+
   @Column({ type: "timestamptz" })
   startsAt: Date;
 

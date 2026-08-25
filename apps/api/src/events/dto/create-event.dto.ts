@@ -23,6 +23,11 @@ export class CreateEventDto {
   @IsNotEmpty()
   venue: string;
 
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  mapLocation?: string;
+
   @Type(() => Date)
   @IsDate()
   startsAt: Date;

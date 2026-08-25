@@ -164,6 +164,16 @@ export function DashboardWorkbench() {
                 required
               />
             </label>
+            <label>
+              Map location
+              <input
+                value={hostEvent.mapLocation}
+                onChange={(event) =>
+                  updateHostEvent("mapLocation", event.target.value)
+                }
+                placeholder="Optional address, map place, or coordinates"
+              />
+            </label>
             <div className="grid grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)] gap-2.5 max-[820px]:grid-cols-1">
               <label>
                 Starts

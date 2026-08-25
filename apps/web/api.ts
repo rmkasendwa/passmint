@@ -5,6 +5,7 @@ export type Event = {
   name: string;
   description: string;
   venue: string;
+  mapLocation?: string | null;
   startsAt: string;
   capacity: number;
   priceCents: number;
@@ -82,6 +83,7 @@ export const api = {
       name: string;
       description: string;
       venue: string;
+      mapLocation?: string;
       startsAt: string;
       capacity: number;
       priceCents: number;
@@ -115,6 +117,7 @@ export const api = {
       name: string;
       description: string;
       venue: string;
+      mapLocation: string;
       startsAt: string;
       capacity: number;
       priceCents: number;

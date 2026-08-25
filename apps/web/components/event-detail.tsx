@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { api, Event } from "../api";
-import { eventCategory, eventStatus } from "../event-utils";
+import { eventCategory, eventStatus, eventTone } from "../event-utils";
 import { dateTime, money } from "../formatters";
 import { useAppContext } from "./app-provider";
 import { EventImage } from "./event-image";
@@ -84,6 +84,7 @@ export function EventDetail({ event }: { event: Event }) {
     setQuantity,
     ticketHistory,
     tickets,
+    visibleEvents,
   } = useAppContext();
   const [displayEvent, setDisplayEvent] = useState(event);
   const [isEditing, setIsEditing] = useState(false);
@@ -92,6 +93,7 @@ export function EventDetail({ event }: { event: Event }) {
     name: event.name,
     description: event.description,
     venue: event.venue,
+    mapLocation: event.mapLocation ?? "",
     startsAt: toLocalInputValue(event.startsAt),
     capacity: event.capacity,
     priceCents: event.priceCents,
@@ -125,9 +127,16 @@ export function EventDetail({ event }: { event: Event }) {
   }, [relevantIssuedTickets, savedTicketsForEvent]);
   const checkoutEvent = displayEvent;
   const startsAt = new Date(displayEvent.startsAt);
-  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-    displayEvent.venue,
-  )}`;
+  const mapQuery = displayEvent.mapLocation || displayEvent.venue;
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`;
+  const mapEmbedUrl = displayEvent.mapLocation
+    ? `https://www.google.com/maps?q=${encodeURIComponent(displayEvent.mapLocation)}&output=embed`
+    : "";
+  const eventIndex = visibleEvents.findIndex(
+    (listedEvent) => listedEvent.id === displayEvent.id,
+  );
+  const detailMood = eventIndex === 0 ? "gold" : "green";
+  const detailTone = eventTone(Math.max(eventIndex, 0));
 
   async function saveEvent(eventForm: FormEvent<HTMLFormElement>) {
     eventForm.preventDefault();
@@ -145,6 +154,7 @@ export function EventDetail({ event }: { event: Event }) {
           name: draft.name,
           description: draft.description,
           venue: draft.venue,
+          mapLocation: draft.mapLocation,
           startsAt: new Date(draft.startsAt).toISOString(),
           capacity: Number(draft.capacity),
           priceCents: Number(draft.priceCents),
@@ -157,6 +167,7 @@ export function EventDetail({ event }: { event: Event }) {
         name: updated.name,
         description: updated.description,
         venue: updated.venue,
+        mapLocation: updated.mapLocation ?? "",
         startsAt: toLocalInputValue(updated.startsAt),
         capacity: updated.capacity,
         priceCents: updated.priceCents,
@@ -171,21 +182,23 @@ export function EventDetail({ event }: { event: Event }) {
   }
 
   return (
-    <section className="mx-auto mt-5 grid w-[min(var(--content-max),calc(100%-var(--content-gutter)*2))] max-w-(--content-max) gap-5 text-text">
+    <section
+      className={`event-detail-page event-detail-page--${detailMood} mx-auto mt-5 grid w-[min(var(--content-max),calc(100%-var(--content-gutter)*2))] max-w-(--content-max) gap-5 text-text`}
+    >
       <section className="event-detail-showcase">
         <div className="event-detail-poster">
           <EventImage
             src={displayEvent.thumbnailUrl}
             name={displayEvent.name}
-            fallbackClassName="event-detail-poster__fallback"
+            fallbackClassName={`event-detail-poster__fallback ${detailTone}`}
           />
         </div>
         <div className="event-detail-showcase__body">
           <div className="flex flex-wrap gap-2">
-            <span className="inline-flex min-h-[34px] items-center rounded-full border border-[rgb(255_255_255/16%)] bg-[rgb(255_255_255/10%)] px-3 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-white/85">
+            <span className="event-detail-chip">
               {eventCategory(displayEvent)}
             </span>
-            <span className="inline-flex min-h-[34px] items-center rounded-full border border-[rgb(255_255_255/16%)] bg-[rgb(255_255_255/10%)] px-3 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-white/85">
+            <span className="event-detail-chip">
               {eventStatus(displayEvent)}
             </span>
           </div>
@@ -211,7 +224,7 @@ export function EventDetail({ event }: { event: Event }) {
         </div>
       </section>
 
-      <section className="grid grid-cols-[150px_minmax(0,1fr)_auto] items-center gap-4 rounded-lg border border-(color:--border) bg-(color:--surface-raised) p-4 shadow-[0_18px_52px_rgb(0_0_0/12%)] max-[820px]:grid-cols-1">
+      <section className="event-detail-summary grid grid-cols-[150px_minmax(0,1fr)_auto] items-center gap-4 rounded-lg border border-(color:--border) bg-(color:--surface-raised) p-4 shadow-[0_18px_52px_rgb(0_0_0/12%)] max-[820px]:grid-cols-1">
         <div className="grid min-h-[118px] place-items-center rounded-lg border border-(color:--border) bg-(color:--surface-muted) text-center">
           <span className="text-[0.84rem] font-(weight:--weight-semibold) uppercase tracking-[0.12em] text-(color:--accent)">
             {eventMonth.format(startsAt)}
@@ -234,7 +247,7 @@ export function EventDetail({ event }: { event: Event }) {
           <div className="grid gap-2 text-[0.98rem] text-(color:--text-muted) [&_span]:inline-flex [&_span]:items-start [&_span]:gap-2 [&_svg]:mt-[3px] [&_svg]:shrink-0 [&_svg]:text-(color:--accent)">
             <span>
               <MapPin size={16} />
-              {displayEvent.venue}
+              {displayEvent.mapLocation || displayEvent.venue}
             </span>
             <span>
               <Users size={16} />
@@ -285,26 +298,47 @@ export function EventDetail({ event }: { event: Event }) {
               <p className={kicker}>Location</p>
               <h2 className={sectionHeading}>{displayEvent.venue}</h2>
             </div>
-            <div className="grid min-h-[220px] place-items-center rounded-lg border border-(color:--border) bg-[linear-gradient(135deg,color-mix(in_srgb,var(--accent)_14%,var(--surface-muted)),var(--surface-elevated))] p-5 text-center">
-              <div className="grid max-w-[520px] place-items-center gap-3">
-                <span className="grid size-12 place-items-center rounded-full bg-(color:--accent-soft) text-(color:--accent)">
-                  <MapPin size={24} />
-                </span>
-                <p className="mb-0 text-(color:--text-muted)">
-                  Open the venue in Google Maps for directions and nearby points
-                  of interest.
-                </p>
-                <a
-                  className={secondaryAction}
-                  href={mapsUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <ExternalLink size={17} />
-                  View on Google Maps
-                </a>
-              </div>
+            <div className="event-detail-map grid min-h-[220px] place-items-center overflow-hidden rounded-lg border border-(color:--border) bg-[linear-gradient(135deg,color-mix(in_srgb,var(--event-detail-accent)_14%,var(--surface-muted)),var(--surface-elevated))] text-center">
+              {mapEmbedUrl ? (
+                <iframe
+                  className="h-[320px] w-full border-0 max-[700px]:h-[260px]"
+                  src={mapEmbedUrl}
+                  title={`Map for ${displayEvent.name}`}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+              ) : (
+                <div className="grid max-w-[520px] place-items-center gap-3 p-5">
+                  <span className="grid size-12 place-items-center rounded-full bg-(color:--accent-soft) text-(color:--accent)">
+                    <MapPin size={24} />
+                  </span>
+                  <p className="mb-0 text-(color:--text-muted)">
+                    The host has not added an exact map location yet. You can
+                    still search for the venue in Google Maps.
+                  </p>
+                  <a
+                    className={secondaryAction}
+                    href={mapsUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <ExternalLink size={17} />
+                    View on Google Maps
+                  </a>
+                </div>
+              )}
             </div>
+            {mapEmbedUrl && (
+              <a
+                className={`${secondaryAction} w-fit`}
+                href={mapsUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <ExternalLink size={17} />
+                Open in Google Maps
+              </a>
+            )}
           </section>
 
           <section className={panelPadded}>
@@ -377,6 +411,19 @@ export function EventDetail({ event }: { event: Event }) {
                       }))
                     }
                     required
+                  />
+                </label>
+                <label>
+                  Map location
+                  <input
+                    value={draft.mapLocation}
+                    onChange={(input) =>
+                      setDraft((current) => ({
+                        ...current,
+                        mapLocation: input.target.value,
+                      }))
+                    }
+                    placeholder="Optional address, map place, or coordinates"
                   />
                 </label>
                 <div className="grid grid-cols-3 gap-2.5 max-[820px]:grid-cols-1">

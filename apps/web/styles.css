@@ -1216,6 +1216,36 @@ html[data-theme='light'] .event-list-card__frame {
   color: #f8c868;
 }
 
+.event-detail-page {
+  --event-detail-accent: #49e2cc;
+  --event-detail-accent-soft: rgb(73 226 204 / 16%);
+  --event-detail-accent-strong: rgb(139 255 235 / 42%);
+  --event-detail-bg: #06100f;
+  --event-detail-bg-2: #071614;
+  --event-detail-text-accent: #dffcf7;
+  --event-detail-price: #f6c866;
+}
+
+.event-detail-page--gold {
+  --event-detail-accent: #f6b53d;
+  --event-detail-accent-soft: rgb(246 181 61 / 17%);
+  --event-detail-accent-strong: rgb(246 200 104 / 46%);
+  --event-detail-bg: #0f0d0b;
+  --event-detail-bg-2: #1b130c;
+  --event-detail-text-accent: #f6c866;
+  --event-detail-price: #f8c868;
+}
+
+.event-detail-page--green {
+  --event-detail-accent: #49e2cc;
+  --event-detail-accent-soft: rgb(73 226 204 / 16%);
+  --event-detail-accent-strong: rgb(139 255 235 / 42%);
+  --event-detail-bg: #06100f;
+  --event-detail-bg-2: #071614;
+  --event-detail-text-accent: #dffcf7;
+  --event-detail-price: #f6c866;
+}
+
 .event-detail-showcase {
   position: relative;
   isolation: isolate;
@@ -1226,8 +1256,8 @@ html[data-theme='light'] .event-list-card__frame {
   border: 1px solid var(--border);
   border-radius: 8px;
   background:
-    linear-gradient(115deg, rgb(9 10 16 / 94%) 0%, rgb(9 10 16 / 72%) 50%, rgb(9 10 16 / 42%) 100%),
-    var(--surface-raised);
+    linear-gradient(115deg, rgb(6 8 10 / 94%) 0%, rgb(6 8 10 / 72%) 50%, rgb(6 8 10 / 42%) 100%),
+    linear-gradient(180deg, var(--event-detail-bg-2), var(--event-detail-bg));
   box-shadow:
     0 26px 84px rgb(0 0 0 / 34%),
     inset 0 1px 0 rgb(255 255 255 / 8%);
@@ -1239,14 +1269,14 @@ html[data-theme='light'] .event-list-card__frame {
   z-index: -1;
   content: '';
   background:
-    radial-gradient(circle at 18% 10%, rgb(255 122 69 / 24%), transparent 30%),
-    radial-gradient(circle at 88% 18%, rgb(40 196 181 / 18%), transparent 26%);
+    radial-gradient(circle at 18% 10%, var(--event-detail-accent-soft), transparent 30%),
+    radial-gradient(circle at 88% 18%, var(--event-detail-accent-soft), transparent 26%);
 }
 
 .event-detail-poster {
   min-height: 520px;
   background:
-    linear-gradient(135deg, #171924, #0b0c12);
+    linear-gradient(135deg, var(--event-detail-bg-2), var(--event-detail-bg));
 }
 
 .event-detail-poster img {
@@ -1261,12 +1291,28 @@ html[data-theme='light'] .event-list-card__frame {
   min-height: 520px;
   place-items: center;
   background:
-    radial-gradient(circle at 38% 24%, rgb(255 122 69 / 32%), transparent 32%),
-    linear-gradient(135deg, #20222e, #0f1118);
+    radial-gradient(circle at 38% 24%, var(--event-detail-accent-soft), transparent 32%),
+    linear-gradient(135deg, var(--event-detail-bg-2), var(--event-detail-bg));
   color: rgb(255 255 255 / 82%);
   font-size: clamp(5rem, 14vw, 11rem);
   font-weight: var(--weight-heavy);
   line-height: 1;
+}
+
+.event-detail-chip {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  border: 1px solid var(--event-detail-accent-strong);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--event-detail-accent) 12%, transparent);
+  padding: 0 13px;
+  color: var(--event-detail-text-accent);
+  font-size: 0.78rem;
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(18px);
 }
 
 .event-detail-showcase__body {
@@ -1288,7 +1334,7 @@ html[data-theme='light'] .event-list-card__frame {
   min-height: 40px;
   align-items: center;
   gap: 8px;
-  border: 1px solid rgb(255 255 255 / 14%);
+  border: 1px solid color-mix(in srgb, var(--event-detail-accent) 22%, transparent);
   border-radius: 999px;
   background: rgb(255 255 255 / 10%);
   padding: 0 14px;
@@ -1299,9 +1345,19 @@ html[data-theme='light'] .event-list-card__frame {
 }
 
 .event-detail-showcase__facts strong {
-  border-color: rgb(248 200 104 / 26%);
-  background: rgb(248 200 104 / 14%);
-  color: #f8c868;
+  border-color: var(--event-detail-accent-strong);
+  background: var(--event-detail-accent-soft);
+  color: var(--event-detail-price);
+}
+
+.event-detail-summary {
+  box-shadow:
+    0 18px 52px rgb(0 0 0 / 12%),
+    inset 0 1px 0 color-mix(in srgb, var(--event-detail-accent) 16%, transparent);
+}
+
+.event-detail-map iframe {
+  display: block;
 }
 
 @media (max-width: 900px) {
