@@ -8,10 +8,11 @@ import {
   ExternalLink,
   LogIn,
   MapPin,
+  Minus,
   Navigation,
+  Plus,
   QrCode,
   Save,
-  Smartphone,
   Ticket as TicketIcon,
   UserPlus,
   Users,
@@ -48,6 +49,9 @@ const eventTime = new Intl.DateTimeFormat("en-UG", {
   hour: "2-digit",
   minute: "2-digit",
 });
+const quantityFormat = new Intl.NumberFormat("en-US", {
+  maximumFractionDigits: 0,
+});
 
 function toLocalInputValue(value: string) {
   const date = new Date(value);
@@ -66,6 +70,11 @@ function ownerId(event: Event) {
 function ownerName(event: Event) {
   if (!event.owner || typeof event.owner === "string") return "Passmint organizer";
   return event.owner.name;
+}
+
+function normalizeQuantity(value: number) {
+  if (!Number.isFinite(value)) return 1;
+  return Math.min(10, Math.max(1, Math.trunc(value)));
 }
 
 export function EventDetail({ event }: { event: Event }) {
@@ -95,6 +104,7 @@ export function EventDetail({ event }: { event: Event }) {
   const [paymentProvider, setPaymentProvider] = useState<"airtel" | "mtn">(
     "mtn",
   );
+  const formattedQuantity = quantityFormat.format(quantity);
   const [draft, setDraft] = useState({
     name: event.name,
     description: event.description,
@@ -144,6 +154,14 @@ export function EventDetail({ event }: { event: Event }) {
   );
   const detailMood = eventIndex === 0 ? "gold" : "green";
   const detailTone = eventTone(Math.max(eventIndex, 0));
+  function updateQuantityFromText(value: string) {
+    const digits = value.replace(/\D/g, "");
+    setQuantity(normalizeQuantity(Number(digits || "1")));
+  }
+
+  function stepQuantity(direction: 1 | -1) {
+    setQuantity(normalizeQuantity(quantity + direction));
+  }
 
   async function saveEvent(eventForm: FormEvent<HTMLFormElement>) {
     eventForm.preventDefault();
@@ -696,14 +714,44 @@ export function EventDetail({ event }: { event: Event }) {
               </label>
               <label>
                 Quantity
-                <input
-                  min={1}
-                  max={10}
-                  type="number"
-                  value={quantity}
-                  onChange={(input) => setQuantity(Number(input.target.value))}
-                  required
-                />
+                <span
+                  className="quantity-stepper"
+                  onWheel={(event) => {
+                    event.preventDefault();
+                    stepQuantity(event.deltaY < 0 ? 1 : -1);
+                  }}
+                >
+                  <button
+                    type="button"
+                    aria-label="Decrease quantity"
+                    onClick={() => stepQuantity(-1)}
+                    disabled={quantity <= 1}
+                  >
+                    <Minus size={16} />
+                  </button>
+                  <input
+                    inputMode="numeric"
+                    pattern="[0-9,]*"
+                    value={formattedQuantity}
+                    onChange={(input) =>
+                      updateQuantityFromText(input.target.value)
+                    }
+                    onKeyDown={(event) => {
+                      if (["e", "E", "+", "-", "."].includes(event.key)) {
+                        event.preventDefault();
+                      }
+                    }}
+                    required
+                  />
+                  <button
+                    type="button"
+                    aria-label="Increase quantity"
+                    onClick={() => stepQuantity(1)}
+                    disabled={quantity >= 10}
+                  >
+                    <Plus size={16} />
+                  </button>
+                </span>
               </label>
 
               {checkoutEvent.priceCents > 0 && (
@@ -712,20 +760,32 @@ export function EventDetail({ event }: { event: Event }) {
                     <p className={kicker}>Payment method</p>
                     <div className="grid grid-cols-2 gap-2 max-[520px]:grid-cols-1">
                       {[
-                        ["mtn", "MTN MoMo"],
-                        ["airtel", "Airtel Money"],
-                      ].map(([value, label]) => (
+                        {
+                          value: "mtn",
+                          label: "MTN MoMo",
+                          logo: "/payment/mtn-momo.svg",
+                        },
+                        {
+                          value: "airtel",
+                          label: "Airtel Money",
+                          logo: "/payment/airtel-money.svg",
+                        },
+                      ].map((option) => (
                         <button
-                          className="payment-option"
-                          data-selected={paymentProvider === value}
-                          key={value}
+                          className={`payment-option payment-option--${option.value}`}
+                          data-selected={paymentProvider === option.value}
+                          key={option.value}
                           type="button"
                           onClick={() =>
-                            setPaymentProvider(value as "airtel" | "mtn")
+                            setPaymentProvider(
+                              option.value as "airtel" | "mtn",
+                            )
                           }
                         >
-                          <Smartphone size={18} />
-                          {label}
+                          <span className="payment-option__poster">
+                            <img src={option.logo} alt="" />
+                          </span>
+                          <span>{option.label}</span>
                         </button>
                       ))}
                     </div>
