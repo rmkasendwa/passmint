@@ -53,9 +53,11 @@ async function waitForPostgres() {
   throw new Error(`Postgres did not become available on ${host}:${port}`);
 }
 
-await run('docker', ['compose', 'up', '-d', 'postgres', 'minio']);
+await run('docker', ['compose', 'up', '-d', '--remove-orphans', 'postgres', 'minio']);
 await run('docker', ['compose', 'run', '--rm', 'minio-init']);
 await waitForPostgres();
+await run('pnpm', ['exec', 'prisma', 'generate']);
+await run('pnpm', ['exec', 'prisma', 'db', 'push']);
 
 const app = spawn(
   'pnpm',

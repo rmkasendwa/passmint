@@ -3,7 +3,7 @@ import { loadRootEnv } from './root-env.mjs';
 
 loadRootEnv();
 
-const compose = spawnSync('docker', ['compose', 'up', '-d', 'postgres'], {
+const compose = spawnSync('docker', ['compose', 'up', '-d', '--remove-orphans', 'postgres'], {
   env: process.env,
   stdio: 'inherit',
 });

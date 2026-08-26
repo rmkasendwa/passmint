@@ -10,60 +10,64 @@ datasource db {
 enum UserRole {
   user
   admin
+
+  @@map("users_role_enum")
 }
 
 enum TicketStatus {
   issued
   checked_in
   cancelled
+
+  @@map("tickets_status_enum")
 }
 
 model User {
-  id           String   @id
-  email        String   @unique
-  name         String
-  passwordHash String
+  id           String   @id(map: "PK_a3ffb1c0c8416b9fc6f907b7433") @db.VarChar
+  email        String   @unique(map: "IDX_97672ac88f789774dd47f7c8be") @db.VarChar
+  name         String   @db.VarChar
+  passwordHash String   @db.VarChar
   role         UserRole @default(user)
   tickets      Ticket[]
   events       Event[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime @default(now()) @db.Timestamp(6)
+  updatedAt    DateTime @default(now()) @updatedAt @db.Timestamp(6)
 
   @@map("users")
 }
 
 model Event {
-  id           String   @id
-  name         String
+  id           String   @id(map: "PK_40731c7151fe4be3116e45ddf73") @db.VarChar
+  name         String   @db.VarChar
   description  String
-  venue        String
+  venue        String   @db.VarChar
   mapLocation  String?
-  startsAt     DateTime @db.Timestamptz
+  startsAt     DateTime @db.Timestamptz(6)
   capacity     Int
   priceCents   Int
   thumbnailUrl String?
-  ownerId      String?
-  owner        User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  ownerId      String?  @db.VarChar
+  owner        User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull, map: "FK_72bbe49600962f125177d7d6b68")
   tickets      Ticket[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime @default(now()) @db.Timestamp(6)
+  updatedAt    DateTime @default(now()) @updatedAt @db.Timestamp(6)
 
   @@map("events")
 }
 
 model Ticket {
-  id          String       @id
-  code        String       @unique
-  buyerName   String
-  buyerEmail  String
+  id          String       @id(map: "PK_343bc942ae261cf7a1377f48fd0") @db.VarChar
+  code        String       @unique(map: "IDX_c6e20a830c0f8b571abd331b77") @db.VarChar
+  buyerName   String       @db.VarChar
+  buyerEmail  String       @db.VarChar
   status      TicketStatus @default(issued)
-  checkedInAt DateTime?    @db.Timestamptz
-  eventId     String
-  event       Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  ownerId     String?
-  owner       User?        @relation(fields: [ownerId], references: [id], onDelete: SetNull)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  checkedInAt DateTime?    @db.Timestamptz(6)
+  eventId     String?      @db.VarChar
+  event       Event?       @relation(fields: [eventId], references: [id], onDelete: Cascade, map: "FK_8a101375d173c39a7c1d02c9d7d")
+  ownerId     String?      @db.VarChar
+  owner       User?        @relation(fields: [ownerId], references: [id], onDelete: SetNull, map: "FK_7506734651265d3714ac06902d0")
+  createdAt   DateTime     @default(now()) @db.Timestamp(6)
+  updatedAt   DateTime     @default(now()) @updatedAt @db.Timestamp(6)
 
   @@map("tickets")
 }

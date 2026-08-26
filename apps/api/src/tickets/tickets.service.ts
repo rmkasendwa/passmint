@@ -104,6 +104,12 @@ export class TicketsService {
         message: "Ticket does not exist",
       });
     }
+    if (!ticket.event) {
+      throw new NotFoundException({
+        result: "invalid",
+        message: "Ticket event does not exist",
+      });
+    }
 
     const canValidate =
       authUser.role === UserRole.Admin ||

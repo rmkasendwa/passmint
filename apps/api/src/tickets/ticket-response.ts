@@ -1,9 +1,14 @@
 import * as QRCode from "qrcode";
 import { Event, Ticket } from "@prisma/client";
+import { NotFoundException } from "@nestjs/common";
 
-type TicketWithEvent = Ticket & { event: Event };
+type TicketWithEvent = Ticket & { event: Event | null };
 
 function toPublicEvent(ticket: TicketWithEvent) {
+  if (!ticket.event) {
+    throw new NotFoundException("Ticket event not found");
+  }
+
   return {
     id: ticket.event.id,
     name: ticket.event.name,
