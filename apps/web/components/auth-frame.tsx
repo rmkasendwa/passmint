@@ -1,7 +1,7 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react';
 
 const sectionKicker =
-  "mb-2 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-(color:--accent)";
+  'mb-2 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-(color:--accent)';
 
 export function AuthFrame({
   children,
@@ -18,10 +18,10 @@ export function AuthFrame({
 }) {
   return (
     <section
-      className={`grid min-h-[calc(100vh-64px)] grid-cols-[minmax(0,1fr)_minmax(390px,520px)] bg-(color:--surface) ${pageClass} max-[820px]:grid-cols-1 max-[820px]:min-h-0`}
+      className={`grid min-h-[calc(100vh-64px)] grid-cols-[minmax(0,1fr)_minmax(390px,520px)] bg-surface ${pageClass} max-[820px]:grid-cols-1 max-[820px]:min-h-0`}
     >
       <div
-        className="relative min-h-[calc(100vh-64px)] overflow-hidden max-[820px]:h-auto max-[820px]:min-h-[265px] after:absolute after:inset-0 after:bg-(image:--auth-media-overlay)"
+        className="relative min-h-[calc(100vh-64px)] overflow-hidden max-[820px]:h-auto max-[820px]:min-h-66.25 after:absolute after:inset-0 after:bg-(image:--auth-media-overlay)"
         aria-hidden="true"
       >
         <img
@@ -29,29 +29,29 @@ export function AuthFrame({
           src="https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=1800&q=85"
           alt=""
         />
-        <div className="absolute bottom-0 right-0 z-[1] grid w-[min(560px,78%)] gap-2 bg-(image:--auth-media-card-bg) px-10 pb-10 pt-20 text-white max-[820px]:left-0 max-[820px]:right-0 max-[820px]:w-full max-[820px]:px-[18px] max-[820px]:pb-[18px] max-[820px]:pt-[52px]">
-          <span className="text-[0.8rem] font-(weight:--weight-semibold) uppercase tracking-[0.18em] text-[rgb(255_255_255/70%)]">
+        <div className="absolute bottom-0 right-0 z-1 grid w-[min(560px,78%)] gap-2 bg-(image:--auth-media-card-bg) px-10 pb-10 pt-20 text-white max-[820px]:left-0 max-[820px]:right-0 max-[820px]:w-full max-[820px]:px-4.5 max-[820px]:pb-4.5 max-[820px]:pt-13">
+          <span className="text-[0.8rem] font-(--weight-semibold) uppercase tracking-[0.18em] text-[rgb(255_255_255/70%)]">
             Passmint
           </span>
-          <strong className="text-[clamp(1.75rem,4vw,3.4rem)] font-(weight:--weight-bold) leading-[0.98] max-[820px]:text-[1.1rem]">
+          <strong className="text-[clamp(1.75rem,4vw,3.4rem)] font-(--weight-bold) leading-[0.98] max-[820px]:text-[1.1rem]">
             One account for tickets, events, and the door.
           </strong>
-          <small className="max-w-[410px] text-[0.98rem] leading-[1.55] text-[rgb(255_255_255/72%)] max-[820px]:hidden">
+          <small className="max-w-102.5 text-[0.98rem] leading-[1.55] text-[rgb(255_255_255/72%)] max-[820px]:hidden">
             Checkout, hosting, and gate verification in one place.
           </small>
         </div>
       </div>
 
       <section
-        className="grid content-center gap-6 border-l border-(color:--border) bg-(color:--surface-raised) px-[clamp(22px,5vw,54px)] py-12 max-[820px]:gap-[19px] max-[820px]:border-l-0 max-[820px]:px-[18px] max-[820px]:pb-[42px] max-[820px]:pt-[30px]"
+        className="grid content-center gap-6 border-l border-border bg-surface-raised px-[clamp(22px,5vw,54px)] py-12 max-[820px]:gap-4.75 max-[820px]:border-l-0 max-[820px]:px-4.5 max-[820px]:pb-10.5 max-[820px]:pt-7.5"
         aria-label="Account access"
       >
-        <div className="grid w-full max-w-[430px] gap-2.5 max-[820px]:max-w-none">
+        <div className="grid w-full max-w-107.5 gap-2.5 max-[820px]:max-w-none">
           {kicker && <p className={sectionKicker}>{kicker}</p>}
-          <h1 className="mb-0 text-[clamp(2.25rem,5vw,3.9rem)] font-(weight:--weight-bold) leading-[1.02] tracking-normal text-(color:--text) max-[820px]:text-[clamp(1.9rem,8vw,2.45rem)]">
+          <h1 className="mb-0 text-[clamp(2.25rem,5vw,3.9rem)] font-(--weight-bold) leading-[1.02] tracking-normal text-text max-[820px]:text-[clamp(1.9rem,8vw,2.45rem)]">
             {title}
           </h1>
-          <p className="mb-0 text-[1.02rem] leading-[1.58] text-(color:--text-muted)">
+          <p className="mb-0 text-[1.02rem] leading-[1.58] text-text-muted">
             {description}
           </p>
         </div>
