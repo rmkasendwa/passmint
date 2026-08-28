@@ -23,7 +23,7 @@ import { listEventsForPage } from '../../server-events';
 export const dynamic = 'force-dynamic';
 
 const sectionKicker =
-  'mb-2 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-(color:--text-soft)';
+  'mb-2 text-[0.78rem] font-(--weight-semibold) uppercase tracking-[0.08em] text-text-soft';
 
 function getParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -153,7 +153,7 @@ export default async function DiscoverPage({
                     </span>
                     <span className="grid content-between gap-4 py-1">
                       <span>
-                        <small className="mb-1 flex items-center gap-1.5 text-[0.75rem] font-(--weight-semibold) uppercase text-accent">
+                        <small className="mb-1 flex items-center gap-1.5 text-xs font-(--weight-semibold) uppercase text-accent">
                           <CalendarDays size={14} />
                           {shortDate.format(new Date(event.startsAt))}
                         </small>
@@ -306,7 +306,7 @@ function DiscoverStat({
   return (
     <div className="grid gap-2 rounded-md bg-surface-muted p-3">
       <span className="text-accent">{icon}</span>
-      <strong className="text-[1.25rem] leading-none text-text">{value}</strong>
+      <strong className="text-xl leading-none text-text">{value}</strong>
       <small className="text-[0.72rem] font-(--weight-semibold) uppercase text-text-soft">
         {label}
       </small>

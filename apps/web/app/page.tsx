@@ -18,7 +18,7 @@ import { listEventsForPage } from '../server-events';
 export const dynamic = 'force-dynamic';
 
 const sectionKicker =
-  'mb-2 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-(color:--text-soft)';
+  'mb-2 text-[0.78rem] font-(--weight-semibold) uppercase tracking-[0.08em] text-text-soft';
 
 export default async function HomePage() {
   const events = await listEventsForPage();
@@ -142,7 +142,7 @@ export default async function HomePage() {
               <h2 className="mb-4 text-[clamp(1.8rem,2.6vw,2.8rem)] font-(--weight-bold) leading-tight text-text">
                 Built around the whole event day.
               </h2>
-              <p className="mb-0 text-[1rem] leading-normal text-text-muted">
+              <p className="mb-0 text-base leading-normal text-text-muted">
                 Guests can find a plan for the weekend, organizers can publish the next one, and door teams can keep entry moving.
               </p>
             </div>
@@ -299,7 +299,7 @@ function HomeStat({
     <div className="grid content-between rounded-lg border border-border bg-surface-raised p-5">
       <span className="mb-8 text-accent">{icon}</span>
       <strong className="text-[2rem] leading-none text-text">{value}</strong>
-      <small className="mt-2 text-[0.75rem] font-(--weight-semibold) uppercase text-text-soft">
+      <small className="mt-2 text-xs font-(--weight-semibold) uppercase text-text-soft">
         {label}
       </small>
     </div>

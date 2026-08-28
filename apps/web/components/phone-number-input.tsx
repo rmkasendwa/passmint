@@ -431,7 +431,7 @@ export function PhoneNumberInput({
 
   return (
     <>
-      <span className="grid gap-[7px] text-[0.82rem] font-(--weight-semibold) text-text-muted">
+      <span className="grid gap-1.75 text-[0.82rem] font-(--weight-semibold) text-text-muted">
         <label htmlFor={inputId}>
           {required ? <RequiredLabel>{label}</RequiredLabel> : label}
         </label>

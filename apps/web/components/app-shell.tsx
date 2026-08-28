@@ -34,7 +34,7 @@ export function AppShell({
   themePreference: ThemePreference;
 }) {
   const navItemClass =
-    'inline-flex min-h-9 items-center justify-center rounded-full border-0 bg-transparent px-3 text-[0.9rem] font-(weight:--weight-semibold) text-(color:--text-muted) hover:bg-(color:--surface-muted) hover:text-(color:--text)';
+    'inline-flex min-h-9 items-center justify-center rounded-full border-0 bg-transparent px-3 text-[0.9rem] font-(--weight-semibold) text-text-muted hover:bg-surface-muted hover:text-text';
   const footerClass = `${isAuthPage ? 'mt-0' : 'mt-14'} border-t border-border bg-surface-raised`;
 
   return (
@@ -160,9 +160,9 @@ function ThemeToggle({
   onChange: (preference: ThemePreference) => void;
 }) {
   const buttonClass =
-    'inline-grid h-7 w-[30px] place-items-center rounded-full border-0 bg-transparent text-(color:--text-muted) hover:text-(color:--text)';
+    'inline-grid h-7 w-7.5 place-items-center rounded-full border-0 bg-transparent text-text-muted hover:text-text';
   const selectedClass =
-    'bg-(color:--button-bg) text-(color:--button-text) shadow-[0_6px_14px_rgb(0_0_0/10%)] hover:text-(color:--button-text)';
+    'bg-(--button-bg) text-(--button-text) shadow-[0_6px_14px_rgb(0_0_0/10%)] hover:text-(--button-text)';
 
   return (
     <div

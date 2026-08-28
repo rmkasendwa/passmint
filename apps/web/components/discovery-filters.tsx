@@ -16,7 +16,7 @@ import {
 } from "../event-utils";
 
 const inputShell =
-  "flex min-h-11 items-center gap-2 rounded-full border border-(color:--border) bg-(color:--control-bg) px-[15px] text-(color:--text-muted) focus-within:border-(color:--accent) focus-within:outline-[3px_solid_rgb(22_125_119/18%)] [&_input]:min-h-[42px] [&_input]:w-full [&_input]:min-w-0 [&_input]:border-0 [&_input]:bg-transparent [&_input]:p-0 [&_input]:text-(color:--text) [&_input]:outline-0 [&_input::placeholder]:text-(color:--text-soft)";
+  "flex min-h-11 items-center gap-2 rounded-full border border-border bg-control px-3.75 text-text-muted focus-within:border-accent focus-within:outline-[3px_solid_rgb(22_125_119/18%)] [&_input]:min-h-10.5 [&_input]:w-full [&_input]:min-w-0 [&_input]:border-0 [&_input]:bg-transparent [&_input]:p-0 [&_input]:text-text [&_input]:outline-0 [&_input::placeholder]:text-text-soft";
 
 export function DiscoveryFilters({
   query,
@@ -77,7 +77,7 @@ export function DiscoveryFilters({
       action="/"
       role="search"
     >
-      <label className="grid gap-[7px] text-[0.76rem] font-(weight:--weight-semibold) text-(color:--text-muted)">
+      <label className="grid gap-1.75 text-[0.76rem] font-(--weight-semibold) text-text-muted">
         <div className={inputShell}>
           <Search size={18} />
           <input
@@ -89,39 +89,39 @@ export function DiscoveryFilters({
         </div>
       </label>
 
-      <div className="relative grid gap-[7px] text-[0.76rem] font-(weight:--weight-semibold) text-(color:--text-muted)">
+      <div className="relative grid gap-1.75 text-[0.76rem] font-(--weight-semibold) text-text-muted">
         <input type="hidden" name="start" value={dateStart} />
         <input type="hidden" name="end" value={dateEnd} />
         <button
-          className={`${inputShell} w-full justify-start text-left text-(color:--text)`}
+          className={`${inputShell} w-full justify-start text-left text-text`}
           type="button"
           aria-expanded={pickerOpen}
           aria-label="Choose event date range"
           onClick={() => setPickerOpen((open) => !open)}
         >
           <CalendarDays size={18} />
-          <span className="min-w-0 flex-1 truncate text-[0.95rem] font-(weight:--weight-semibold)">
+          <span className="min-w-0 flex-1 truncate text-[0.95rem] font-(--weight-semibold)">
             {dateFilterLabel(dateStart, dateEnd)}
           </span>
         </button>
 
         {pickerOpen && (
-          <div className="absolute left-0 top-[calc(100%+8px)] z-40 grid w-[min(340px,calc(100vw-32px))] gap-3 rounded-2xl border border-(color:--border) bg-(color:--surface-raised) p-3 text-(color:--text) shadow-[0_24px_70px_rgb(0_0_0/38%)]">
+          <div className="absolute left-0 top-[calc(100%+8px)] z-40 grid w-[min(340px,calc(100vw-32px))] gap-3 rounded-2xl border border-border bg-surface-raised p-3 text-text shadow-[0_24px_70px_rgb(0_0_0/38%)]">
             <div className="flex items-center justify-between gap-2">
               <button
                 type="button"
-                className="grid size-9 place-items-center rounded-full border border-(color:--border) bg-(color:--surface-muted) text-(color:--text-muted) hover:text-(color:--text)"
+                className="grid size-9 place-items-center rounded-full border border-border bg-surface-muted text-text-muted hover:text-text"
                 onClick={() => moveMonth(-1)}
                 aria-label="Previous month"
               >
                 <ChevronLeft size={17} />
               </button>
-              <strong className="text-[0.95rem] font-(weight:--weight-bold)">
+              <strong className="text-[0.95rem] font-(--weight-bold)">
                 {calendarMonthLabel}
               </strong>
               <button
                 type="button"
-                className="grid size-9 place-items-center rounded-full border border-(color:--border) bg-(color:--surface-muted) text-(color:--text-muted) hover:text-(color:--text)"
+                className="grid size-9 place-items-center rounded-full border border-border bg-surface-muted text-text-muted hover:text-text"
                 onClick={() => moveMonth(1)}
                 aria-label="Next month"
               >
@@ -129,7 +129,7 @@ export function DiscoveryFilters({
               </button>
             </div>
 
-            <div className="grid grid-cols-7 gap-1 text-center text-[0.72rem] font-(weight:--weight-semibold) uppercase text-(color:--text-soft)">
+            <div className="grid grid-cols-7 gap-1 text-center text-[0.72rem] font-(--weight-semibold) uppercase text-text-soft">
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
                 <span key={day}>{day}</span>
               ))}
@@ -150,12 +150,12 @@ export function DiscoveryFilters({
                   <button
                     key={dateKey}
                     type="button"
-                    className={`grid aspect-square place-items-center rounded-lg text-[0.82rem] font-(weight:--weight-semibold) ${
+                    className={`grid aspect-square place-items-center rounded-lg text-[0.82rem] font-(--weight-semibold) ${
                       isSelected
-                        ? "bg-(color:--button-bg) text-(color:--button-text)"
+                        ? "bg-(--button-bg) text-(--button-text)"
                         : isInRange
-                          ? "bg-(color:--accent-soft) text-(color:--text)"
-                          : "bg-transparent text-(color:--text-muted) hover:bg-(color:--surface-muted) hover:text-(color:--text)"
+                          ? "bg-accent-soft text-text"
+                          : "bg-transparent text-text-muted hover:bg-surface-muted hover:text-text"
                     } ${isOutsideMonth ? "opacity-45" : ""}`}
                     onClick={() => chooseCalendarDate(dateKey)}
                   >
@@ -165,10 +165,10 @@ export function DiscoveryFilters({
               })}
             </div>
 
-            <div className="flex items-center justify-between gap-2 border-t border-(color:--border) pt-3">
+            <div className="flex items-center justify-between gap-2 border-t border-border pt-3">
               <button
                 type="button"
-                className="inline-flex min-h-9 items-center gap-2 rounded-full border border-(color:--border) bg-(color:--surface-muted) px-3 text-[0.82rem] font-(weight:--weight-semibold) text-(color:--text-muted) hover:text-(color:--text)"
+                className="inline-flex min-h-9 items-center gap-2 rounded-full border border-border bg-surface-muted px-3 text-[0.82rem] font-(--weight-semibold) text-text-muted hover:text-text"
                 onClick={() => {
                   setDateStart("");
                   setDateEnd("");
@@ -179,7 +179,7 @@ export function DiscoveryFilters({
               </button>
               <button
                 type="button"
-                className="inline-flex min-h-9 items-center rounded-full bg-(color:--button-bg) px-3 text-[0.82rem] font-(weight:--weight-bold) text-(color:--button-text)"
+                className="inline-flex min-h-9 items-center rounded-full bg-(--button-bg) px-3 text-[0.82rem] font-(--weight-bold) text-(--button-text)"
                 onClick={() => setPickerOpen(false)}
               >
                 Apply
@@ -190,7 +190,7 @@ export function DiscoveryFilters({
       </div>
 
       <button
-        className="inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-transparent bg-(color:--button-bg) px-5 text-[0.95rem] font-(weight:--weight-bold) text-(color:--button-text) hover:bg-(color:--accent) hover:text-[#081010]"
+        className="inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-transparent bg-(--button-bg) px-5 text-[0.95rem] font-(--weight-bold) text-(--button-text) hover:bg-accent hover:text-[#081010]"
         type="submit"
         aria-label="Search events"
       >

@@ -35,18 +35,18 @@ import {
 import { PhoneNumberInput } from "./phone-number-input";
 
 const panel =
-  "rounded-lg border border-(color:--border) bg-(color:--surface-raised) shadow-[0_18px_52px_rgb(0_0_0/14%)]";
-const panelPadded = `${panel} grid gap-4 p-[18px]`;
+  "rounded-lg border border-border bg-surface-raised shadow-[0_18px_52px_rgb(0_0_0/14%)]";
+const panelPadded = `${panel} grid gap-4 p-4.5`;
 const primaryAction =
-  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-(color:--button-bg) px-4 font-(weight:--weight-bold) text-(color:--button-text) hover:bg-(color:--accent)";
+  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-(--button-bg) px-4 font-(--weight-bold) text-(--button-text) hover:bg-accent";
 const secondaryAction =
-  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-(color:--border) bg-(color:--surface-muted) px-4 font-(weight:--weight-bold) text-(color:--text)";
+  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border bg-surface-muted px-4 font-(--weight-bold) text-text";
 const formGrid =
-  "grid gap-3 [&_label]:grid [&_label]:gap-[7px] [&_label]:text-[0.82rem] [&_label]:font-(weight:--weight-semibold) [&_label]:text-(color:--text-muted) [&_input]:min-h-11 [&_input]:w-full [&_input]:min-w-0 [&_input]:rounded-lg [&_input]:border [&_input]:border-(color:--border) [&_input]:bg-(color:--surface-elevated) [&_input]:px-3 [&_input]:text-(color:--text) [&_input]:focus:border-(color:--accent) [&_input]:focus:outline-[3px_solid_rgb(255_122_69/18%)] [&_textarea]:min-h-[112px] [&_textarea]:w-full [&_textarea]:min-w-0 [&_textarea]:resize-y [&_textarea]:rounded-lg [&_textarea]:border [&_textarea]:border-(color:--border) [&_textarea]:bg-(color:--surface-elevated) [&_textarea]:px-3 [&_textarea]:py-[11px] [&_textarea]:text-(color:--text) [&_textarea]:focus:border-(color:--accent) [&_textarea]:focus:outline-[3px_solid_rgb(255_122_69/18%)]";
+  "grid gap-3 [&_label]:grid [&_label]:gap-1.75 [&_label]:text-[0.82rem] [&_label]:font-(--weight-semibold) [&_label]:text-text-muted [&_input]:min-h-11 [&_input]:w-full [&_input]:min-w-0 [&_input]:rounded-lg [&_input]:border [&_input]:border-border [&_input]:bg-surface-elevated [&_input]:px-3 [&_input]:text-text [&_input]:focus:border-accent [&_input]:focus:outline-[3px_solid_rgb(255_122_69/18%)] [&_textarea]:min-h-28 [&_textarea]:w-full [&_textarea]:min-w-0 [&_textarea]:resize-y [&_textarea]:rounded-lg [&_textarea]:border [&_textarea]:border-border [&_textarea]:bg-surface-elevated [&_textarea]:px-3 [&_textarea]:py-2.75 [&_textarea]:text-text [&_textarea]:focus:border-accent [&_textarea]:focus:outline-[3px_solid_rgb(255_122_69/18%)]";
 const sectionHeading =
-  "mb-0 text-[clamp(1.45rem,2vw,2rem)] font-(weight:--weight-bold) leading-tight text-(color:--text)";
+  "mb-0 text-[clamp(1.45rem,2vw,2rem)] font-(--weight-bold) leading-tight text-text";
 const kicker =
-  "mb-2 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-(color:--accent)";
+  "mb-2 text-[0.78rem] font-(--weight-semibold) uppercase tracking-[0.08em] text-accent";
 
 const eventDay = new Intl.DateTimeFormat("en-UG", {
   day: "2-digit",
@@ -306,10 +306,10 @@ export function EventDetail({ event }: { event: Event }) {
             </span>
           </div>
           <div>
-            <h1 className="mb-4 text-[clamp(2.7rem,6vw,6.4rem)] font-(weight:--weight-bold) leading-[0.94] text-white">
+            <h1 className="mb-4 text-[clamp(2.7rem,6vw,6.4rem)] font-(--weight-bold) leading-[0.94] text-white">
               {displayEvent.name}
             </h1>
-            <p className="mb-0 max-w-[720px] text-[1.08rem] leading-[1.6] text-white/76">
+            <p className="mb-0 max-w-180 text-[1.08rem] leading-[1.6] text-white/76">
               {displayEvent.description}
             </p>
           </div>
@@ -327,15 +327,15 @@ export function EventDetail({ event }: { event: Event }) {
         </div>
       </section>
 
-      <section className="event-detail-summary grid grid-cols-[150px_minmax(0,1fr)_auto] items-center gap-4 rounded-lg border border-(color:--border) bg-(color:--surface-raised) p-4 shadow-[0_18px_52px_rgb(0_0_0/12%)] max-[820px]:grid-cols-1">
-        <div className="grid min-h-[118px] place-items-center rounded-lg border border-(color:--border) bg-(color:--surface-muted) text-center">
-          <span className="text-[0.84rem] font-(weight:--weight-semibold) uppercase tracking-[0.12em] text-(color:--accent)">
+      <section className="event-detail-summary grid grid-cols-[150px_minmax(0,1fr)_auto] items-center gap-4 rounded-lg border border-border bg-surface-raised p-4 shadow-[0_18px_52px_rgb(0_0_0/12%)] max-[820px]:grid-cols-1">
+        <div className="grid min-h-29.5 place-items-center rounded-lg border border-border bg-surface-muted text-center">
+          <span className="text-[0.84rem] font-(--weight-semibold) uppercase tracking-[0.12em] text-accent">
             {eventMonth.format(startsAt)}
           </span>
-          <strong className="text-[3rem] font-(weight:--weight-bold) leading-none text-(color:--text)">
+          <strong className="text-5xl font-(--weight-bold) leading-none text-text">
             {eventDay.format(startsAt)}
           </strong>
-          <span className="inline-flex items-center gap-1.5 text-[0.9rem] font-(weight:--weight-semibold) text-(color:--text-muted)">
+          <span className="inline-flex items-center gap-1.5 text-[0.9rem] font-(--weight-semibold) text-text-muted">
             <Clock size={14} />
             {eventTime.format(startsAt)}
           </span>
@@ -343,11 +343,11 @@ export function EventDetail({ event }: { event: Event }) {
         <div className="grid gap-3">
           <div>
             <p className={kicker}>Organized by</p>
-            <h2 className="mb-0 text-[1.35rem] font-(weight:--weight-bold) text-(color:--text)">
+            <h2 className="mb-0 text-[1.35rem] font-(--weight-bold) text-text">
               {ownerName(displayEvent)}
             </h2>
           </div>
-          <div className="grid gap-2 text-[0.98rem] text-(color:--text-muted) [&_span]:inline-flex [&_span]:items-start [&_span]:gap-2 [&_svg]:mt-[3px] [&_svg]:shrink-0 [&_svg]:text-(color:--accent)">
+          <div className="grid gap-2 text-[0.98rem] text-text-muted [&_span]:inline-flex [&_span]:items-start [&_span]:gap-2 [&_svg]:mt-0.75 [&_svg]:shrink-0 [&_svg]:text-accent">
             <span>
               <MapPin size={16} />
               {displayEvent.mapLocation || displayEvent.venue}
@@ -377,11 +377,11 @@ export function EventDetail({ event }: { event: Event }) {
                 <p className={kicker}>About this event</p>
                 <h2 className={sectionHeading}>Event details</h2>
               </div>
-              <span className="inline-flex min-h-9 w-fit items-center rounded-full border border-(color:--border) bg-(color:--surface-muted) px-3 text-[0.84rem] font-(weight:--weight-semibold) text-(color:--text-muted)">
+              <span className="inline-flex min-h-9 w-fit items-center rounded-full border border-border bg-surface-muted px-3 text-[0.84rem] font-(--weight-semibold) text-text-muted">
                 {eventStatus(displayEvent)}
               </span>
             </div>
-            <p className="mb-0 text-[1.02rem] leading-[1.65] text-(color:--text-muted)">
+            <p className="mb-0 text-[1.02rem] leading-[1.65] text-text-muted">
               {displayEvent.description}
             </p>
             {ownedBySession && (
@@ -401,21 +401,21 @@ export function EventDetail({ event }: { event: Event }) {
               <p className={kicker}>Location</p>
               <h2 className={sectionHeading}>{displayEvent.venue}</h2>
             </div>
-            <div className="event-detail-map grid min-h-[220px] place-items-center overflow-hidden rounded-lg border border-(color:--border) bg-[linear-gradient(135deg,color-mix(in_srgb,var(--event-detail-accent)_14%,var(--surface-muted)),var(--surface-elevated))] text-center">
+            <div className="event-detail-map grid min-h-55 place-items-center overflow-hidden rounded-lg border border-border bg-[linear-gradient(135deg,color-mix(in_srgb,var(--event-detail-accent)_14%,var(--surface-muted)),var(--surface-elevated))] text-center">
               {mapEmbedUrl ? (
                 <iframe
-                  className="h-[320px] w-full border-0 max-[700px]:h-[260px]"
+                  className="h-80 w-full border-0 max-[700px]:h-65"
                   src={mapEmbedUrl}
                   title={`Map for ${displayEvent.name}`}
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                 />
               ) : (
-                <div className="grid max-w-[520px] place-items-center gap-3 p-5">
-                  <span className="grid size-12 place-items-center rounded-full bg-(color:--accent-soft) text-(color:--accent)">
+                <div className="grid max-w-130 place-items-center gap-3 p-5">
+                  <span className="grid size-12 place-items-center rounded-full bg-accent-soft text-accent">
                     <MapPin size={24} />
                   </span>
-                  <p className="mb-0 text-(color:--text-muted)">
+                  <p className="mb-0 text-text-muted">
                     The host has not added an exact map location yet. You can
                     still search for the venue in Google Maps.
                   </p>
@@ -465,13 +465,13 @@ export function EventDetail({ event }: { event: Event }) {
                 ],
               ].map(([title, copy]) => (
                 <article
-                  className="rounded-lg border border-(color:--border) bg-(color:--surface-muted) p-4"
+                  className="rounded-lg border border-border bg-surface-muted p-4"
                   key={title}
                 >
-                  <h3 className="mb-2 text-[1rem] text-(color:--text)">
+                  <h3 className="mb-2 text-base text-text">
                     {title}
                   </h3>
-                  <p className="mb-0 text-[0.92rem] leading-[1.5] text-(color:--text-muted)">
+                  <p className="mb-0 text-[0.92rem] leading-normal text-text-muted">
                     {copy}
                   </p>
                 </article>
@@ -481,7 +481,7 @@ export function EventDetail({ event }: { event: Event }) {
 
           {ownedBySession && isEditing && (
             <section className={panelPadded}>
-              <div className="flex items-center gap-2.5 text-(color:--text) [&_svg]:text-(color:--accent)">
+              <div className="flex items-center gap-2.5 text-text [&_svg]:text-accent">
                 <Edit3 size={22} />
                 <h2 className="mb-0 text-[1.55rem]">Edit event</h2>
               </div>
@@ -639,7 +639,7 @@ export function EventDetail({ event }: { event: Event }) {
                 </button>
               </form>
               {editState && (
-                <p className="mb-0 rounded-lg bg-(color:--accent-soft) p-3 text-[0.92rem] font-(weight:--weight-medium) text-(color:--accent)">
+                <p className="mb-0 rounded-lg bg-accent-soft p-3 text-[0.92rem] font-(--weight-medium) text-accent">
                   {editState}
                 </p>
               )}
@@ -647,36 +647,36 @@ export function EventDetail({ event }: { event: Event }) {
           )}
 
           <section className={panelPadded}>
-            <div className="flex items-center gap-2.5 text-(color:--text) [&_svg]:text-(color:--accent)">
+            <div className="flex items-center gap-2.5 text-text [&_svg]:text-accent">
               <QrCode size={22} />
               <h2 className="mb-0 text-[1.55rem]">
                 Your tickets for this event
               </h2>
             </div>
             {ticketsForEvent.length === 0 ? (
-              <p className="mb-0 text-(color:--text-muted)">
+              <p className="mb-0 text-text-muted">
                 Tickets you buy for this event will appear here.
               </p>
             ) : (
               <div className="grid gap-3">
                 {ticketsForEvent.map((ticket) => (
                   <article
-                    className="grid grid-cols-[92px_1fr] items-center gap-3 rounded-lg border border-(color:--border) bg-(color:--surface-muted) p-3 max-[600px]:grid-cols-1"
+                    className="grid grid-cols-[92px_1fr] items-center gap-3 rounded-lg border border-border bg-surface-muted p-3 max-[600px]:grid-cols-1"
                     key={ticket.id}
                   >
                     <img
-                      className="size-[92px] rounded-lg bg-white p-1 max-[600px]:size-[132px]"
+                      className="size-23 rounded-lg bg-white p-1 max-[600px]:size-33"
                       src={ticket.qrCodeDataUrl}
                       alt={`QR code for ${ticket.buyerName}`}
                     />
                     <div className="min-w-0">
-                      <h3 className="mb-1 truncate text-(color:--text)">
+                      <h3 className="mb-1 truncate text-text">
                         {ticket.buyerName}
                       </h3>
-                      <p className="mb-2 text-(color:--text-muted)">
+                      <p className="mb-2 text-text-muted">
                         {ticket.status.replace("_", " ")}
                       </p>
-                      <code className="rounded-md bg-(color:--surface-elevated) px-2 py-1 text-[0.78rem] text-(color:--accent)">
+                      <code className="rounded-md bg-surface-elevated px-2 py-1 text-[0.78rem] text-accent">
                         {ticket.code}
                       </code>
                     </div>
@@ -687,7 +687,7 @@ export function EventDetail({ event }: { event: Event }) {
           </section>
         </div>
 
-        <aside className="sticky top-[94px] grid gap-5 max-[1120px]:static">
+        <aside className="sticky top-23.5 grid gap-5 max-[1120px]:static">
           <section className={panelPadded}>
             <div>
               <p className={kicker}>
@@ -733,22 +733,22 @@ export function EventDetail({ event }: { event: Event }) {
                 </h2>
               </div>
             </div>
-            <div className="grid gap-3 rounded-lg border border-(color:--border) bg-(color:--surface-muted) p-3">
+            <div className="grid gap-3 rounded-lg border border-border bg-surface-muted p-3">
               <div className="flex items-start justify-between gap-3">
-                <strong className="text-(color:--text)">
+                <strong className="text-text">
                   General admission
                 </strong>
-                <strong className="text-(color:--price)">
+                <strong className="text-price">
                   {money.format(checkoutEvent.priceCents / 100)}
                 </strong>
               </div>
-              <span className="text-[0.9rem] text-(color:--text-muted)">
+              <span className="text-[0.9rem] text-text-muted">
                 {dateTime.format(new Date(checkoutEvent.startsAt))}
               </span>
-              <span className="text-[0.9rem] text-(color:--text-muted)">
+              <span className="text-[0.9rem] text-text-muted">
                 {checkoutEvent.venue}
               </span>
-              <span className="text-[0.86rem] font-(weight:--weight-semibold) text-(color:--text-soft)">
+              <span className="text-[0.86rem] font-(--weight-semibold) text-text-soft">
                 Displayed price
               </span>
             </div>
@@ -761,7 +761,7 @@ export function EventDetail({ event }: { event: Event }) {
               {checkoutEvent.priceCents === 0 ? "Get ticket" : "Pay now"}
             </button>
             {purchaseState && (
-              <p className="mb-0 rounded-lg bg-(color:--accent-soft) p-3 text-[0.92rem] font-(weight:--weight-medium) text-(color:--accent)">
+              <p className="mb-0 rounded-lg bg-accent-soft p-3 text-[0.92rem] font-(--weight-medium) text-accent">
                 {purchaseState}
               </p>
             )}
@@ -781,7 +781,7 @@ export function EventDetail({ event }: { event: Event }) {
               <div>
                 <p className={kicker}>Checkout</p>
                 <h2
-                  className="mb-0 text-[clamp(1.6rem,3vw,2.35rem)] leading-tight text-(color:--text)"
+                  className="mb-0 text-[clamp(1.6rem,3vw,2.35rem)] leading-tight text-text"
                   id="checkout-dialog-title"
                 >
                   {checkoutEvent.priceCents === 0
@@ -790,7 +790,7 @@ export function EventDetail({ event }: { event: Event }) {
                 </h2>
               </div>
               <button
-                className="grid size-10 shrink-0 place-items-center rounded-lg border border-(color:--border) bg-(color:--surface-muted) text-(color:--text)"
+                className="grid size-10 shrink-0 place-items-center rounded-lg border border-border bg-surface-muted text-text"
                 type="button"
                 aria-label="Close checkout"
                 onClick={() => setCheckoutOpen(false)}
@@ -800,20 +800,20 @@ export function EventDetail({ event }: { event: Event }) {
             </div>
 
             <div className="checkout-dialog__body">
-              <div className="grid gap-3 rounded-lg border border-(color:--border) bg-(color:--surface-muted) p-3">
+              <div className="grid gap-3 rounded-lg border border-border bg-surface-muted p-3">
                 <div className="flex items-start justify-between gap-3">
-                  <strong className="text-(color:--text)">
+                  <strong className="text-text">
                     General admission
                   </strong>
-                  <strong className="text-(color:--price)">
+                  <strong className="text-price">
                     {money.format(ticketTotalCents / 100)}
                   </strong>
                 </div>
-                <span className="text-[0.9rem] text-(color:--text-muted)">
+                <span className="text-[0.9rem] text-text-muted">
                   {quantity.toLocaleString("en-UG")} x{" "}
                   {money.format(checkoutEvent.priceCents / 100)}
                 </span>
-                <span className="text-[0.9rem] text-(color:--text-muted)">
+                <span className="text-[0.9rem] text-text-muted">
                   {dateTime.format(new Date(checkoutEvent.startsAt))}
                 </span>
               </div>
@@ -971,7 +971,7 @@ export function EventDetail({ event }: { event: Event }) {
                 </button>
               </form>
               {purchaseState && (
-                <p className="mb-0 rounded-lg bg-(color:--accent-soft) p-3 text-[0.92rem] font-(weight:--weight-medium) text-(color:--accent)">
+                <p className="mb-0 rounded-lg bg-accent-soft p-3 text-[0.92rem] font-(--weight-medium) text-accent">
                   {purchaseState}
                 </p>
               )}

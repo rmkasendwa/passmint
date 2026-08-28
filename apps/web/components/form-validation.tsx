@@ -35,7 +35,7 @@ type TextareaValidationProps = Pick<
 };
 
 const messageClass =
-  'mb-0 min-h-[1.15rem] text-[0.78rem] font-(weight:--weight-medium) leading-snug text-[#ef4444]';
+  'mb-0 min-h-[1.15rem] text-[0.78rem] font-(--weight-medium) leading-snug text-[#ef4444]';
 
 function stringValue(value: string | number) {
   return String(value ?? '').trim();

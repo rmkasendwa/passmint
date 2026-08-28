@@ -21,7 +21,7 @@ import { EventImage } from './event-image';
 const primaryAction = 'featured-carousel__cta';
 
 const sectionKicker =
-  'mb-2 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-[rgb(255_246_226/62%)]';
+  'mb-2 text-[0.78rem] font-(--weight-semibold) uppercase tracking-[0.08em] text-[rgb(255_246_226/62%)]';
 
 const ticketBadge = 'featured-carousel__badge';
 
@@ -70,7 +70,7 @@ export function FeaturedEventCarousel({ events }: { events: Event[] }) {
         >
           {event.name}
         </h2>
-        <p className="mb-0 mt-3 line-clamp-2 max-w-147.5 text-[1.08rem] leading-normal text-[rgb(255_255_255/82%)]">
+        <p className="mb-0 mt-3 line-clamp-2 max-w-147.5 text-[1.08rem] leading-normal text-white/82">
           {event.description}
         </p>
         <div className="featured-carousel__meta">

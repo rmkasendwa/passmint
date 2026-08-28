@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 const sectionKicker =
-  'mb-2 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-(color:--accent)';
+  'mb-2 text-[0.78rem] font-(--weight-semibold) uppercase tracking-[0.08em] text-accent';
 
 export function AuthFrame({
   children,
@@ -30,13 +30,13 @@ export function AuthFrame({
           alt=""
         />
         <div className="absolute bottom-0 right-0 z-1 grid w-[min(560px,78%)] gap-2 bg-(image:--auth-media-card-bg) px-10 pb-10 pt-20 text-white max-[820px]:left-0 max-[820px]:right-0 max-[820px]:w-full max-[820px]:px-4.5 max-[820px]:pb-4.5 max-[820px]:pt-13">
-          <span className="text-[0.8rem] font-(--weight-semibold) uppercase tracking-[0.18em] text-[rgb(255_255_255/70%)]">
+          <span className="text-[0.8rem] font-(--weight-semibold) uppercase tracking-[0.18em] text-white/70">
             Passmint
           </span>
           <strong className="text-[clamp(1.75rem,4vw,3.4rem)] font-(--weight-bold) leading-[0.98] max-[820px]:text-[1.1rem]">
             One account for tickets, events, and the door.
           </strong>
-          <small className="max-w-102.5 text-[0.98rem] leading-[1.55] text-[rgb(255_255_255/72%)] max-[820px]:hidden">
+          <small className="max-w-102.5 text-[0.98rem] leading-[1.55] text-white/72 max-[820px]:hidden">
             Checkout, hosting, and gate verification in one place.
           </small>
         </div>

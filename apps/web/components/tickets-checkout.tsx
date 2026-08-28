@@ -23,26 +23,26 @@ import {
 } from "./form-validation";
 
 const sectionKicker =
-  "mb-2 text-[0.78rem] font-(weight:--weight-semibold) uppercase tracking-[0.08em] text-(color:--accent)";
+  "mb-2 text-[0.78rem] font-(--weight-semibold) uppercase tracking-[0.08em] text-accent";
 const panel =
-  "rounded-lg border border-(color:--border) bg-(color:--surface-raised) shadow-[0_18px_44px_rgb(18_24_31/6%)]";
-const panelPadded = `${panel} grid gap-3.5 p-[18px]`;
+  "rounded-lg border border-border bg-surface-raised shadow-[0_18px_44px_rgb(18_24_31/6%)]";
+const panelPadded = `${panel} grid gap-3.5 p-4.5`;
 const panelHeading =
-  "mb-3 flex items-center gap-2.5 text-(color:--text) [&_h2]:mb-0 [&_h2]:text-[1.55rem] [&_svg]:text-(color:--accent)";
+  "mb-3 flex items-center gap-2.5 text-text [&_h2]:mb-0 [&_h2]:text-[1.55rem] [&_svg]:text-accent";
 const primaryAction =
-  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-(color:--button-bg) px-4 font-(weight:--weight-bold) text-(color:--button-text) hover:bg-(color:--accent)";
+  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-(--button-bg) px-4 font-(--weight-bold) text-(--button-text) hover:bg-accent";
 const secondaryAction =
-  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-(color:--border) bg-(color:--surface-muted) px-4 font-(weight:--weight-bold) text-(color:--text)";
+  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border bg-surface-muted px-4 font-(--weight-bold) text-text";
 const formGrid =
-  "grid gap-3 [&_label]:grid [&_label]:gap-[7px] [&_label]:text-[0.82rem] [&_label]:font-(weight:--weight-semibold) [&_label]:text-(color:--text-muted) [&_input]:min-h-11 [&_input]:w-full [&_input]:min-w-0 [&_input]:rounded-lg [&_input]:border [&_input]:border-(color:--border) [&_input]:bg-(color:--surface-elevated) [&_input]:px-3 [&_input]:text-(color:--text) [&_input]:focus:border-(color:--accent) [&_input]:focus:outline-[3px_solid_rgb(22_125_119/18%)]";
+  "grid gap-3 [&_label]:grid [&_label]:gap-1.75 [&_label]:text-[0.82rem] [&_label]:font-(--weight-semibold) [&_label]:text-text-muted [&_input]:min-h-11 [&_input]:w-full [&_input]:min-w-0 [&_input]:rounded-lg [&_input]:border [&_input]:border-border [&_input]:bg-surface-elevated [&_input]:px-3 [&_input]:text-text [&_input]:focus:border-accent [&_input]:focus:outline-[3px_solid_rgb(22_125_119/18%)]";
 const eventCard =
-  "grid min-h-[430px] rounded-lg border border-(color:--border) bg-(color:--surface-raised) text-left text-(color:--text) shadow-none hover:border-(color:--border-strong) [&.selected]:border-(color:--border-strong) max-[820px]:min-h-[500px] max-[600px]:min-h-0 max-[600px]:grid-rows-[220px_1fr] [&_.event-thumbnail-card]:max-[600px]:min-h-[220px]";
+  "grid min-h-107.5 rounded-lg border border-border bg-surface-raised text-left text-text shadow-none hover:border-border-strong [&.selected]:border-border-strong max-[820px]:min-h-125 max-[600px]:min-h-0 max-[600px]:grid-rows-[220px_1fr] [&_.event-thumbnail-card]:max-[600px]:min-h-55";
 const eventCardCopy =
-  "grid grid-rows-[auto_auto_auto_1fr_auto] gap-4 p-[26px] max-[820px]:p-[22px]";
-const mutedText = "mb-0 text-(color:--text-muted)";
-const helperLine = "mb-0 text-[0.88rem] leading-[1.5] text-(color:--text-soft)";
+  "grid grid-rows-[auto_auto_auto_1fr_auto] gap-4 p-6.5 max-[820px]:p-5.5";
+const mutedText = "mb-0 text-text-muted";
+const helperLine = "mb-0 text-[0.88rem] leading-normal text-text-soft";
 const stateLine =
-  "mb-0 rounded-lg bg-(color:--accent-soft) p-3 text-[0.92rem] font-(weight:--weight-medium) text-(color:--accent)";
+  "mb-0 rounded-lg bg-accent-soft p-3 text-[0.92rem] font-(--weight-medium) text-accent";
 
 export function TicketsCheckout() {
   const {
@@ -87,20 +87,20 @@ export function TicketsCheckout() {
   });
 
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_420px] items-start gap-[18px] max-[1120px]:grid-cols-1">
+    <div className="grid grid-cols-[minmax(0,1fr)_420px] items-start gap-4.5 max-[1120px]:grid-cols-1">
       <section>
-        <div className="mb-[26px] flex items-end justify-between gap-4">
+        <div className="mb-6.5 flex items-end justify-between gap-4">
           <div>
             <p className={sectionKicker}>Available now</p>
-            <h2 className="mb-0 text-[clamp(2rem,3vw,3.15rem)] font-(weight:--weight-bold) leading-none text-(color:--text)">
+            <h2 className="mb-0 text-[clamp(2rem,3vw,3.15rem)] font-(--weight-bold) leading-none text-text">
               Pick an event
             </h2>
           </div>
-          <span className="text-base font-(weight:--weight-semibold) text-(color:--text-muted)">
+          <span className="text-base font-(--weight-semibold) text-text-muted">
             {loading ? "Loading..." : `${visibleEvents.length} live`}
           </span>
         </div>
-        <div className="grid grid-cols-2 gap-[22px] max-[820px]:grid-cols-1">
+        <div className="grid grid-cols-2 gap-5.5 max-[820px]:grid-cols-1">
           {visibleEvents.map((event, index) => (
             <button
               className={`${eventCard} ${event.id === selectedEventId ? "selected" : ""}`}
@@ -110,13 +110,13 @@ export function TicketsCheckout() {
             >
               <EventThumbnail event={event} tone={eventTone(index)} />
               <span className={eventCardCopy}>
-                <strong className="text-[1.18rem] font-(weight:--weight-bold) leading-[1.16] text-(color:--text)">
+                <strong className="text-[1.18rem] font-(--weight-bold) leading-[1.16] text-text">
                   {event.name}
                 </strong>
-                <small className="min-h-[3.1em] text-[1.02rem] font-(weight:--weight-regular) leading-[1.55] text-(color:--text-muted)">
+                <small className="min-h-[3.1em] text-[1.02rem] font-(--weight-regular) leading-[1.55] text-text-muted">
                   {event.description}
                 </small>
-                <span className="grid gap-2 [&_span]:inline-flex [&_span]:items-center [&_span]:gap-[7px] [&_span]:text-[0.94rem] [&_span]:font-(weight:--weight-medium) [&_span]:leading-[1.34] [&_span]:text-(color:--text-muted) [&_svg]:text-(color:--accent)">
+                <span className="grid gap-2 [&_span]:inline-flex [&_span]:items-center [&_span]:gap-1.75 [&_span]:text-[0.94rem] [&_span]:font-(--weight-medium) [&_span]:leading-[1.34] [&_span]:text-text-muted [&_svg]:text-accent">
                   <span>
                     <CalendarDays size={15} />
                     {shortDate.format(new Date(event.startsAt))}
@@ -126,7 +126,7 @@ export function TicketsCheckout() {
                     {event.venue}
                   </span>
                 </span>
-                <span className="self-center text-[1.4rem] font-(weight:--weight-bold) text-[#167d77]">
+                <span className="self-center text-[1.4rem] font-(--weight-bold) text-[#167d77]">
                   {money.format(event.priceCents / 100)}
                 </span>
               </span>
@@ -135,7 +135,7 @@ export function TicketsCheckout() {
         </div>
       </section>
 
-      <aside className="sticky top-[94px] grid gap-[18px] max-[1120px]:static">
+      <aside className="sticky top-23.5 grid gap-4.5 max-[1120px]:static">
         <section
           className={`${panelPadded} ${session ? "signed-in" : "anonymous"}`}
         >
@@ -151,7 +151,7 @@ export function TicketsCheckout() {
           </div>
           {session ? (
             <span
-              className={`inline-flex min-h-[30px] w-fit items-center rounded-full px-2.5 text-[0.78rem] font-(weight:--weight-semibold) uppercase ${session.user.role === "admin" ? "bg-[#ffe6d8] text-[#b43d19]" : "bg-(color:--accent-soft) text-(color:--accent)"}`}
+              className={`inline-flex min-h-7.5 w-fit items-center rounded-full px-2.5 text-[0.78rem] font-(--weight-semibold) uppercase ${session.user.role === "admin" ? "bg-[#ffe6d8] text-[#b43d19]" : "bg-accent-soft text-accent"}`}
             >
               {session.user.role}
             </span>
@@ -183,14 +183,14 @@ export function TicketsCheckout() {
             <h2>Checkout</h2>
           </div>
           {selectedEvent && (
-            <div className="grid gap-1 rounded-lg bg-(color:--surface-muted) p-3">
-              <strong className="text-(color:--text)">
+            <div className="grid gap-1 rounded-lg bg-surface-muted p-3">
+              <strong className="text-text">
                 {selectedEvent.name}
               </strong>
-              <span className="text-[0.9rem] text-(color:--text-muted)">
+              <span className="text-[0.9rem] text-text-muted">
                 {dateTime.format(new Date(selectedEvent.startsAt))}
               </span>
-              <span className="text-[0.9rem] text-(color:--text-muted)">
+              <span className="text-[0.9rem] text-text-muted">
                 {selectedEvent.venue}
               </span>
             </div>
@@ -280,20 +280,20 @@ export function TicketsCheckout() {
             <div className="grid gap-3">
               {tickets.map((ticket) => (
                 <article
-                  className="grid grid-cols-[92px_1fr] items-center gap-3 rounded-lg border border-(color:--border) bg-(color:--surface-muted) p-3 max-[600px]:grid-cols-1"
+                  className="grid grid-cols-[92px_1fr] items-center gap-3 rounded-lg border border-border bg-surface-muted p-3 max-[600px]:grid-cols-1"
                   key={ticket.id}
                 >
                   <img
-                    className="size-[92px] rounded-lg bg-white p-1 max-[600px]:size-[132px]"
+                    className="size-23 rounded-lg bg-white p-1 max-[600px]:size-33"
                     src={ticket.qrCodeDataUrl}
                     alt={`QR code for ${ticket.buyerName}`}
                   />
                   <div>
                     <h3>{ticket.buyerName}</h3>
-                    <p className="mb-2 text-(color:--text-muted)">
+                    <p className="mb-2 text-text-muted">
                       {ticket.event.name}
                     </p>
-                    <code className="rounded-md bg-(color:--surface-elevated) px-2 py-1 text-[0.78rem] text-(color:--accent)">
+                    <code className="rounded-md bg-surface-elevated px-2 py-1 text-[0.78rem] text-accent">
                       {ticket.code}
                     </code>
                   </div>
@@ -317,19 +317,19 @@ export function TicketsCheckout() {
               ) : (
                 ticketHistory.map((ticket) => (
                   <article
-                    className="flex items-center justify-between gap-3 rounded-lg border border-(color:--border) bg-(color:--surface-muted) p-3"
+                    className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface-muted p-3"
                     key={ticket.id}
                   >
                     <div>
-                      <strong className="block text-(color:--text)">
+                      <strong className="block text-text">
                         {ticket.event.name}
                       </strong>
-                      <small className="text-(color:--text-muted)">
+                      <small className="text-text-muted">
                         {dateTime.format(new Date(ticket.event.startsAt))}
                       </small>
                     </div>
                     <span
-                      className={`inline-flex min-h-[28px] items-center rounded-full px-2.5 text-[0.75rem] font-(weight:--weight-semibold) uppercase ${ticket.status === "checked_in" ? "bg-[#dff7e8] text-[#14532d]" : ticket.status === "cancelled" ? "bg-[#ffe8df] text-[#8d2718]" : "bg-(color:--accent-soft) text-(color:--accent)"}`}
+                      className={`inline-flex min-h-7 items-center rounded-full px-2.5 text-xs font-(--weight-semibold) uppercase ${ticket.status === "checked_in" ? "bg-[#dff7e8] text-[#14532d]" : ticket.status === "cancelled" ? "bg-[#ffe8df] text-[#8d2718]" : "bg-accent-soft text-accent"}`}
                     >
                       {ticket.status.replace("_", " ")}
                     </span>

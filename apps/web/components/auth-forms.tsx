@@ -11,30 +11,30 @@ import {
   useInlineFormValidation,
 } from "./form-validation";
 
-const formClass = "grid w-full max-w-[430px] gap-4 max-[820px]:max-w-none";
+const formClass = "grid w-full max-w-107.5 gap-4 max-[820px]:max-w-none";
 const labelClass =
-  "grid gap-[7px] text-[0.82rem] font-(weight:--weight-semibold) text-(color:--text-muted)";
+  "grid gap-1.75 text-[0.82rem] font-(--weight-semibold) text-text-muted";
 const inputClass =
-  "min-h-[52px] w-full min-w-0 rounded-lg border border-(color:--border) bg-(color:--surface-elevated) px-3 text-(color:--text) hover:border-(color:--border-strong) focus:border-(color:--accent) focus:outline-[3px_solid_rgb(22_125_119/18%)] placeholder:text-(color:--text-soft)";
+  "min-h-13 w-full min-w-0 rounded-lg border border-border bg-surface-elevated px-3 text-text hover:border-border-strong focus:border-accent focus:outline-[3px_solid_rgb(22_125_119/18%)] placeholder:text-text-soft";
 const passwordInputClass = `${inputClass} pr-12`;
 const passwordInputWrapClass = "relative block";
 const passwordToggleClass =
-  "absolute right-2 top-1/2 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-md text-(color:--text-soft) hover:bg-(color:--surface-muted) hover:text-(color:--text) focus:outline-[3px_solid_rgb(22_125_119/18%)]";
+  "absolute right-2 top-1/2 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-md text-text-soft hover:bg-surface-muted hover:text-text focus:outline-[3px_solid_rgb(22_125_119/18%)]";
 const labelRowClass = "flex items-center justify-between gap-3";
 const textLinkClass =
-  "font-(weight:--weight-semibold) text-(color:--accent) hover:text-(color:--text)";
+  "font-(--weight-semibold) text-accent hover:text-text";
 const submitClass =
-  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-(color:--button-bg) px-4 font-(weight:--weight-bold) text-(color:--button-text) hover:bg-(color:--accent)";
+  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-(--button-bg) px-4 font-(--weight-bold) text-(--button-text) hover:bg-accent";
 const stateClass =
-  "mb-0 w-full max-w-[430px] rounded-lg bg-(color:--accent-soft) p-3 text-[0.92rem] font-(weight:--weight-medium) text-(color:--accent) max-[820px]:max-w-none";
+  "mb-0 w-full max-w-107.5 rounded-lg bg-accent-soft p-3 text-[0.92rem] font-(--weight-medium) text-accent max-[820px]:max-w-none";
 const switchClass =
-  "w-full max-w-[430px] text-[0.96rem] text-(color:--text-muted) max-[820px]:max-w-none [&_a]:font-(weight:--weight-semibold) [&_a]:text-(color:--accent) [&_a:hover]:text-(color:--text) [&_p]:mb-0";
+  "w-full max-w-107.5 text-[0.96rem] text-text-muted max-[820px]:max-w-none [&_a]:font-(--weight-semibold) [&_a]:text-accent [&_a:hover]:text-text [&_p]:mb-0";
 const strengthTrackClass =
-  "h-2 overflow-hidden rounded-full bg-(color:--surface-muted)";
+  "h-2 overflow-hidden rounded-full bg-surface-muted";
 const strengthBarClass =
   "block h-full rounded-full transition-[width,background-color]";
 const strengthTextClass =
-  "flex items-center justify-between gap-3 text-[0.78rem] text-(color:--text-soft)";
+  "flex items-center justify-between gap-3 text-[0.78rem] text-text-soft";
 
 function getPasswordStrength(password: string) {
   const checks = [
