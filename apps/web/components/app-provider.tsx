@@ -755,7 +755,6 @@ export function AppProvider({
       <AppShell
         isAuthPage={isAuthPage}
         logout={logout}
-        onHostEvents={() => router.push("/login")}
         openAuth={openAuth}
         resolvedTheme={resolvedTheme}
         session={session}

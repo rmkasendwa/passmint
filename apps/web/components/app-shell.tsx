@@ -18,7 +18,6 @@ export function AppShell({
   children,
   isAuthPage = false,
   logout,
-  onHostEvents,
   openAuth,
   resolvedTheme,
   session,
@@ -28,7 +27,6 @@ export function AppShell({
   children: ReactNode;
   isAuthPage?: boolean;
   logout: () => void;
-  onHostEvents: () => void;
   openAuth: (mode: 'login' | 'register') => void;
   resolvedTheme: ResolvedTheme;
   session: AuthSession | null;
@@ -64,15 +62,7 @@ export function AppShell({
               <Link className={navItemClass} href="/dashboard">
                 Dashboard
               </Link>
-            ) : (
-              <button
-                className={navItemClass}
-                type="button"
-                onClick={onHostEvents}
-              >
-                Host
-              </button>
-            )}
+            ) : null}
           </nav>
           {session ? (
             <div className="inline-flex items-center justify-self-end gap-2 max-[820px]:w-full max-[820px]:justify-self-stretch">
