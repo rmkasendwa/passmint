@@ -441,7 +441,7 @@ export function DashboardWorkbench() {
                   <strong className="block capitalize">
                     {gateResult.result.replace("_", " ")}
                   </strong>
-                  <span className="break-words">
+                  <span className="wrap-break-word">
                     {gateResult.ticket?.buyerName ?? gateResult.message}
                   </span>
                 </div>

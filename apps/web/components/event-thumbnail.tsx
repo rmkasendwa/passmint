@@ -18,7 +18,7 @@ const baseThumbnail =
   "relative grid min-w-0 isolate overflow-hidden text-white [&_img]:absolute [&_img]:inset-0 [&_img]:z-0 [&_img]:size-full [&_img]:object-cover";
 
 const fallbackDecor =
-  "before:absolute before:inset-0 before:z-0 before:content-[''] after:absolute after:right-[-28px] after:bottom-[-38px] after:z-[1] after:size-37.5 after:rounded-full after:border-6 after:border-white/12 after:content-['']";
+  "before:absolute before:inset-0 before:z-0 before:content-[''] after:absolute after:right-[-28px] after:bottom-[-38px] after:z-1 after:size-37.5 after:rounded-full after:border-6 after:border-white/12 after:content-['']";
 
 const variantClass = {
   featured:
@@ -84,17 +84,17 @@ export function EventThumbnail({
           onError={() => setImageFailed(true)}
         />
       )}
-      <span className={`absolute inset-0 z-[1] ${imageOverlay}`} />
+      <span className={`absolute inset-0 z-1 ${imageOverlay}`} />
       <span
         aria-hidden="true"
-        className={`pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-52 ${blendFadeClass}`}
+        className={`pointer-events-none absolute inset-x-0 bottom-0 z-2 h-52 ${blendFadeClass}`}
       />
       <span
-        className={`thumbnail-frame absolute inset-4 z-[2] rounded-lg border ${frameClass}`}
+        className={`thumbnail-frame absolute inset-4 z-2 rounded-lg border ${frameClass}`}
       />
       {showBadge && (
         <span
-          className={`thumbnail-badge absolute left-5.5 top-5.5 z-[3] inline-flex min-h-8 items-center gap-1.75 rounded-full border px-2.75 text-[0.72rem] font-(--weight-semibold) uppercase backdrop-blur-xl data-[featured=true]:hidden ${badgeClass}`}
+          className={`thumbnail-badge absolute left-5.5 top-5.5 z-3 inline-flex min-h-8 items-center gap-1.75 rounded-full border px-2.75 text-[0.72rem] font-(--weight-semibold) uppercase backdrop-blur-xl data-[featured=true]:hidden ${badgeClass}`}
           data-featured={variant === "featured"}
         >
           <BadgeIcon size={variant === "featured" ? 25 : 18} />
@@ -102,11 +102,11 @@ export function EventThumbnail({
         </span>
       )}
       {!hasImage && (
-        <span className="thumbnail-initials absolute left-5.5 top-[52%] z-[2] -translate-y-1/2 text-[clamp(4rem,10vw,8rem)] font-(--weight-bold) leading-[0.8] text-white/14">
+        <span className="thumbnail-initials absolute left-5.5 top-[52%] z-2 -translate-y-1/2 text-[clamp(4rem,10vw,8rem)] font-(--weight-bold) leading-[0.8] text-white/14">
           {initials(event.name)}
         </span>
       )}
-      <span className="thumbnail-date absolute bottom-5.5 right-5.5 z-[3] grid min-w-17 place-items-center rounded-lg bg-white px-2.5 py-2.25 text-[#101010] shadow-[0_16px_34px_rgb(0_0_0/18%)]">
+      <span className="thumbnail-date absolute bottom-5.5 right-5.5 z-3 grid min-w-17 place-items-center rounded-lg bg-white px-2.5 py-2.25 text-[#101010] shadow-[0_16px_34px_rgb(0_0_0/18%)]">
         <strong className="text-[2.15rem] font-(--weight-bold) leading-[0.9]">
           {day}
         </strong>
@@ -114,7 +114,7 @@ export function EventThumbnail({
           {month}
         </small>
       </span>
-      <span className="thumbnail-title absolute bottom-6 left-5.5 right-28 z-[3] hidden gap-1.25">
+      <span className="thumbnail-title absolute bottom-6 left-5.5 right-28 z-3 hidden gap-1.25">
         <strong className="overflow-hidden text-[1.35rem] font-(--weight-bold) leading-[1.02]">
           {event.name || "New event"}
         </strong>

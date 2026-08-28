@@ -353,14 +353,14 @@ export function PhoneNumberInput({
           <>
             <span
               aria-hidden="true"
-              className="fixed inset-0 z-[119]"
+              className="fixed inset-0 z-119"
               onPointerDown={() => {
                 setOpen(false);
                 setQuery("");
               }}
             />
             <span
-              className="fixed z-[120] grid grid-rows-[auto_minmax(0,1fr)] gap-2 overflow-hidden rounded-lg border border-border bg-surface-raised p-2 shadow-[0_18px_44px_rgb(18_24_31/18%)]"
+              className="fixed z-120 grid grid-rows-[auto_minmax(0,1fr)] gap-2 overflow-hidden rounded-lg border border-border bg-surface-raised p-2 shadow-[0_18px_44px_rgb(18_24_31/18%)]"
               onWheel={(event) => event.stopPropagation()}
               ref={dropdownRef}
               style={{
