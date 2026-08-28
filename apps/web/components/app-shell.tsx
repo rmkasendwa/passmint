@@ -57,7 +57,7 @@ export function AppShell({
             className="inline-flex items-center justify-center gap-1 self-center max-[820px]:flex-wrap max-[820px]:justify-start"
             aria-label="Main navigation"
           >
-            <Link className={navItemClass} href="/">
+            <Link className={navItemClass} href="/discover">
               Discover
             </Link>
             {session ? (
@@ -145,7 +145,7 @@ export function AppShell({
           >
             <Link
               className="text-[0.88rem] font-(--weight-medium) text-text-muted hover:text-text"
-              href="/"
+              href="/discover"
             >
               Discover
             </Link>
