@@ -77,7 +77,6 @@ export default async function HomePage({
 
         <div className="mx-auto grid min-h-[min(740px,calc(100vh-64px))] w-[min(var(--content-max),calc(100%-var(--content-gutter)*2))] grid-cols-[minmax(0,1fr)_360px] items-center gap-12 py-14 max-[960px]:min-h-0 max-[960px]:grid-cols-1 max-[960px]:py-12">
           <div className="max-w-165">
-            <p className={sectionKicker}>Passmint</p>
             <h1 className="mb-0 text-[clamp(2.7rem,5vw,5.7rem)] font-(--weight-bold) leading-[0.98] text-text">
               Events you can find, book, and enter from one place.
             </h1>
