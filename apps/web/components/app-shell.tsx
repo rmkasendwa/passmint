@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  LogIn,
   LogOut,
   Monitor,
   Moon,
@@ -34,7 +33,7 @@ export function AppShell({
   themePreference: ThemePreference;
 }) {
   const navItemClass =
-    'inline-flex min-h-9 items-center justify-center rounded-full border-0 bg-transparent px-3 text-[0.9rem] font-(--weight-semibold) text-text-muted hover:bg-surface-muted hover:text-text';
+    'inline-flex min-h-9 items-center justify-center border-0 bg-transparent px-2 text-[0.9rem] font-(--weight-semibold) text-text-muted hover:text-text';
   const footerClass = `${isAuthPage ? 'mt-0' : 'mt-14'} border-t border-border bg-surface-raised`;
 
   return (
@@ -55,9 +54,6 @@ export function AppShell({
             className="inline-flex items-center justify-center gap-1 self-center max-[820px]:flex-wrap max-[820px]:justify-start"
             aria-label="Main navigation"
           >
-            <Link className={navItemClass} href="/discover">
-              Discover
-            </Link>
             {session ? (
               <Link className={navItemClass} href="/dashboard">
                 Dashboard
@@ -71,7 +67,7 @@ export function AppShell({
                 onChange={setThemePreference}
               />
               <Link
-                className="inline-flex min-h-11.5 items-center gap-2.25 rounded-full border border-border bg-surface-muted py-1.25 pl-1.25 pr-2.5 max-[820px]:flex-1"
+                className="inline-flex min-h-11.5 items-center gap-2.25 border-0 bg-transparent py-1.25 pl-1.25 pr-2.5 max-[820px]:flex-1"
                 href="/dashboard"
               >
                 <span className="grid size-8.5 place-items-center rounded-lg bg-[#101010] text-[0.82rem] font-(--weight-bold) text-white">
@@ -88,7 +84,7 @@ export function AppShell({
               </Link>
               <button
                 type="button"
-                className="inline-flex size-10 items-center justify-center rounded-full border border-border bg-surface-muted text-text hover:border-border-strong"
+                className="inline-flex size-10 items-center justify-center border-0 bg-transparent text-text-muted hover:text-text"
                 onClick={logout}
                 aria-label="Logout"
               >
@@ -103,10 +99,9 @@ export function AppShell({
               />
               <button
                 type="button"
-                className="inline-flex min-h-9.5 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-border bg-surface-muted px-3.25 text-[0.9rem] font-(--weight-semibold) text-text hover:border-border-strong hover:bg-(--button-bg) hover:text-(--button-text) max-[820px]:flex-1"
+                className="inline-flex min-h-9.5 items-center justify-center gap-2 whitespace-nowrap border-0 bg-transparent px-2 text-[0.9rem] font-(--weight-semibold) text-text-muted hover:text-text max-[820px]:flex-1"
                 onClick={() => openAuth('login')}
               >
-                <LogIn size={16} />
                 Sign in
               </button>
             </div>
@@ -135,12 +130,6 @@ export function AppShell({
           >
             <Link
               className="text-[0.88rem] font-(--weight-medium) text-text-muted hover:text-text"
-              href="/discover"
-            >
-              Discover
-            </Link>
-            <Link
-              className="text-[0.88rem] font-(--weight-medium) text-text-muted hover:text-text"
               href="/login"
             >
               Sign in
@@ -160,13 +149,13 @@ function ThemeToggle({
   onChange: (preference: ThemePreference) => void;
 }) {
   const buttonClass =
-    'inline-grid h-7 w-7.5 place-items-center rounded-full border-0 bg-transparent text-text-muted hover:text-text';
+    'inline-grid h-8 w-8 place-items-center border-0 bg-transparent text-text-soft hover:text-text';
   const selectedClass =
-    'bg-(--button-bg) text-(--button-text) shadow-[0_6px_14px_rgb(0_0_0/10%)] hover:text-(--button-text)';
+    'text-text shadow-[inset_0_-2px_0_var(--accent)] hover:text-text';
 
   return (
     <div
-      className="inline-grid min-h-8.5 flex-none grid-cols-[repeat(3,30px)] items-center gap-0.5 rounded-full border border-border bg-surface-muted p-0.5"
+      className="inline-grid min-h-8.5 flex-none grid-cols-[repeat(3,32px)] items-center gap-0.5 border-0 bg-transparent"
       aria-label="Color theme"
     >
       <button

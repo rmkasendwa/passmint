@@ -3,16 +3,19 @@ import {
   CalendarDays,
   CheckCircle2,
   MapPin,
+  Music2,
   ScanLine,
   Ticket as TicketIcon,
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import type { Event } from '../api';
+import { DiscoveryFilters } from '../components/discovery-filters';
 import { EventImage } from '../components/event-image';
 import { FeaturedEventCarousel } from '../components/featured-event-carousel';
 import { categories, eventCategory, eventStatus } from '../event-utils';
-import { money, shortDate } from '../formatters';
+import { dateTime, money, shortDate } from '../formatters';
 import { listEventsForPage } from '../server-events';
 
 export const dynamic = 'force-dynamic';
@@ -20,14 +23,38 @@ export const dynamic = 'force-dynamic';
 const sectionKicker =
   'mb-2 text-[0.78rem] font-(--weight-semibold) uppercase tracking-[0.08em] text-text-soft';
 
-export default async function HomePage() {
-  const events = await listEventsForPage();
+function getParam(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const [params, events] = await Promise.all([
+    searchParams,
+    listEventsForPage(),
+  ]);
+  const query = getParam(params.q)?.trim() ?? '';
+  const dateStart = getParam(params.start) ?? '';
+  const dateEnd = getParam(params.end) ?? '';
+  const visibleEvents = filterEvents(events, {
+    q: query,
+    start: dateStart,
+    end: dateEnd,
+  });
   const upcomingEvents = events.filter(
     (event) => eventStatus(event) === 'Upcoming',
   );
   const featuredEvents = upcomingEvents.length > 0 ? upcomingEvents : events;
   const heroEvent = featuredEvents[0];
-  const previewEvents = featuredEvents.slice(0, 6);
+  const filteredFeaturedEvents =
+    visibleEvents.length > 0 ? visibleEvents.slice(0, 5) : events.slice(0, 5);
+  const filteredUpcomingEvents = visibleEvents.filter(
+    (event) => eventStatus(event) === 'Upcoming',
+  );
+  const nextEvent = filteredUpcomingEvents[0] ?? visibleEvents[0];
   const venueCount = new Set(events.map((event) => event.venue)).size;
   const capacityTotal = events.reduce((total, event) => total + event.capacity, 0);
 
@@ -59,7 +86,7 @@ export default async function HomePage() {
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
-                href="/discover"
+                href="#events"
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-(--button-bg) px-5 text-[0.95rem] font-(--weight-semibold) text-(--button-text) hover:opacity-[0.92]"
               >
                 Discover events
@@ -114,7 +141,7 @@ export default async function HomePage() {
       </section>
 
       <section className="mx-auto grid w-[min(var(--content-max),calc(100%-var(--content-gutter)*2))] gap-15 py-14">
-        {featuredEvents.length > 0 && (
+        {filteredFeaturedEvents.length > 0 && (
           <section aria-label="Featured events">
             <div className="mb-6 flex items-end justify-between gap-4 max-[700px]:grid">
               <div>
@@ -123,17 +150,36 @@ export default async function HomePage() {
                   Start with these events
                 </h2>
               </div>
-              <Link
-                href="/discover"
-                className="inline-flex items-center gap-1.5 text-[0.95rem] font-(--weight-semibold) text-text-muted hover:text-text"
-              >
-                Full discovery
-                <ArrowRight size={16} />
-              </Link>
             </div>
-            <FeaturedEventCarousel events={featuredEvents.slice(0, 5)} />
+            <FeaturedEventCarousel events={filteredFeaturedEvents} />
           </section>
         )}
+
+        <section
+          className="grid justify-items-center gap-3 rounded-lg border border-border bg-[color-mix(in_srgb,var(--surface-raised)_76%,transparent)] p-4 shadow-[0_18px_70px_rgb(0_0_0/16%)] backdrop-blur-[18px] max-[820px]:p-3"
+          aria-label="Event discovery"
+        >
+          <DiscoveryFilters query={query} start={dateStart} end={dateEnd} />
+
+          <form
+            className="flex w-full justify-center gap-1.75 overflow-x-auto border-t border-border pt-3 max-[820px]:justify-start"
+            aria-label="Event categories"
+          >
+            {categories.map(({ label, query: categoryQuery, icon: Icon }) => (
+              <button
+                type="submit"
+                key={label}
+                name="q"
+                value={categoryQuery}
+                data-selected={query === categoryQuery}
+                className="category-pill flex min-h-8.5 flex-none items-center gap-3 rounded-full border px-3 py-0 pl-1.75 text-left shadow-none [&_svg]:size-5.75 [&_svg]:rounded-full [&_svg]:p-1.25 [&_strong]:block [&_strong]:text-[0.82rem] [&_strong]:font-(--weight-medium)"
+              >
+                <Icon size={20} />
+                <strong>{label}</strong>
+              </button>
+            ))}
+          </form>
+        </section>
 
         <section aria-label="Passmint overview">
           <div className="grid grid-cols-[0.8fr_1.2fr] gap-5 max-[920px]:grid-cols-1">
@@ -166,58 +212,129 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {previewEvents.length > 0 && (
-          <section aria-label="Upcoming events">
-            <div className="mb-6 flex items-end justify-between gap-4 max-[700px]:grid">
+        {filteredUpcomingEvents.length > 0 && (
+          <section aria-label="Upcoming highlights">
+            <div className="mb-6.5 flex items-end justify-between gap-4">
               <div>
-                <p className={sectionKicker}>Upcoming</p>
+                <p className={sectionKicker}>Time-sensitive picks</p>
                 <h2 className="mb-0 text-[clamp(2rem,3vw,3.15rem)] font-(--weight-bold) leading-none text-text">
-                  On the calendar
+                  Coming up
                 </h2>
               </div>
-              <Link
-                href="/discover#events"
-                className="inline-flex items-center gap-1.5 text-[0.95rem] font-(--weight-semibold) text-text-muted hover:text-text"
-              >
-                Browse all
-                <ArrowRight size={16} />
-              </Link>
             </div>
 
-            <div className="grid grid-cols-3 gap-3.5 max-[980px]:grid-cols-2 max-[620px]:grid-cols-1">
-              {previewEvents.map((event) => {
+            <div className="grid grid-cols-3 gap-3.5 max-[920px]:grid-cols-1">
+              {filteredUpcomingEvents.slice(0, 3).map((event) => (
+                <Link
+                  key={event.id}
+                  href={`/event/${event.id}`}
+                  className="grid min-h-32 grid-cols-[104px_1fr] gap-3 rounded-lg border border-border bg-surface-raised p-2.5 text-text hover:border-border-strong max-[440px]:grid-cols-1"
+                >
+                  <span className="relative block overflow-hidden rounded-md bg-surface-muted max-[440px]:aspect-[16/9]">
+                    <EventImage
+                      src={event.thumbnailUrl}
+                      name={event.name}
+                      fallbackClassName="event-list-card__fallback"
+                    />
+                  </span>
+                  <span className="grid content-between gap-4 py-1">
+                    <span>
+                      <small className="mb-1 flex items-center gap-1.5 text-xs font-(--weight-semibold) uppercase text-accent">
+                        <CalendarDays size={14} />
+                        {shortDate.format(new Date(event.startsAt))}
+                      </small>
+                      <strong className="line-clamp-2 text-[1.02rem] leading-tight">
+                        {event.name}
+                      </strong>
+                    </span>
+                    <span className="flex min-w-0 items-center gap-1.5 text-[0.82rem] text-text-muted">
+                      <MapPin size={14} />
+                      <span className="truncate">{event.venue}</span>
+                    </span>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <section aria-label="Event marketplace">
+          <div id="events" className="mb-6.5 flex items-end justify-between gap-4">
+            <div>
+              <p className={sectionKicker}>Fresh from the platform</p>
+              <h2 className="mb-0 text-[clamp(2rem,3vw,3.15rem)] font-(--weight-bold) leading-none text-text">
+                Latest events
+              </h2>
+            </div>
+            <Link
+              className="text-base font-(--weight-semibold) text-text-muted after:content-['_->_'] hover:text-text"
+              href="#events"
+            >
+              See everything
+            </Link>
+          </div>
+
+          {visibleEvents.length === 0 ? (
+            <p className="mb-0 text-text-muted">
+              No events match those filters.
+            </p>
+          ) : (
+            <div className="grid grid-cols-3 gap-5.5 max-[1120px]:grid-cols-2 max-[600px]:grid-cols-1">
+              {visibleEvents.map((event, index) => {
+                const isFeaturedCard = index === 0;
                 const category = eventCategory(event);
+                const CategoryIcon =
+                  category === 'Music' ? Music2 : TicketIcon;
 
                 return (
                   <Link
+                    className={`event-list-card ${
+                      isFeaturedCard
+                        ? 'event-list-card--gold'
+                        : 'event-list-card--green'
+                    }`}
                     key={event.id}
                     href={`/event/${event.id}`}
-                    className="grid min-h-36 grid-cols-[108px_1fr] gap-3 rounded-lg border border-border bg-surface-raised p-2.5 text-text hover:border-border-strong max-[420px]:grid-cols-1"
                   >
-                    <span className="relative block overflow-hidden rounded-md bg-surface-muted max-[420px]:aspect-[16/9]">
+                    <span className="event-list-card__media" aria-hidden="true">
                       <EventImage
                         src={event.thumbnailUrl}
                         name={event.name}
                         fallbackClassName="event-list-card__fallback"
                       />
                     </span>
-                    <span className="grid content-between gap-4 py-1">
-                      <span>
-                        <small className="mb-1 text-[0.72rem] font-(--weight-semibold) uppercase text-accent">
-                          {category}
-                        </small>
-                        <strong className="line-clamp-2 text-[1.02rem] leading-tight">
-                          {event.name}
-                        </strong>
-                      </span>
-                      <span className="grid gap-1.5 text-[0.82rem] text-text-muted">
-                        <span className="flex items-center gap-1.5">
-                          <CalendarDays size={14} />
+                    <span className="event-list-card__sheen" aria-hidden="true" />
+                    <span className="event-list-card__orb" aria-hidden="true" />
+                    <span className="event-list-card__arc" aria-hidden="true" />
+                    <span className="event-list-card__frame" aria-hidden="true" />
+                    <span className="event-list-card__chip">
+                      <CategoryIcon size={17} />
+                      {category}
+                    </span>
+                    <span className="event-list-card__content">
+                      <strong className="event-list-card__title">
+                        {event.name}
+                      </strong>
+                      <small className="event-list-card__description">
+                        {event.description}
+                      </small>
+                      <span className="event-list-card__meta">
+                        <span>
+                          <CalendarDays size={15} />
                           {shortDate.format(new Date(event.startsAt))}
                         </span>
-                        <span className="flex min-w-0 items-center gap-1.5">
-                          <MapPin size={14} />
-                          <span className="truncate">{event.venue}</span>
+                        <span>
+                          <MapPin size={15} />
+                          {event.venue}
+                        </span>
+                      </span>
+                      <span className="event-list-card__footer">
+                        <span className="event-list-card__price">
+                          {money.format(event.priceCents / 100)}
+                        </span>
+                        <span className="event-list-card__cta">
+                          Get tickets
+                          <ArrowRight size={16} />
                         </span>
                       </span>
                     </span>
@@ -225,36 +342,38 @@ export default async function HomePage() {
                 );
               })}
             </div>
+          )}
+        </section>
+
+        {nextEvent && (
+          <section className="next-event-panel">
+            <span className="next-event-panel__sheen" aria-hidden="true" />
+            <span className="next-event-panel__arc" aria-hidden="true" />
+            <div className="next-event-panel__content">
+              <p className="next-event-panel__kicker">Next event</p>
+              <h2 className="next-event-panel__title">
+                {nextEvent.name}
+              </h2>
+              <div className="next-event-panel__meta">
+                <span>
+                  <CalendarDays size={17} />
+                  {dateTime.format(new Date(nextEvent.startsAt))}
+                </span>
+                <span>
+                  <MapPin size={17} />
+                  {nextEvent.venue}
+                </span>
+                <strong>
+                  {money.format(nextEvent.priceCents / 100)}
+                </strong>
+              </div>
+            </div>
+            <Link className="next-event-panel__cta" href={`/event/${nextEvent.id}`}>
+              <TicketIcon size={18} />
+              Reserve spot
+            </Link>
           </section>
         )}
-
-        <section aria-label="Event categories">
-          <div className="mb-6">
-            <p className={sectionKicker}>Browse by mood</p>
-            <h2 className="mb-0 text-[clamp(2rem,3vw,3.15rem)] font-(--weight-bold) leading-none text-text">
-              Pick a lane
-            </h2>
-          </div>
-          <div className="grid grid-cols-4 gap-3 max-[920px]:grid-cols-2 max-[520px]:grid-cols-1">
-            {categories.slice(0, 4).map(({ label, query, icon: Icon }) => (
-              <Link
-                key={label}
-                href={`/discover?q=${encodeURIComponent(query)}`}
-                className="grid min-h-34 gap-5 rounded-lg border border-border bg-surface-raised p-4 text-text hover:border-border-strong"
-              >
-                <Icon className="text-accent" size={24} />
-                <span>
-                  <strong className="block text-[1.2rem] leading-tight">
-                    {label}
-                  </strong>
-                  <small className="mt-1 block text-[0.86rem] leading-normal text-text-muted">
-                    See what is live now.
-                  </small>
-                </span>
-              </Link>
-            ))}
-          </div>
-        </section>
 
         <section className="rounded-lg border border-border bg-surface-raised p-6" aria-label="How Passmint works">
           <div className="mb-6 max-w-150">
@@ -284,6 +403,30 @@ export default async function HomePage() {
       </section>
     </>
   );
+}
+
+function filterEvents(
+  events: Event[],
+  filters: { q: string; start: string; end: string },
+) {
+  const normalizedQuery = filters.q.trim().toLowerCase();
+  const activeEnd = filters.end || filters.start;
+  const rangeStart = filters.start <= activeEnd ? filters.start : activeEnd;
+  const rangeEnd = filters.start <= activeEnd ? activeEnd : filters.start;
+
+  return events.filter((event) => {
+    const haystack =
+      `${event.name} ${event.description} ${event.venue}`.toLowerCase();
+    const matchesQuery = normalizedQuery
+      ? haystack.includes(normalizedQuery)
+      : true;
+    const eventDate = event.startsAt.slice(0, 10);
+    const matchesDate = filters.start
+      ? eventDate >= rangeStart && eventDate <= rangeEnd
+      : true;
+
+    return matchesQuery && matchesDate;
+  });
 }
 
 function HomeStat({
