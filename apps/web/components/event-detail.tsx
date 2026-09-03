@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   CalendarDays,
@@ -18,53 +18,53 @@ import {
   UserPlus,
   Users,
   X,
-} from "lucide-react";
-import { FormEvent, useEffect, useMemo, useState } from "react";
-import { api, Event } from "../api";
-import { eventCategory, eventStatus, eventTone } from "../event-utils";
-import { dateTime, money } from "../formatters";
-import { useAppContext } from "./app-provider";
-import { EventImage } from "./event-image";
+} from 'lucide-react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { api, Event } from '../api';
+import { eventCategory, eventStatus, eventTone } from '../event-utils';
+import { dateTime, money } from '../formatters';
+import { useAppContext } from './app-provider';
+import { EventImage } from './event-image';
 import {
   FieldMessage,
   RequiredLabel,
   requiredField,
   requiredTextareaField,
   useInlineFormValidation,
-} from "./form-validation";
-import { PhoneNumberInput } from "./phone-number-input";
+} from './form-validation';
+import { PhoneNumberInput } from './phone-number-input';
 
 const panel =
-  "rounded-lg border border-border bg-surface-raised shadow-[0_18px_52px_rgb(0_0_0/14%)]";
+  'rounded-lg border border-border bg-surface-raised shadow-[0_18px_52px_rgb(0_0_0/14%)]';
 const panelPadded = `${panel} grid gap-4 p-4.5`;
 const primaryAction =
-  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-(--button-bg) px-4 font-(--weight-bold) text-(--button-text) hover:bg-accent";
+  'inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-(--button-bg) px-4 font-(--weight-bold) text-(--button-text) hover:bg-accent';
 const secondaryAction =
-  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border bg-surface-muted px-4 font-(--weight-bold) text-text";
+  'inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border bg-surface-muted px-4 font-(--weight-bold) text-text';
 const formGrid =
-  "grid gap-3 [&_label]:grid [&_label]:gap-1.75 [&_label]:text-[0.82rem] [&_label]:font-(--weight-semibold) [&_label]:text-text-muted [&_input]:min-h-11 [&_input]:w-full [&_input]:min-w-0 [&_input]:rounded-lg [&_input]:border [&_input]:border-border [&_input]:bg-surface-elevated [&_input]:px-3 [&_input]:text-text [&_input]:focus:border-accent [&_input]:focus:outline-[3px_solid_rgb(255_122_69/18%)] [&_textarea]:min-h-28 [&_textarea]:w-full [&_textarea]:min-w-0 [&_textarea]:resize-y [&_textarea]:rounded-lg [&_textarea]:border [&_textarea]:border-border [&_textarea]:bg-surface-elevated [&_textarea]:px-3 [&_textarea]:py-2.75 [&_textarea]:text-text [&_textarea]:focus:border-accent [&_textarea]:focus:outline-[3px_solid_rgb(255_122_69/18%)]";
+  'grid gap-3 [&_label]:grid [&_label]:gap-1.75 [&_label]:text-[0.82rem] [&_label]:font-(--weight-semibold) [&_label]:text-text-muted [&_input]:min-h-11 [&_input]:w-full [&_input]:min-w-0 [&_input]:rounded-lg [&_input]:border [&_input]:border-border [&_input]:bg-surface-elevated [&_input]:px-3 [&_input]:text-text [&_input]:focus:border-accent [&_input]:focus:outline-[3px_solid_rgb(255_122_69/18%)] [&_textarea]:min-h-28 [&_textarea]:w-full [&_textarea]:min-w-0 [&_textarea]:resize-y [&_textarea]:rounded-lg [&_textarea]:border [&_textarea]:border-border [&_textarea]:bg-surface-elevated [&_textarea]:px-3 [&_textarea]:py-2.75 [&_textarea]:text-text [&_textarea]:focus:border-accent [&_textarea]:focus:outline-[3px_solid_rgb(255_122_69/18%)]';
 const sectionHeading =
-  "mb-0 text-[clamp(1.45rem,2vw,2rem)] font-(--weight-bold) leading-tight text-text";
+  'mb-0 text-[clamp(1.45rem,2vw,2rem)] font-(--weight-bold) leading-tight text-text';
 const kicker =
-  "mb-2 text-[0.78rem] font-(--weight-semibold) uppercase tracking-[0.08em] text-accent";
+  'mb-2 text-[0.78rem] font-(--weight-semibold) uppercase tracking-[0.08em] text-accent';
 
-const eventDay = new Intl.DateTimeFormat("en-UG", {
-  day: "2-digit",
+const eventDay = new Intl.DateTimeFormat('en-UG', {
+  day: '2-digit',
 });
-const eventMonth = new Intl.DateTimeFormat("en-UG", {
-  month: "short",
+const eventMonth = new Intl.DateTimeFormat('en-UG', {
+  month: 'short',
 });
-const eventTime = new Intl.DateTimeFormat("en-UG", {
-  hour: "2-digit",
-  minute: "2-digit",
+const eventTime = new Intl.DateTimeFormat('en-UG', {
+  hour: '2-digit',
+  minute: '2-digit',
 });
-const quantityFormat = new Intl.NumberFormat("en-US", {
+const quantityFormat = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 0,
 });
 
 function toLocalInputValue(value: string) {
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
+  if (Number.isNaN(date.getTime())) return '';
 
   const offset = date.getTimezoneOffset();
   const local = new Date(date.getTime() - offset * 60_000);
@@ -73,12 +73,12 @@ function toLocalInputValue(value: string) {
 
 function ownerId(event: Event) {
   if (!event.owner) return null;
-  return typeof event.owner === "string" ? event.owner : event.owner.id;
+  return typeof event.owner === 'string' ? event.owner : event.owner.id;
 }
 
 function ownerName(event: Event) {
-  if (!event.owner || typeof event.owner === "string")
-    return "Passmint organizer";
+  if (!event.owner || typeof event.owner === 'string')
+    return 'Passmint organizer';
   return event.owner.name;
 }
 
@@ -109,21 +109,21 @@ export function EventDetail({ event }: { event: Event }) {
   } = useAppContext();
   const [displayEvent, setDisplayEvent] = useState(event);
   const [isEditing, setIsEditing] = useState(false);
-  const [editState, setEditState] = useState("");
+  const [editState, setEditState] = useState('');
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [paymentProvider, setPaymentProvider] = useState<"airtel" | "mtn">(
-    "mtn",
+  const [paymentProvider, setPaymentProvider] = useState<'airtel' | 'mtn'>(
+    'mtn',
   );
   const formattedQuantity = quantityFormat.format(quantity);
   const [draft, setDraft] = useState({
     name: event.name,
     description: event.description,
     venue: event.venue,
-    mapLocation: event.mapLocation ?? "",
+    mapLocation: event.mapLocation ?? '',
     startsAt: toLocalInputValue(event.startsAt),
     capacity: event.capacity,
     priceCents: event.priceCents,
-    thumbnailUrl: event.thumbnailUrl ?? "",
+    thumbnailUrl: event.thumbnailUrl ?? '',
   });
   const editValidation = useInlineFormValidation();
   const checkoutValidation = useInlineFormValidation();
@@ -136,7 +136,7 @@ export function EventDetail({ event }: { event: Event }) {
     if (!checkoutOpen) return;
 
     const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    document.body.style.overflow = 'hidden';
 
     return () => {
       document.body.style.overflow = originalOverflow;
@@ -170,68 +170,68 @@ export function EventDetail({ event }: { event: Event }) {
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`;
   const mapEmbedUrl = displayEvent.mapLocation
     ? `https://www.google.com/maps?q=${encodeURIComponent(displayEvent.mapLocation)}&output=embed`
-    : "";
+    : '';
   const eventIndex = visibleEvents.findIndex(
     (listedEvent) => listedEvent.id === displayEvent.id,
   );
-  const detailMood = eventIndex === 0 ? "gold" : "green";
+  const detailMood = eventIndex === 0 ? 'gold' : 'green';
   const detailTone = eventTone(Math.max(eventIndex, 0));
   const editNameError = editValidation.fieldError({
-    label: "Event name",
+    label: 'Event name',
     required: true,
     value: draft.name,
   });
   const editDescriptionError = editValidation.fieldError({
-    label: "Description",
+    label: 'Description',
     required: true,
     value: draft.description,
   });
   const editVenueError = editValidation.fieldError({
-    label: "Venue",
+    label: 'Venue',
     required: true,
     value: draft.venue,
   });
   const editStartsError = editValidation.fieldError({
-    label: "Starts",
+    label: 'Starts',
     required: true,
     value: draft.startsAt,
   });
   const editCapacityError = editValidation.fieldError({
-    label: "Capacity",
+    label: 'Capacity',
     min: 1,
     required: true,
     value: draft.capacity,
   });
   const editPriceError = editValidation.fieldError({
-    label: "Price in UGX",
+    label: 'Price in UGX',
     min: 0,
     required: true,
     value: draft.priceCents / 100,
   });
   const checkoutBuyerNameError = checkoutValidation.fieldError({
-    label: "Buyer name",
+    label: 'Buyer name',
     required: true,
     value: buyerName,
   });
   const checkoutBuyerEmailError = checkoutValidation.fieldError({
-    label: "Buyer email",
+    label: 'Buyer email',
     required: true,
-    type: "email",
+    type: 'email',
     value: buyerEmail,
   });
   const checkoutQuantityError = checkoutValidation.fieldError({
-    label: "Quantity",
+    label: 'Quantity',
     max: 10,
     min: 1,
     pattern: /^[0-9,]+$/,
     required: true,
-    title: "Please enter a whole number.",
+    title: 'Please enter a whole number.',
     value: formattedQuantity,
   });
 
   function updateQuantityFromText(value: string) {
-    const digits = value.replace(/\D/g, "");
-    setQuantity(normalizeQuantity(Number(digits || "1")));
+    const digits = value.replace(/\D/g, '');
+    setQuantity(normalizeQuantity(Number(digits || '1')));
   }
 
   function stepQuantity(direction: 1 | -1) {
@@ -241,11 +241,11 @@ export function EventDetail({ event }: { event: Event }) {
   async function saveEvent(eventForm: FormEvent<HTMLFormElement>) {
     eventForm.preventDefault();
     if (!session) {
-      setEditState("Sign in to edit this event.");
+      setEditState('Sign in to edit this event.');
       return;
     }
 
-    setEditState("Saving event...");
+    setEditState('Saving event...');
 
     try {
       const updated = await api.updateEvent(
@@ -267,17 +267,17 @@ export function EventDetail({ event }: { event: Event }) {
         name: updated.name,
         description: updated.description,
         venue: updated.venue,
-        mapLocation: updated.mapLocation ?? "",
+        mapLocation: updated.mapLocation ?? '',
         startsAt: toLocalInputValue(updated.startsAt),
         capacity: updated.capacity,
         priceCents: updated.priceCents,
-        thumbnailUrl: updated.thumbnailUrl ?? "",
+        thumbnailUrl: updated.thumbnailUrl ?? '',
       });
       setIsEditing(false);
-      setEditState("Event updated.");
+      setEditState('Event updated.');
     } catch (error) {
       const fallback = error as { message?: string };
-      setEditState(fallback.message ?? "Event could not be updated.");
+      setEditState(fallback.message ?? 'Event could not be updated.');
     }
   }
 
@@ -354,7 +354,7 @@ export function EventDetail({ event }: { event: Event }) {
             </span>
             <span>
               <Users size={16} />
-              {displayEvent.capacity.toLocaleString("en-UG")} total spots
+              {displayEvent.capacity.toLocaleString('en-UG')} total spots
             </span>
           </div>
         </div>
@@ -391,7 +391,7 @@ export function EventDetail({ event }: { event: Event }) {
                 onClick={() => setIsEditing((value) => !value)}
               >
                 <Edit3 size={17} />
-                {isEditing ? "Close editor" : "Edit event"}
+                {isEditing ? 'Close editor' : 'Edit event'}
               </button>
             )}
           </section>
@@ -452,25 +452,23 @@ export function EventDetail({ event }: { event: Event }) {
             <div className="grid grid-cols-3 gap-3 max-[820px]:grid-cols-1">
               {[
                 [
-                  "Bring your ticket QR",
-                  "Your purchased QR code appears here immediately after checkout.",
+                  'Bring your ticket QR',
+                  'Your purchased QR code appears here immediately after checkout.',
                 ],
                 [
-                  "Arrive on time",
+                  'Arrive on time',
                   `Doors are based around the ${eventTime.format(startsAt)} start time.`,
                 ],
                 [
-                  "Check the venue",
-                  "Use the map link before leaving so your route is clear.",
+                  'Check the venue',
+                  'Use the map link before leaving so your route is clear.',
                 ],
               ].map(([title, copy]) => (
                 <article
                   className="rounded-lg border border-border bg-surface-muted p-4"
                   key={title}
                 >
-                  <h3 className="mb-2 text-base text-text">
-                    {title}
-                  </h3>
+                  <h3 className="mb-2 text-base text-text">{title}</h3>
                   <p className="mb-0 text-[0.92rem] leading-normal text-text-muted">
                     {copy}
                   </p>
@@ -501,7 +499,7 @@ export function EventDetail({ event }: { event: Event }) {
                         name: input.target.value,
                       }))
                     }
-                    {...requiredField("Event name")}
+                    {...requiredField('Event name')}
                   />
                   <FieldMessage
                     error={editNameError}
@@ -520,7 +518,7 @@ export function EventDetail({ event }: { event: Event }) {
                         description: input.target.value,
                       }))
                     }
-                    {...requiredTextareaField("Description")}
+                    {...requiredTextareaField('Description')}
                   />
                   <FieldMessage
                     error={editDescriptionError}
@@ -539,7 +537,7 @@ export function EventDetail({ event }: { event: Event }) {
                         venue: input.target.value,
                       }))
                     }
-                    {...requiredField("Venue")}
+                    {...requiredField('Venue')}
                   />
                   <FieldMessage error={editVenueError} id="edit-venue-error" />
                 </label>
@@ -570,7 +568,7 @@ export function EventDetail({ event }: { event: Event }) {
                           startsAt: input.target.value,
                         }))
                       }
-                      {...requiredField("Starts")}
+                      {...requiredField('Starts')}
                     />
                     <FieldMessage
                       error={editStartsError}
@@ -591,7 +589,7 @@ export function EventDetail({ event }: { event: Event }) {
                           capacity: Number(input.target.value),
                         }))
                       }
-                      {...requiredField("Capacity")}
+                      {...requiredField('Capacity')}
                     />
                     <FieldMessage
                       error={editCapacityError}
@@ -612,7 +610,7 @@ export function EventDetail({ event }: { event: Event }) {
                           priceCents: Number(input.target.value) * 100,
                         }))
                       }
-                      {...requiredField("Price in UGX")}
+                      {...requiredField('Price in UGX')}
                     />
                     <FieldMessage
                       error={editPriceError}
@@ -674,7 +672,7 @@ export function EventDetail({ event }: { event: Event }) {
                         {ticket.buyerName}
                       </h3>
                       <p className="mb-2 text-text-muted">
-                        {ticket.status.replace("_", " ")}
+                        {ticket.status.replace('_', ' ')}
                       </p>
                       <code className="rounded-md bg-surface-elevated px-2 py-1 text-[0.78rem] text-accent">
                         {ticket.code}
@@ -687,16 +685,16 @@ export function EventDetail({ event }: { event: Event }) {
           </section>
         </div>
 
-        <aside className="sticky top-23.5 grid gap-5 max-[1120px]:static">
+        <aside className="sticky top-22 grid gap-5 max-[1120px]:static">
           <section className={panelPadded}>
             <div>
               <p className={kicker}>
-                {session ? "Signed in checkout" : "Guest checkout"}
+                {session ? 'Signed in checkout' : 'Guest checkout'}
               </p>
               <h2 className="mb-0 text-[1.55rem]">
                 {session
                   ? `Buying as ${session.user.name}`
-                  : "Reserve your spot"}
+                  : 'Reserve your spot'}
               </h2>
             </div>
             {!session && (
@@ -704,7 +702,7 @@ export function EventDetail({ event }: { event: Event }) {
                 <button
                   type="button"
                   className={secondaryAction}
-                  onClick={() => openAuth("login")}
+                  onClick={() => openAuth('login')}
                 >
                   <LogIn size={17} />
                   Sign in
@@ -712,7 +710,7 @@ export function EventDetail({ event }: { event: Event }) {
                 <button
                   type="button"
                   className={primaryAction}
-                  onClick={() => openAuth("register")}
+                  onClick={() => openAuth('register')}
                 >
                   <UserPlus size={17} />
                   Register
@@ -735,9 +733,7 @@ export function EventDetail({ event }: { event: Event }) {
             </div>
             <div className="grid gap-3 rounded-lg border border-border bg-surface-muted p-3">
               <div className="flex items-start justify-between gap-3">
-                <strong className="text-text">
-                  General admission
-                </strong>
+                <strong className="text-text">General admission</strong>
                 <strong className="text-price">
                   {money.format(checkoutEvent.priceCents / 100)}
                 </strong>
@@ -758,7 +754,7 @@ export function EventDetail({ event }: { event: Event }) {
               onClick={() => setCheckoutOpen(true)}
             >
               <CircleDollarSign size={18} />
-              {checkoutEvent.priceCents === 0 ? "Get ticket" : "Pay now"}
+              {checkoutEvent.priceCents === 0 ? 'Get ticket' : 'Pay now'}
             </button>
             {purchaseState && (
               <p className="mb-0 rounded-lg bg-accent-soft p-3 text-[0.92rem] font-(--weight-medium) text-accent">
@@ -785,8 +781,8 @@ export function EventDetail({ event }: { event: Event }) {
                   id="checkout-dialog-title"
                 >
                   {checkoutEvent.priceCents === 0
-                    ? "Get your ticket"
-                    : "Complete payment"}
+                    ? 'Get your ticket'
+                    : 'Complete payment'}
                 </h2>
               </div>
               <button
@@ -802,15 +798,13 @@ export function EventDetail({ event }: { event: Event }) {
             <div className="checkout-dialog__body">
               <div className="grid gap-3 rounded-lg border border-border bg-surface-muted p-3">
                 <div className="flex items-start justify-between gap-3">
-                  <strong className="text-text">
-                    General admission
-                  </strong>
+                  <strong className="text-text">General admission</strong>
                   <strong className="text-price">
                     {money.format(ticketTotalCents / 100)}
                   </strong>
                 </div>
                 <span className="text-[0.9rem] text-text-muted">
-                  {quantity.toLocaleString("en-UG")} x{" "}
+                  {quantity.toLocaleString('en-UG')} x{' '}
                   {money.format(checkoutEvent.priceCents / 100)}
                 </span>
                 <span className="text-[0.9rem] text-text-muted">
@@ -829,8 +823,8 @@ export function EventDetail({ event }: { event: Event }) {
                     aria-invalid={Boolean(checkoutBuyerNameError) || undefined}
                     value={buyerName}
                     onChange={(input) => setBuyerName(input.target.value)}
-                    placeholder={session?.user.name ?? "Anonymous buyer name"}
-                    {...requiredField("Buyer name")}
+                    placeholder={session?.user.name ?? 'Anonymous buyer name'}
+                    {...requiredField('Buyer name')}
                   />
                   <FieldMessage
                     error={checkoutBuyerNameError}
@@ -846,9 +840,9 @@ export function EventDetail({ event }: { event: Event }) {
                     value={buyerEmail}
                     onChange={(input) => setBuyerEmail(input.target.value)}
                     placeholder={
-                      session?.user.email ?? "Email for ticket delivery"
+                      session?.user.email ?? 'Email for ticket delivery'
                     }
-                    {...requiredField("Buyer email")}
+                    {...requiredField('Buyer email')}
                   />
                   <FieldMessage
                     error={checkoutBuyerEmailError}
@@ -877,7 +871,7 @@ export function EventDetail({ event }: { event: Event }) {
                         updateQuantityFromText(input.target.value)
                       }
                       onKeyDown={(event) => {
-                        if (["e", "E", "+", "-", "."].includes(event.key)) {
+                        if (['e', 'E', '+', '-', '.'].includes(event.key)) {
                           event.preventDefault();
                         }
                       }}
@@ -889,7 +883,7 @@ export function EventDetail({ event }: { event: Event }) {
                         event.preventDefault();
                         stepQuantity(event.deltaY > 0 ? 1 : -1);
                       }}
-                      {...requiredField("Quantity")}
+                      {...requiredField('Quantity')}
                     />
                     <button
                       type="button"
@@ -913,14 +907,14 @@ export function EventDetail({ event }: { event: Event }) {
                       <div className="grid grid-cols-2 gap-2 max-[520px]:grid-cols-1">
                         {[
                           {
-                            value: "mtn",
-                            label: "MTN MoMo",
-                            logo: "/payment/mtn-momo.svg",
+                            value: 'mtn',
+                            label: 'MTN MoMo',
+                            logo: '/payment/mtn-momo.svg',
                           },
                           {
-                            value: "airtel",
-                            label: "Airtel Money",
-                            logo: "/payment/airtel-money.svg",
+                            value: 'airtel',
+                            label: 'Airtel Money',
+                            logo: '/payment/airtel-money.svg',
                           },
                         ].map((option) => (
                           <button
@@ -931,7 +925,7 @@ export function EventDetail({ event }: { event: Event }) {
                             type="button"
                             onClick={() =>
                               setPaymentProvider(
-                                option.value as "airtel" | "mtn",
+                                option.value as 'airtel' | 'mtn',
                               )
                             }
                           >
@@ -964,9 +958,9 @@ export function EventDetail({ event }: { event: Event }) {
                 <button className={primaryAction} type="submit">
                   <CircleDollarSign size={18} />
                   {checkoutEvent.priceCents === 0
-                    ? "Get ticket"
+                    ? 'Get ticket'
                     : `Pay with ${
-                        paymentProvider === "mtn" ? "MTN MoMo" : "Airtel Money"
+                        paymentProvider === 'mtn' ? 'MTN MoMo' : 'Airtel Money'
                       }`}
                 </button>
               </form>
