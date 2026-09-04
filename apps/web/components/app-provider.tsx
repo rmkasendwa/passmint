@@ -65,6 +65,7 @@ type AppContextValue = {
   openAuth: (mode: "login" | "register") => void;
   purchaseState: string;
   publishEvent: (event: FormEvent<HTMLFormElement>) => Promise<void>;
+  saveDraft: () => Promise<void>;
   buyTickets: (event: FormEvent<HTMLFormElement>) => Promise<void>;
   query: string;
   quantity: number;
@@ -615,6 +616,28 @@ export function AppProvider({
     }
   }
 
+  async function saveDraft() {
+    if (!session) return;
+    setHostState("Saving draft...");
+    try {
+      let thumbnailUrl = hostEvent.thumbnailUrl;
+      if (thumbnailUrl.startsWith("data:") && hostThumbnailFile) {
+        thumbnailUrl = (await api.uploadEventImage({ ...hostThumbnailFile, dataUrl: thumbnailUrl }, session.token)).url;
+      }
+      const created = await api.createDraft({
+        ...hostEvent, thumbnailUrl,
+        startsAt: hostEvent.startsAt ? new Date(hostEvent.startsAt).toISOString() : undefined,
+      }, session.token);
+      setHostedEvents(current => [...current, created]);
+      setHostEvent(emptyHostEvent);
+      setHostThumbnailFile(null);
+      setHostThumbnailName("");
+      setHostState("Draft saved. Open it from Your events to continue editing.");
+    } catch (error) {
+      setHostState((error as { message?: string }).message ?? "Unable to save draft.");
+    }
+  }
+
   function openAuth(mode: "login" | "register") {
     router.push(mode === "login" ? "/login" : "/register");
   }
@@ -714,6 +737,7 @@ export function AppProvider({
     openAuth,
     purchaseState,
     publishEvent,
+    saveDraft,
     buyTickets,
     query,
     quantity,

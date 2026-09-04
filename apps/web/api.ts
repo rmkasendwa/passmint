@@ -1,7 +1,7 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
 export type Event = {
-  status?: "published" | "cancelled";
+  status?: "draft" | "published" | "cancelled";
   cancelledAt?: string | null;
   id: string;
   name: string;
@@ -79,9 +79,10 @@ async function request<T>(
 }
 
 export const api = {
+  createDraft: (payload: Partial<Pick<Event, "name" | "description" | "venue" | "startsAt" | "capacity" | "priceCents" | "mapLocation" | "thumbnailUrl">>, token: string) => request<Event>("/events/drafts", { method: "POST", body: JSON.stringify(payload) }, token),
   cancelEvent: (eventId: string, token: string) => request<Event>(`/events/${eventId}/cancel`, { method: "POST", body: JSON.stringify({ confirm: true }) }, token),
   listEvents: () => request<Event[]>("/events"),
-  getEvent: (eventId: string) => request<Event>(`/events/${eventId}`),
+  getEvent: (eventId: string, token?: string) => request<Event>(`/events/${eventId}`, undefined, token),
   myEvents: (token: string) =>
     request<Event[]>("/events/mine", undefined, token),
   createEvent: (
@@ -120,6 +121,7 @@ export const api = {
   updateEvent: (
     eventId: string,
     payload: Partial<{
+      status: "published";
       name: string;
       description: string;
       venue: string;

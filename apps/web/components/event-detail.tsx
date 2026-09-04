@@ -64,6 +64,7 @@ const quantityFormat = new Intl.NumberFormat('en-US', {
 
 function toLocalInputValue(value: string) {
   const date = new Date(value);
+  if (date.getTime() === 0) return '';
   if (Number.isNaN(date.getTime())) return '';
 
   const offset = date.getTimezoneOffset();
@@ -134,11 +135,11 @@ export function EventDetail({ event }: { event: Event }) {
 
   useEffect(() => {
     let active = true;
-    void api.getEvent(event.id).then((latest) => {
+    void api.getEvent(event.id, session?.token).then((latest) => {
       if (active) setDisplayEvent(latest);
     }).catch(() => {});
     return () => { active = false; };
-  }, [event.id, tickets]);
+  }, [event.id, tickets, session?.token]);
 
   useEffect(() => {
     if (!checkoutOpen) return;
@@ -173,7 +174,9 @@ export function EventDetail({ event }: { event: Event }) {
     return [...byId.values()];
   }, [relevantIssuedTickets, savedTicketsForEvent]);
   const checkoutEvent = displayEvent;
+  const isDraft = displayEvent.status === 'draft';
   const cancelled = displayEvent.status === 'cancelled';
+  const salesClosed = cancelled || isDraft;
   const ticketTotalCents = checkoutEvent.priceCents * quantity;
   const startsAt = new Date(displayEvent.startsAt);
   const mapQuery = displayEvent.mapLocation || displayEvent.venue;
@@ -265,7 +268,7 @@ export function EventDetail({ event }: { event: Event }) {
           description: draft.description,
           venue: draft.venue,
           mapLocation: draft.mapLocation,
-          startsAt: new Date(draft.startsAt).toISOString(),
+          ...(draft.startsAt ? { startsAt: new Date(draft.startsAt).toISOString() } : {}),
           capacity: draft.capacity,
           priceCents: Number(draft.priceCents),
           ...(draft.thumbnailUrl ? { thumbnailUrl: draft.thumbnailUrl } : {}),
@@ -301,6 +304,14 @@ export function EventDetail({ event }: { event: Event }) {
     } catch (error) {
       setEditState((error as { message?: string }).message ?? 'Unable to cancel event.');
     }
+  }
+
+  async function publishDraft() {
+    if (!session) return;
+    try {
+      setDisplayEvent(await api.updateEvent(displayEvent.id, { status: 'published' }, session.token));
+      setEditState('Event published.');
+    } catch (error) { setEditState((error as { message?: string }).message ?? 'Unable to publish.'); }
   }
 
   return (
@@ -409,6 +420,8 @@ export function EventDetail({ event }: { event: Event }) {
               {displayEvent.description}
             </p>
             {cancelled && <p role="status" className="rounded-lg bg-accent-soft p-3 text-text">This event has been cancelled. Ticket sales are closed. Existing tickets remain in your purchase history.</p>}
+            {isDraft && <p role="status">Private draft. Save your details, then publish when ready.</p>}
+            {ownedBySession && isDraft && <button className={primaryAction} type="button" onClick={() => void publishDraft()}>Publish draft</button>}
             {ownedBySession && !cancelled && (
               <button
                 className={secondaryAction}
@@ -512,7 +525,7 @@ export function EventDetail({ event }: { event: Event }) {
               </div>
               <form
                 className={formGrid}
-                {...editValidation.formProps(saveEvent)}
+                {...(isDraft ? { noValidate: true, onSubmit: saveEvent } : editValidation.formProps(saveEvent))}
               >
                 <label>
                   <RequiredLabel>Event name</RequiredLabel>
@@ -787,11 +800,11 @@ export function EventDetail({ event }: { event: Event }) {
             <button
               className={primaryAction}
               type="button"
-              disabled={cancelled || checkoutEvent.soldOut}
+              disabled={salesClosed || checkoutEvent.soldOut}
               onClick={() => setCheckoutOpen(true)}
             >
               <CircleDollarSign size={18} />
-              {cancelled ? 'Event cancelled' : checkoutEvent.soldOut
+              {isDraft ? 'Draft — ticket sales closed' : cancelled ? 'Event cancelled' : checkoutEvent.soldOut
                 ? 'Sold out'
                 : checkoutEvent.priceCents === 0
                   ? 'Get ticket'
@@ -996,7 +1009,7 @@ export function EventDetail({ event }: { event: Event }) {
                   </>
                 )}
 
-                <button className={primaryAction} type="submit" disabled={cancelled || checkoutEvent.soldOut}>
+                <button className={primaryAction} type="submit" disabled={salesClosed || checkoutEvent.soldOut}>
                   <CircleDollarSign size={18} />
                   {checkoutEvent.priceCents === 0
                     ? 'Get ticket'

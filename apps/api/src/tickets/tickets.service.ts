@@ -30,6 +30,7 @@ export class TicketsService {
       await tx.$queryRaw`SELECT id FROM events WHERE id = ${dto.eventId} FOR UPDATE`;
       const event = await tx.event.findUnique({ where: { id: dto.eventId } });
       if (!event) throw new NotFoundException("Event not found");
+      if (event.status === "draft") throw new NotFoundException("Event not found");
       if (event.status === "cancelled") throw new BadRequestException("This event has been cancelled. Ticket sales are closed.");
       const soldCount = await tx.ticket.count({
         where: { eventId: event.id, status: { not: TicketStatus.Cancelled } },
