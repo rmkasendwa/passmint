@@ -10,6 +10,7 @@ function run(command, args) {
       cwd: root,
       env: process.env,
       stdio: 'inherit',
+      shell: process.platform === 'win32',
     });
 
     child.on('error', reject);
@@ -73,6 +74,7 @@ const app = spawn(
     cwd: root,
     env: process.env,
     stdio: 'inherit',
+    shell: process.platform === 'win32',
   },
 );
 
