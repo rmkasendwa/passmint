@@ -152,6 +152,7 @@ export function EventDetail({ event }: { event: Event }) {
   }, [checkoutOpen]);
 
   const ownedBySession =
+    session?.user.role === 'admin' ||
     Boolean(session && ownerId(displayEvent) === session.user.id) ||
     dashboardEvents.some((ownedEvent) => ownedEvent.id === displayEvent.id);
   const relevantIssuedTickets = tickets.filter(
@@ -172,6 +173,7 @@ export function EventDetail({ event }: { event: Event }) {
     return [...byId.values()];
   }, [relevantIssuedTickets, savedTicketsForEvent]);
   const checkoutEvent = displayEvent;
+  const cancelled = displayEvent.status === 'cancelled';
   const ticketTotalCents = checkoutEvent.priceCents * quantity;
   const startsAt = new Date(displayEvent.startsAt);
   const mapQuery = displayEvent.mapLocation || displayEvent.venue;
@@ -289,6 +291,18 @@ export function EventDetail({ event }: { event: Event }) {
     }
   }
 
+  async function cancelEvent() {
+    if (!session || !window.confirm('Cancel this event? Ticket sales will stop and existing tickets will remain in purchase history.')) return;
+    try {
+      setDisplayEvent(await api.cancelEvent(displayEvent.id, session.token));
+      setCheckoutOpen(false);
+      setIsEditing(false);
+      setEditState('Event cancelled.');
+    } catch (error) {
+      setEditState((error as { message?: string }).message ?? 'Unable to cancel event.');
+    }
+  }
+
   return (
     <section
       className={`event-detail-page event-detail-page--${detailMood} mx-auto mt-5 grid w-[min(var(--content-max),calc(100%-var(--content-gutter)*2))] max-w-(--content-max) gap-5 text-text`}
@@ -394,7 +408,8 @@ export function EventDetail({ event }: { event: Event }) {
             <p className="mb-0 text-[1.02rem] leading-[1.65] text-text-muted">
               {displayEvent.description}
             </p>
-            {ownedBySession && (
+            {cancelled && <p role="status" className="rounded-lg bg-accent-soft p-3 text-text">This event has been cancelled. Ticket sales are closed. Existing tickets remain in your purchase history.</p>}
+            {ownedBySession && !cancelled && (
               <button
                 className={secondaryAction}
                 type="button"
@@ -404,6 +419,8 @@ export function EventDetail({ event }: { event: Event }) {
                 {isEditing ? 'Close editor' : 'Edit event'}
               </button>
             )}
+            {ownedBySession && !cancelled && <button className={secondaryAction} type="button" onClick={() => void cancelEvent()}>Cancel event</button>}
+            {editState && !isEditing && <p role="status">{editState}</p>}
           </section>
 
           <section className={panelPadded}>
@@ -733,7 +750,7 @@ export function EventDetail({ event }: { event: Event }) {
 
           <section className={panelPadded}>
             <p role="status">
-              {checkoutEvent.soldOut
+              {cancelled ? 'Event cancelled' : checkoutEvent.soldOut
                 ? 'Sold out'
                 : checkoutEvent.remainingCapacity != null
                   ? `${checkoutEvent.remainingCapacity} tickets remaining`
@@ -770,11 +787,11 @@ export function EventDetail({ event }: { event: Event }) {
             <button
               className={primaryAction}
               type="button"
-              disabled={checkoutEvent.soldOut}
+              disabled={cancelled || checkoutEvent.soldOut}
               onClick={() => setCheckoutOpen(true)}
             >
               <CircleDollarSign size={18} />
-              {checkoutEvent.soldOut
+              {cancelled ? 'Event cancelled' : checkoutEvent.soldOut
                 ? 'Sold out'
                 : checkoutEvent.priceCents === 0
                   ? 'Get ticket'
@@ -979,7 +996,7 @@ export function EventDetail({ event }: { event: Event }) {
                   </>
                 )}
 
-                <button className={primaryAction} type="submit" disabled={checkoutEvent.soldOut}>
+                <button className={primaryAction} type="submit" disabled={cancelled || checkoutEvent.soldOut}>
                   <CircleDollarSign size={18} />
                   {checkoutEvent.priceCents === 0
                     ? 'Get ticket'

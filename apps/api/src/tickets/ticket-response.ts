@@ -11,6 +11,7 @@ function toPublicEvent(ticket: TicketWithEvent) {
 
   return {
     id: ticket.event.id,
+    status: ticket.event.status,
     name: ticket.event.name,
     description: ticket.event.description,
     venue: ticket.event.venue,
