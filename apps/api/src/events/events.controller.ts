@@ -11,6 +11,7 @@ import {
 import { AuthGuard } from "../auth/auth.guard";
 import { AuthenticatedRequest } from "../auth/auth.types";
 import { CreateEventDto } from "./dto/create-event.dto";
+import { CancelEventDto } from "./dto/cancel-event.dto";
 import { UpdateEventDto } from "./dto/update-event.dto";
 import { UploadEventImageDto } from "./dto/upload-event-image.dto";
 import { EventsService } from "./events.service";
@@ -59,5 +60,11 @@ export class EventsController {
     @Req() request: AuthenticatedRequest,
   ) {
     return this.eventsService.update(id, dto, request.user!);
+  }
+
+  @Post(":id/cancel")
+  @UseGuards(AuthGuard)
+  cancel(@Param("id") id: string, @Body() dto: CancelEventDto, @Req() request: AuthenticatedRequest) {
+    return this.eventsService.cancel(id, request.user!);
   }
 }

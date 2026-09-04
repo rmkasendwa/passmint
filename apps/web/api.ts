@@ -1,6 +1,8 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
 export type Event = {
+  status?: "published" | "cancelled";
+  cancelledAt?: string | null;
   id: string;
   name: string;
   description: string;
@@ -77,6 +79,7 @@ async function request<T>(
 }
 
 export const api = {
+  cancelEvent: (eventId: string, token: string) => request<Event>(`/events/${eventId}/cancel`, { method: "POST", body: JSON.stringify({ confirm: true }) }, token),
   listEvents: () => request<Event[]>("/events"),
   getEvent: (eventId: string) => request<Event>(`/events/${eventId}`),
   myEvents: (token: string) =>

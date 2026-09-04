@@ -37,6 +37,8 @@ model User {
 }
 
 model Event {
+  status       String   @default("published") @db.VarChar
+  cancelledAt  DateTime? @db.Timestamptz(6)
   id           String   @id(map: "PK_40731c7151fe4be3116e45ddf73") @db.VarChar
   name         String   @db.VarChar
   description  String

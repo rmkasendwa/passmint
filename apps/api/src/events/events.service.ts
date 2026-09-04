@@ -287,6 +287,8 @@ export class EventsService implements OnApplicationBootstrap {
 
     const updated = await this.prisma.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT id FROM events WHERE id = ${id} FOR UPDATE`;
+      const current = await tx.event.findUniqueOrThrow({ where: { id } });
+      if (current.status === "cancelled") throw new BadRequestException("Cancelled events cannot be edited.");
       if (dto.capacity != null) {
         const sold = await tx.ticket.count({
           where: { eventId: id, status: { not: "cancelled" } },
@@ -309,6 +311,23 @@ export class EventsService implements OnApplicationBootstrap {
     });
 
     return this.toEventResponse(updated);
+  }
+
+  async cancel(id: string, authUser: AuthUser) {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM events WHERE id = ${id} FOR UPDATE`;
+      const event = await tx.event.findUnique({ where: { id } });
+      if (!event) throw new NotFoundException("Event not found");
+      if (event.ownerId !== authUser.id && authUser.role !== UserRole.Admin) {
+        throw new ForbiddenException("You can only cancel events you created.");
+      }
+      const cancelled = await tx.event.update({
+        where: { id },
+        data: { status: "cancelled", cancelledAt: event.cancelledAt ?? new Date() },
+        include: { _count: { select: { tickets: { where: { status: { not: "cancelled" } } } } } },
+      });
+      return this.toEventResponse(cancelled);
+    });
   }
 
   private toEventResponse(
