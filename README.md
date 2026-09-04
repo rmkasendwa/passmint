@@ -76,6 +76,10 @@ See [docs/product-flow.md](docs/product-flow.md) for the fuller product model.
 
 ## Useful Commands
 
+Hosts can leave capacity blank for unlimited sales. Limited events display remaining availability and stop checkout when sold out. Cancelled tickets release capacity; capacity cannot be reduced below the active ticket count. Run `pnpm run db:push` after updating an existing installation to allow unlimited capacity.
+
+Run `pnpm test` with PostgreSQL available. Tests use a unique temporary schema, leaving application records untouched. Set `TEST_DATABASE_URL` to use a separate PostgreSQL test database. Pull requests also run integration tests, type checks, and production builds in CI.
+
 ```bash
 pnpm run dev       # run API and web locally
 pnpm run dev:db    # run PostgreSQL in Docker

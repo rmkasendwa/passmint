@@ -133,6 +133,14 @@ export function EventDetail({ event }: { event: Event }) {
   }, [event.id]);
 
   useEffect(() => {
+    let active = true;
+    void api.getEvent(event.id).then((latest) => {
+      if (active) setDisplayEvent(latest);
+    }).catch(() => {});
+    return () => { active = false; };
+  }, [event.id, tickets]);
+
+  useEffect(() => {
     if (!checkoutOpen) return;
 
     const originalOverflow = document.body.style.overflow;
@@ -199,8 +207,8 @@ export function EventDetail({ event }: { event: Event }) {
   const editCapacityError = editValidation.fieldError({
     label: 'Capacity',
     min: 1,
-    required: true,
-    value: draft.capacity,
+    required: false,
+    value: draft.capacity ?? '',
   });
   const editPriceError = editValidation.fieldError({
     label: 'Price in UGX',
@@ -256,7 +264,7 @@ export function EventDetail({ event }: { event: Event }) {
           venue: draft.venue,
           mapLocation: draft.mapLocation,
           startsAt: new Date(draft.startsAt).toISOString(),
-          capacity: Number(draft.capacity),
+          capacity: draft.capacity,
           priceCents: Number(draft.priceCents),
           ...(draft.thumbnailUrl ? { thumbnailUrl: draft.thumbnailUrl } : {}),
         },
@@ -354,7 +362,9 @@ export function EventDetail({ event }: { event: Event }) {
             </span>
             <span>
               <Users size={16} />
-              {displayEvent.capacity.toLocaleString('en-UG')} total spots
+              {displayEvent.capacity?.toLocaleString('en-UG') ??
+                'Unlimited'}{' '}
+              total spots
             </span>
           </div>
         </div>
@@ -576,20 +586,22 @@ export function EventDetail({ event }: { event: Event }) {
                     />
                   </label>
                   <label>
-                    <RequiredLabel>Capacity</RequiredLabel>
+                    Capacity (leave blank for unlimited)
                     <input
                       aria-describedby="edit-capacity-error"
                       aria-invalid={Boolean(editCapacityError) || undefined}
                       min={1}
                       type="number"
-                      value={draft.capacity}
+                      value={draft.capacity ?? ''}
                       onChange={(input) =>
                         setDraft((current) => ({
                           ...current,
-                          capacity: Number(input.target.value),
+                          capacity:
+                            input.target.value === ''
+                              ? null
+                              : Number(input.target.value),
                         }))
                       }
-                      {...requiredField('Capacity')}
                     />
                     <FieldMessage
                       error={editCapacityError}
@@ -720,6 +732,13 @@ export function EventDetail({ event }: { event: Event }) {
           </section>
 
           <section className={panelPadded}>
+            <p role="status">
+              {checkoutEvent.soldOut
+                ? 'Sold out'
+                : checkoutEvent.remainingCapacity != null
+                  ? `${checkoutEvent.remainingCapacity} tickets remaining`
+                  : 'Tickets available'}
+            </p>
             <div className="select-ticket-heading">
               <span className="select-ticket-heading__icon">
                 <TicketIcon size={22} />
@@ -751,10 +770,15 @@ export function EventDetail({ event }: { event: Event }) {
             <button
               className={primaryAction}
               type="button"
+              disabled={checkoutEvent.soldOut}
               onClick={() => setCheckoutOpen(true)}
             >
               <CircleDollarSign size={18} />
-              {checkoutEvent.priceCents === 0 ? 'Get ticket' : 'Pay now'}
+              {checkoutEvent.soldOut
+                ? 'Sold out'
+                : checkoutEvent.priceCents === 0
+                  ? 'Get ticket'
+                  : 'Pay now'}
             </button>
             {purchaseState && (
               <p className="mb-0 rounded-lg bg-accent-soft p-3 text-[0.92rem] font-(--weight-medium) text-accent">
@@ -955,7 +979,7 @@ export function EventDetail({ event }: { event: Event }) {
                   </>
                 )}
 
-                <button className={primaryAction} type="submit">
+                <button className={primaryAction} type="submit" disabled={checkoutEvent.soldOut}>
                   <CircleDollarSign size={18} />
                   {checkoutEvent.priceCents === 0
                     ? 'Get ticket'

@@ -36,7 +36,7 @@ export class UpdateEventDto {
   @Type(() => Number)
   @IsInt()
   @IsPositive()
-  capacity?: number;
+  capacity?: number | null;
 
   @IsOptional()
   @Type(() => Number)

@@ -101,7 +101,10 @@ type AppContextValue = {
   submitResetPassword: (event: FormEvent<HTMLFormElement>) => void;
   ticketHistory: Ticket[];
   tickets: Ticket[];
-  updateHostEvent: (key: keyof HostEvent, value: string | number) => void;
+  updateHostEvent: (
+    key: keyof HostEvent,
+    value: string | number | null,
+  ) => void;
   videoRef: RefObject<HTMLVideoElement>;
   visibleCalendarDays: Date[];
   visibleEvents: Event[];
@@ -368,11 +371,11 @@ export function AppProvider({
     (event) => eventStatus(event) === "Upcoming",
   ).length;
   const dashboardCapacity = dashboardEvents.reduce(
-    (total, event) => total + event.capacity,
+    (total, event) => total + (event.capacity ?? 0),
     0,
   );
   const dashboardRevenuePotential = dashboardEvents.reduce(
-    (total, event) => total + event.capacity * event.priceCents,
+    (total, event) => total + (event.capacity ?? 0) * event.priceCents,
     0,
   );
   const hostPreviewEvent: Event = {
@@ -508,7 +511,10 @@ export function AppProvider({
     setPurchaseState("");
   }
 
-  function updateHostEvent(key: keyof HostEvent, value: string | number) {
+  function updateHostEvent(
+    key: keyof HostEvent,
+    value: string | number | null,
+  ) {
     setHostEvent((current) => ({ ...current, [key]: value }));
   }
 

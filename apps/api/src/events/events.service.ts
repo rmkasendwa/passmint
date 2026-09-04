@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   NotFoundException,
   OnApplicationBootstrap,
+  BadRequestException,
 } from "@nestjs/common";
 import { Event, User } from "@prisma/client";
 import { AuthUser } from "../auth/auth.types";
@@ -215,6 +216,11 @@ export class EventsService implements OnApplicationBootstrap {
   async findAll() {
     const events = await this.prisma.event.findMany({
       orderBy: { startsAt: "asc" },
+      include: {
+        _count: {
+          select: { tickets: { where: { status: { not: "cancelled" } } } },
+        },
+      },
     });
 
     return events.map((event) => this.toEventResponse(event));
@@ -223,6 +229,11 @@ export class EventsService implements OnApplicationBootstrap {
   async findMine(userId: string) {
     const events = await this.prisma.event.findMany({
       where: { ownerId: userId },
+      include: {
+        _count: {
+          select: { tickets: { where: { status: { not: "cancelled" } } } },
+        },
+      },
       orderBy: { startsAt: "asc" },
     });
 
@@ -232,7 +243,12 @@ export class EventsService implements OnApplicationBootstrap {
   async findOne(id: string) {
     const event = await this.prisma.event.findUnique({
       where: { id },
-      include: { owner: true },
+      include: {
+        owner: true,
+        _count: {
+          select: { tickets: { where: { status: { not: "cancelled" } } } },
+        },
+      },
     });
     if (!event) throw new NotFoundException("Event not found");
     return this.toEventResponse(event);
@@ -269,21 +285,48 @@ export class EventsService implements OnApplicationBootstrap {
       throw new ForbiddenException("You can only edit events you created.");
     }
 
-    const updated = await this.prisma.event.update({
-      where: { id },
-      data: dto,
-      include: { owner: true },
+    const updated = await this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM events WHERE id = ${id} FOR UPDATE`;
+      if (dto.capacity != null) {
+        const sold = await tx.ticket.count({
+          where: { eventId: id, status: { not: "cancelled" } },
+        });
+        if (dto.capacity < sold)
+          throw new BadRequestException(
+            "Capacity cannot be lower than the number of active tickets.",
+          );
+      }
+      return tx.event.update({
+        where: { id },
+        data: dto,
+        include: {
+          owner: true,
+          _count: {
+            select: { tickets: { where: { status: { not: "cancelled" } } } },
+          },
+        },
+      });
     });
 
     return this.toEventResponse(updated);
   }
 
-  private toEventResponse(event: Event | EventWithOwner) {
+  private toEventResponse(
+    event: (Event | EventWithOwner) & { _count?: { tickets: number } },
+  ) {
     const owner = "owner" in event ? event.owner : event.ownerId;
 
     return {
       ...event,
       owner,
+      ticketsSold: event._count?.tickets ?? 0,
+      remainingCapacity:
+        event.capacity === null
+          ? null
+          : Math.max(0, event.capacity - (event._count?.tickets ?? 0)),
+      soldOut:
+        event.capacity !== null &&
+        (event._count?.tickets ?? 0) >= event.capacity,
     };
   }
 }

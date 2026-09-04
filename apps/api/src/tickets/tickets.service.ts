@@ -23,53 +23,58 @@ export class TicketsService {
   ) {}
 
   async create(dto: CreateTicketDto, authUser?: AuthUser) {
-    const event = await this.eventsService.findOneWithOwner(dto.eventId);
     const quantity = dto.quantity ?? 1;
-    const soldCount = await this.prisma.ticket.count({
-      where: { eventId: event.id },
-    });
     const buyerEmail = dto.buyerEmail.trim().toLowerCase();
-    const existingEmailCount = await this.prisma.ticket.count({
-      where: {
-        eventId: event.id,
-        buyerEmail,
-      },
-    });
-
-    if (soldCount + quantity > event.capacity) {
-      throw new BadRequestException(
-        "Not enough tickets remaining for this event",
-      );
-    }
-
-    if (existingEmailCount > 0 && !dto.confirmAdditional) {
-      throw new ConflictException({
-        result: "additional_confirmation_required",
-        message:
-          "This email already has tickets for this event. Confirm if you want to issue more.",
-        eventId: event.id,
-        buyerEmail,
-        existingTicketCount: existingEmailCount,
-        requestedQuantity: quantity,
-        totalAfterPurchase: existingEmailCount + quantity,
+    const tickets = await this.prisma.$transaction(async (tx) => {
+      // Serialize inventory changes for this event, including capacity edits.
+      await tx.$queryRaw`SELECT id FROM events WHERE id = ${dto.eventId} FOR UPDATE`;
+      const event = await tx.event.findUnique({ where: { id: dto.eventId } });
+      if (!event) throw new NotFoundException("Event not found");
+      const soldCount = await tx.ticket.count({
+        where: { eventId: event.id, status: { not: TicketStatus.Cancelled } },
       });
-    }
+      const existingEmailCount = await tx.ticket.count({
+        where: {
+          eventId: event.id,
+          buyerEmail,
+        },
+      });
 
-    const tickets = await this.prisma.$transaction(
-      Array.from({ length: quantity }, () =>
-        this.prisma.ticket.create({
-          data: {
-            id: prefixedId("tkt"),
-            eventId: event.id,
-            ownerId: authUser?.id,
-            buyerName: dto.buyerName,
-            buyerEmail,
-            code: randomUUID(),
-          },
-          include: { event: true },
-        }),
-      ),
-    );
+      if (event.capacity !== null && soldCount + quantity > event.capacity) {
+        throw new BadRequestException(
+          "Not enough tickets remaining for this event",
+        );
+      }
+
+      if (existingEmailCount > 0 && !dto.confirmAdditional) {
+        throw new ConflictException({
+          result: "additional_confirmation_required",
+          message:
+            "This email already has tickets for this event. Confirm if you want to issue more.",
+          eventId: event.id,
+          buyerEmail,
+          existingTicketCount: existingEmailCount,
+          requestedQuantity: quantity,
+          totalAfterPurchase: existingEmailCount + quantity,
+        });
+      }
+
+      return Promise.all(
+        Array.from({ length: quantity }, () =>
+          tx.ticket.create({
+            data: {
+              id: prefixedId("tkt"),
+              eventId: event.id,
+              ownerId: authUser?.id,
+              buyerName: dto.buyerName,
+              buyerEmail,
+              code: randomUUID(),
+            },
+            include: { event: true },
+          }),
+        ),
+      );
+    });
 
     return Promise.all(tickets.map(toTicketResponse));
   }

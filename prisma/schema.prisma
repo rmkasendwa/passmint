@@ -43,7 +43,7 @@ model Event {
   venue        String   @db.VarChar
   mapLocation  String?
   startsAt     DateTime @db.Timestamptz(6)
-  capacity     Int
+  capacity     Int?
   priceCents   Int
   thumbnailUrl String?
   ownerId      String?  @db.VarChar

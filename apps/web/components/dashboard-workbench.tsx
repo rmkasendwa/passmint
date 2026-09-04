@@ -97,8 +97,8 @@ export function DashboardWorkbench() {
   const capacityError = validation.fieldError({
     label: "Capacity",
     min: 1,
-    required: true,
-    value: hostEvent.capacity,
+    required: false,
+    value: hostEvent.capacity ?? "",
   });
   const priceError = validation.fieldError({
     label: "Price in UGX",
@@ -242,17 +242,21 @@ export function DashboardWorkbench() {
                 <FieldMessage error={startsError} id="host-starts-error" />
               </label>
               <label>
-                <RequiredLabel>Capacity</RequiredLabel>
+                Capacity (leave blank for unlimited)
                 <input
                   aria-describedby="host-capacity-error"
                   aria-invalid={Boolean(capacityError) || undefined}
                   min={1}
                   type="number"
-                  value={hostEvent.capacity}
+                  value={hostEvent.capacity ?? ""}
                   onChange={(event) =>
-                    updateHostEvent("capacity", Number(event.target.value))
+                    updateHostEvent(
+                      "capacity",
+                      event.target.value === ""
+                        ? null
+                        : Number(event.target.value),
+                    )
                   }
-                  {...requiredField("Capacity")}
                 />
                 <FieldMessage error={capacityError} id="host-capacity-error" />
               </label>
@@ -364,7 +368,9 @@ export function DashboardWorkbench() {
                           {event.venue}
                         </span>
                         <strong className="inline-flex min-h-8 items-center gap-1.75 rounded-full bg-surface-raised px-2.5 text-[0.82rem] font-(--weight-medium) text-price">
-                          {event.capacity.toLocaleString("en-UG")} spots
+                          {event.capacity?.toLocaleString("en-UG") ??
+                            "Unlimited"}{" "}
+                          spots
                         </strong>
                       </div>
                     </div>

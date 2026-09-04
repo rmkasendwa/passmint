@@ -56,13 +56,19 @@ export default async function HomePage({
   );
   const nextEvent = filteredUpcomingEvents[0] ?? visibleEvents[0];
   const venueCount = new Set(events.map((event) => event.venue)).size;
-  const capacityTotal = events.reduce((total, event) => total + event.capacity, 0);
+  const capacityTotal = events.reduce(
+    (total, event) => total + (event.capacity ?? 0),
+    0,
+  );
 
   return (
     <>
       <section className="relative isolate overflow-hidden border-b border-border bg-surface-raised">
         {heroEvent && (
-          <span className="absolute inset-0 -z-10 opacity-[0.36]" aria-hidden="true">
+          <span
+            className="absolute inset-0 -z-10 opacity-[0.36]"
+            aria-hidden="true"
+          >
             <EventImage
               src={heroEvent.thumbnailUrl}
               name={heroEvent.name}
@@ -81,7 +87,8 @@ export default async function HomePage({
               Events you can find, book, and enter from one place.
             </h1>
             <p className="mb-0 mt-5 max-w-145 text-[1.08rem] leading-normal text-text-muted">
-              Passmint brings discovery, ticket checkout, host publishing, and gate verification into one smooth event flow.
+              Passmint brings discovery, ticket checkout, host publishing, and
+              gate verification into one smooth event flow.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
@@ -188,7 +195,8 @@ export default async function HomePage({
                 Built around the whole event day.
               </h2>
               <p className="mb-0 text-base leading-normal text-text-muted">
-                Guests can find a plan for the weekend, organizers can publish the next one, and door teams can keep entry moving.
+                Guests can find a plan for the weekend, organizers can publish
+                the next one, and door teams can keep entry moving.
               </p>
             </div>
             <div className="grid grid-cols-3 gap-3 max-[640px]:grid-cols-1">
@@ -258,7 +266,10 @@ export default async function HomePage({
         )}
 
         <section aria-label="Event marketplace">
-          <div id="events" className="mb-6.5 flex items-end justify-between gap-4">
+          <div
+            id="events"
+            className="mb-6.5 flex items-end justify-between gap-4"
+          >
             <div>
               <p className={sectionKicker}>Fresh from the platform</p>
               <h2 className="mb-0 text-[clamp(2rem,3vw,3.15rem)] font-(--weight-bold) leading-none text-text">
@@ -282,8 +293,7 @@ export default async function HomePage({
               {visibleEvents.map((event, index) => {
                 const isFeaturedCard = index === 0;
                 const category = eventCategory(event);
-                const CategoryIcon =
-                  category === 'Music' ? Music2 : TicketIcon;
+                const CategoryIcon = category === 'Music' ? Music2 : TicketIcon;
 
                 return (
                   <Link
@@ -302,10 +312,16 @@ export default async function HomePage({
                         fallbackClassName="event-list-card__fallback"
                       />
                     </span>
-                    <span className="event-list-card__sheen" aria-hidden="true" />
+                    <span
+                      className="event-list-card__sheen"
+                      aria-hidden="true"
+                    />
                     <span className="event-list-card__orb" aria-hidden="true" />
                     <span className="event-list-card__arc" aria-hidden="true" />
-                    <span className="event-list-card__frame" aria-hidden="true" />
+                    <span
+                      className="event-list-card__frame"
+                      aria-hidden="true"
+                    />
                     <span className="event-list-card__chip">
                       <CategoryIcon size={17} />
                       {category}
@@ -350,9 +366,7 @@ export default async function HomePage({
             <span className="next-event-panel__arc" aria-hidden="true" />
             <div className="next-event-panel__content">
               <p className="next-event-panel__kicker">Next event</p>
-              <h2 className="next-event-panel__title">
-                {nextEvent.name}
-              </h2>
+              <h2 className="next-event-panel__title">{nextEvent.name}</h2>
               <div className="next-event-panel__meta">
                 <span>
                   <CalendarDays size={17} />
@@ -362,19 +376,23 @@ export default async function HomePage({
                   <MapPin size={17} />
                   {nextEvent.venue}
                 </span>
-                <strong>
-                  {money.format(nextEvent.priceCents / 100)}
-                </strong>
+                <strong>{money.format(nextEvent.priceCents / 100)}</strong>
               </div>
             </div>
-            <Link className="next-event-panel__cta" href={`/event/${nextEvent.id}`}>
+            <Link
+              className="next-event-panel__cta"
+              href={`/event/${nextEvent.id}`}
+            >
               <TicketIcon size={18} />
               Reserve spot
             </Link>
           </section>
         )}
 
-        <section className="rounded-lg border border-border bg-surface-raised p-6" aria-label="How Passmint works">
+        <section
+          className="rounded-lg border border-border bg-surface-raised p-6"
+          aria-label="How Passmint works"
+        >
           <div className="mb-6 max-w-150">
             <p className={sectionKicker}>Flow</p>
             <h2 className="mb-0 text-[clamp(2rem,3vw,3.15rem)] font-(--weight-bold) leading-none text-text">
