@@ -215,6 +215,7 @@ export class EventsService implements OnApplicationBootstrap {
 
   async findAll() {
     const events = await this.prisma.event.findMany({
+      where: { status: { not: "draft" } },
       orderBy: { startsAt: "asc" },
       include: {
         _count: {
@@ -240,7 +241,7 @@ export class EventsService implements OnApplicationBootstrap {
     return events.map((event) => this.toEventResponse(event));
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, authUser?: AuthUser) {
     const event = await this.prisma.event.findUnique({
       where: { id },
       include: {
@@ -251,6 +252,7 @@ export class EventsService implements OnApplicationBootstrap {
       },
     });
     if (!event) throw new NotFoundException("Event not found");
+    if (event.status === "draft" && event.ownerId !== authUser?.id) throw new NotFoundException("Event not found");
     return this.toEventResponse(event);
   }
 
@@ -276,12 +278,28 @@ export class EventsService implements OnApplicationBootstrap {
     return this.toEventResponse(event);
   }
 
+  async createDraft(dto: UpdateEventDto, authUser: AuthUser) {
+    const draft = await this.prisma.event.create({ data: {
+      id: prefixedId("evt"), name: dto.name ?? "", description: dto.description ?? "", venue: dto.venue ?? "",
+      startsAt: dto.startsAt ?? new Date(0), priceCents: dto.priceCents ?? 0,
+      capacity: dto.capacity ?? null, thumbnailUrl: dto.thumbnailUrl, mapLocation: dto.mapLocation,
+      ownerId: authUser.id, status: "draft",
+    } });
+    return this.toEventResponse(draft);
+  }
+
+  private validatePublication(event: Pick<Event, "name" | "description" | "venue" | "startsAt">) {
+    if (!event.name.trim() || !event.description.trim() || !event.venue.trim() || event.startsAt.getTime() === 0) {
+      throw new BadRequestException("Add an event name, description, venue, and start date before publishing.");
+    }
+  }
+
   async update(id: string, dto: UpdateEventDto, authUser: AuthUser) {
     const event = await this.findOneWithOwner(id);
     const canUpdate =
       authUser.role === UserRole.Admin || event.owner?.id === authUser.id;
 
-    if (!canUpdate) {
+    if (!canUpdate || (event.status === "draft" && event.ownerId !== authUser.id)) {
       throw new ForbiddenException("You can only edit events you created.");
     }
 
@@ -289,6 +307,7 @@ export class EventsService implements OnApplicationBootstrap {
       await tx.$queryRaw`SELECT id FROM events WHERE id = ${id} FOR UPDATE`;
       const current = await tx.event.findUniqueOrThrow({ where: { id } });
       if (current.status === "cancelled") throw new BadRequestException("Cancelled events cannot be edited.");
+      if ((dto.status ?? current.status) === "published") this.validatePublication({ ...current, ...dto });
       if (dto.capacity != null) {
         const sold = await tx.ticket.count({
           where: { eventId: id, status: { not: "cancelled" } },
@@ -318,6 +337,7 @@ export class EventsService implements OnApplicationBootstrap {
       await tx.$queryRaw`SELECT id FROM events WHERE id = ${id} FOR UPDATE`;
       const event = await tx.event.findUnique({ where: { id } });
       if (!event) throw new NotFoundException("Event not found");
+      if (event.status === "draft" && event.ownerId !== authUser.id) throw new NotFoundException("Event not found");
       if (event.ownerId !== authUser.id && authUser.role !== UserRole.Admin) {
         throw new ForbiddenException("You can only cancel events you created.");
       }

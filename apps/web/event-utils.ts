@@ -135,6 +135,7 @@ export function initials(name: string) {
 }
 
 export function eventStatus(event: Event) {
+  if (event.status === "draft") return "Draft";
   if (event.status === "cancelled") return "Cancelled";
   if (event.soldOut) return "Sold out";
   const startsAt = new Date(event.startsAt).getTime();

@@ -64,6 +64,7 @@ export function DashboardWorkbench() {
     hostState,
     hostThumbnailName,
     publishEvent,
+    saveDraft,
     scan,
     scanState,
     selectThumbnail,
@@ -311,6 +312,7 @@ export function DashboardWorkbench() {
               <ImagePlus size={18} />
               Create event
             </button>
+            <button className={secondaryAction} type="button" onClick={() => void saveDraft()}>Save draft</button>
           </form>
           <p className={helperLine}>
             Photos are optional. Without one, Passmint creates a branded event
@@ -353,7 +355,7 @@ export function DashboardWorkbench() {
                         </span>
                       </span>
                       <h3 className="my-3 line-clamp-2 text-[1.45rem] font-(--weight-bold) leading-[1.05] text-text">
-                        {event.name}
+                        {event.name || "Untitled draft"}
                       </h3>
                       <p className="mb-3 line-clamp-2 leading-[1.45] text-text-muted">
                         {event.description}
@@ -373,6 +375,7 @@ export function DashboardWorkbench() {
                           spots
                         </strong>
                       </div>
+                      <a className={secondaryAction} href={`/dashboard/events/${event.id}`}>Manage event</a>
                     </div>
                   </article>
                 ))}

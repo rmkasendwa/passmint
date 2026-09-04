@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { AuthGuard } from "../auth/auth.guard";
+import { OptionalAuthGuard } from "../auth/optional-auth.guard";
 import { AuthenticatedRequest } from "../auth/auth.types";
 import { CreateEventDto } from "./dto/create-event.dto";
 import { CancelEventDto } from "./dto/cancel-event.dto";
@@ -36,8 +37,9 @@ export class EventsController {
   }
 
   @Get(":id")
-  findOne(@Param("id") id: string) {
-    return this.eventsService.findOne(id);
+  @UseGuards(OptionalAuthGuard)
+  findOne(@Param("id") id: string, @Req() request: AuthenticatedRequest) {
+    return this.eventsService.findOne(id, request.user);
   }
 
   @Post("uploads")
@@ -50,6 +52,12 @@ export class EventsController {
   @UseGuards(AuthGuard)
   create(@Body() dto: CreateEventDto, @Req() request: AuthenticatedRequest) {
     return this.eventsService.create(dto, request.user!);
+  }
+
+  @Post("drafts")
+  @UseGuards(AuthGuard)
+  createDraft(@Body() dto: UpdateEventDto, @Req() request: AuthenticatedRequest) {
+    return this.eventsService.createDraft(dto, request.user!);
   }
 
   @Patch(":id")

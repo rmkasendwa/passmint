@@ -7,9 +7,13 @@ import {
   IsString,
   MaxLength,
   Min,
+  IsIn,
 } from "class-validator";
 
 export class UpdateEventDto {
+  @IsOptional()
+  @IsIn(["published"])
+  status?: "published";
   @IsOptional()
   @IsString()
   name?: string;
