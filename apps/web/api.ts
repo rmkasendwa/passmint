@@ -7,7 +7,10 @@ export type Event = {
   venue: string;
   mapLocation?: string | null;
   startsAt: string;
-  capacity: number;
+  capacity: number | null;
+  ticketsSold?: number;
+  remainingCapacity?: number | null;
+  soldOut?: boolean;
   priceCents: number;
   thumbnailUrl?: string | null;
   owner?: string | User | null;
@@ -85,7 +88,7 @@ export const api = {
       venue: string;
       mapLocation?: string;
       startsAt: string;
-      capacity: number;
+      capacity: number | null;
       priceCents: number;
       thumbnailUrl?: string;
     },
@@ -119,7 +122,7 @@ export const api = {
       venue: string;
       mapLocation: string;
       startsAt: string;
-      capacity: number;
+      capacity: number | null;
       priceCents: number;
       thumbnailUrl: string;
     }>,

@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "packageManager": "pnpm@9.14.4",
   "scripts": {
+    "test": "node scripts/test.mjs",
     "dev": "node scripts/dev.mjs",
     "dev:db": "node scripts/run-with-env.mjs docker compose up --remove-orphans postgres minio minio-init",
     "db:generate": "node scripts/run-with-env.mjs prisma generate",

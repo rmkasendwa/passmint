@@ -84,7 +84,7 @@ export function FeaturedEventCarousel({ events }: { events: Event[] }) {
           </span>
           <span>
             <Users size={16} />
-            {event.capacity.toLocaleString('en-UG')} spots
+            {event.capacity?.toLocaleString('en-UG') ?? 'Unlimited'} spots
           </span>
         </div>
         <Link className={primaryAction} href={`/event/${event.id}`}>

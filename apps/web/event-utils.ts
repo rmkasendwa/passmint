@@ -30,7 +30,7 @@ export const emptyHostEvent = {
   venue: "",
   mapLocation: "",
   startsAt: "",
-  capacity: 120,
+  capacity: 120 as number | null,
   priceCents: 0,
   thumbnailUrl: "",
 };
@@ -135,6 +135,7 @@ export function initials(name: string) {
 }
 
 export function eventStatus(event: Event) {
+  if (event.soldOut) return "Sold out";
   const startsAt = new Date(event.startsAt).getTime();
   const now = Date.now();
 

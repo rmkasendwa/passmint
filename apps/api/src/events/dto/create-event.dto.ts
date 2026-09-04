@@ -32,10 +32,11 @@ export class CreateEventDto {
   @IsDate()
   startsAt: Date;
 
+  @IsOptional()
   @Type(() => Number)
   @IsInt()
   @IsPositive()
-  capacity: number;
+  capacity?: number | null;
 
   @Type(() => Number)
   @IsInt()
