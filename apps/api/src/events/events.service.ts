@@ -4,6 +4,8 @@ import {
   NotFoundException,
   OnApplicationBootstrap,
   BadRequestException,
+  OnModuleDestroy,
+  Logger,
 } from "@nestjs/common";
 import { Event, User } from "@prisma/client";
 import { AuthUser } from "../auth/auth.types";
@@ -162,10 +164,15 @@ const seedEvents = [
 ];
 
 @Injectable()
-export class EventsService implements OnApplicationBootstrap {
+export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
+  private readonly logger = new Logger(EventsService.name);
+  private publicationTimer?: ReturnType<typeof setInterval>;
   constructor(private readonly prisma: PrismaService) {}
 
   async onApplicationBootstrap() {
+    await this.publishDue();
+    this.publicationTimer = setInterval(() => { void this.publishDue().catch(() => this.logger.error("Scheduled publication failed; retrying on the next tick.")); }, 30_000);
+    this.publicationTimer.unref();
     const seededNames = seedEvents.map((event) => event.name);
     const existingEvents = await this.prisma.event.findMany({
       select: { id: true, name: true, thumbnailUrl: true, mapLocation: true },
@@ -214,6 +221,7 @@ export class EventsService implements OnApplicationBootstrap {
   }
 
   async findAll() {
+    await this.publishDue();
     const events = await this.prisma.event.findMany({
       where: { status: { not: "draft" } },
       orderBy: { startsAt: "asc" },
@@ -228,6 +236,7 @@ export class EventsService implements OnApplicationBootstrap {
   }
 
   async findMine(userId: string) {
+    await this.publishDue();
     const events = await this.prisma.event.findMany({
       where: { ownerId: userId },
       include: {
@@ -242,6 +251,7 @@ export class EventsService implements OnApplicationBootstrap {
   }
 
   async findOne(id: string, authUser?: AuthUser) {
+    await this.publishDue();
     const event = await this.prisma.event.findUnique({
       where: { id },
       include: {
@@ -294,6 +304,15 @@ export class EventsService implements OnApplicationBootstrap {
     }
   }
 
+  onModuleDestroy() { if (this.publicationTimer) clearInterval(this.publicationTimer); }
+
+  async publishDue(now = new Date()) {
+    return this.prisma.event.updateMany({
+      where: { status: "draft", publishAt: { lte: now } },
+      data: { status: "published", publishAt: null },
+    });
+  }
+
   async update(id: string, dto: UpdateEventDto, authUser: AuthUser) {
     const event = await this.findOneWithOwner(id);
     const canUpdate =
@@ -308,6 +327,13 @@ export class EventsService implements OnApplicationBootstrap {
       const current = await tx.event.findUniqueOrThrow({ where: { id } });
       if (current.status === "cancelled") throw new BadRequestException("Cancelled events cannot be edited.");
       if ((dto.status ?? current.status) === "published") this.validatePublication({ ...current, ...dto });
+      const publishAt = dto.publishAt === undefined ? current.publishAt : dto.publishAt;
+      if (publishAt && dto.status !== "published") {
+        if (current.status !== "draft") throw new BadRequestException("Only drafts can be scheduled.");
+        const next = { ...current, ...dto };
+        this.validatePublication(next);
+        if (publishAt <= new Date() || publishAt >= next.startsAt) throw new BadRequestException("Publication must be in the future and before the event starts.");
+      }
       if (dto.capacity != null) {
         const sold = await tx.ticket.count({
           where: { eventId: id, status: { not: "cancelled" } },
@@ -319,7 +345,7 @@ export class EventsService implements OnApplicationBootstrap {
       }
       return tx.event.update({
         where: { id },
-        data: dto,
+        data: { ...dto, ...(dto.status === "published" ? { publishAt: null } : {}) },
         include: {
           owner: true,
           _count: {
@@ -338,6 +364,7 @@ export class EventsService implements OnApplicationBootstrap {
       const event = await tx.event.findUnique({ where: { id } });
       if (!event) throw new NotFoundException("Event not found");
       if (event.status === "draft" && event.ownerId !== authUser.id) throw new NotFoundException("Event not found");
+      if (event.status === "draft") throw new BadRequestException("Drafts are private. Remove their publication schedule to keep them unpublished.");
       if (event.ownerId !== authUser.id && authUser.role !== UserRole.Admin) {
         throw new ForbiddenException("You can only cancel events you created.");
       }

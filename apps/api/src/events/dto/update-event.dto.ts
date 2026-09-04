@@ -12,6 +12,10 @@ import {
 
 export class UpdateEventDto {
   @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  publishAt?: Date | null;
+  @IsOptional()
   @IsIn(["published"])
   status?: "published";
   @IsOptional()

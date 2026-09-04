@@ -23,6 +23,7 @@ export class TicketsService {
   ) {}
 
   async create(dto: CreateTicketDto, authUser?: AuthUser) {
+    await this.eventsService.publishDue();
     const quantity = dto.quantity ?? 1;
     const buyerEmail = dto.buyerEmail.trim().toLowerCase();
     const tickets = await this.prisma.$transaction(async (tx) => {
