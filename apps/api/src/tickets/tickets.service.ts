@@ -81,12 +81,15 @@ export class TicketsService {
     return Promise.all(tickets.map(toTicketResponse));
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, authUser: AuthUser) {
     const ticket = await this.prisma.ticket.findUnique({
       where: { id },
       include: { event: true },
     });
     if (!ticket) throw new NotFoundException("Ticket not found");
+    if (ticket.ownerId !== authUser.id && ticket.event?.ownerId !== authUser.id && authUser.role !== UserRole.Admin) {
+      throw new ForbiddenException("You do not have access to this ticket.");
+    }
     return toTicketResponse(ticket);
   }
 
@@ -101,9 +104,12 @@ export class TicketsService {
   }
 
   async scan(code: string, authUser: AuthUser) {
-    const ticket = await this.prisma.ticket.findUnique({
+    return this.prisma.$transaction(async (tx) => {
+    const reference = await tx.ticket.findUnique({ where: { code }, select: { eventId: true } });
+    if (reference?.eventId) await tx.$queryRaw`SELECT id FROM events WHERE id = ${reference.eventId} FOR UPDATE`;
+    const ticket = await tx.ticket.findUnique({
       where: { code },
-      include: { event: { include: { owner: true } } },
+      include: { event: true },
     });
     if (!ticket) {
       throw new NotFoundException({
@@ -120,7 +126,7 @@ export class TicketsService {
 
     const canValidate =
       authUser.role === UserRole.Admin ||
-      ticket.event.owner?.id === authUser.id;
+      ticket.event.ownerId === authUser.id;
 
     if (!canValidate) {
       throw new ForbiddenException({
@@ -137,7 +143,7 @@ export class TicketsService {
       throw new ConflictException({
         result: "cancelled",
         message: "Ticket has been cancelled",
-        ticket,
+        ticket: await toTicketResponse(ticket),
       });
     }
 
@@ -146,11 +152,11 @@ export class TicketsService {
         result: "duplicate",
         message: "Ticket has already been checked in",
         checkedInAt: ticket.checkedInAt,
-        ticket,
+        ticket: await toTicketResponse(ticket),
       });
     }
 
-    const saved = await this.prisma.ticket.update({
+    const saved = await tx.ticket.update({
       where: { id: ticket.id },
       data: {
         status: TicketStatus.CheckedIn,
@@ -164,5 +170,6 @@ export class TicketsService {
       message: "Ticket accepted",
       ticket: await toTicketResponse(saved),
     };
+    });
   }
 }

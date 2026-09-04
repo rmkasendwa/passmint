@@ -15,7 +15,7 @@ export type Event = {
   soldOut?: boolean;
   priceCents: number;
   thumbnailUrl?: string | null;
-  owner?: string | User | null;
+  owner?: string | Pick<User, "id" | "name"> | null;
 };
 
 export type Ticket = {

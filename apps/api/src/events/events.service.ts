@@ -353,7 +353,9 @@ export class EventsService implements OnApplicationBootstrap {
   private toEventResponse(
     event: (Event | EventWithOwner) & { _count?: { tickets: number } },
   ) {
-    const owner = "owner" in event ? event.owner : event.ownerId;
+    const owner = "owner" in event
+      ? event.owner ? { id: event.owner.id, name: event.owner.name } : null
+      : event.ownerId;
 
     return {
       ...event,

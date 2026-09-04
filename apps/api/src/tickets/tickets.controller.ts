@@ -22,7 +22,8 @@ export class TicketsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.ticketsService.findOne(id);
+  @UseGuards(AuthGuard)
+  findOne(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
+    return this.ticketsService.findOne(id, request.user!);
   }
 }
