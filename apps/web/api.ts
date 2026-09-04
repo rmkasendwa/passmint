@@ -3,6 +3,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 export type Event = {
   status?: "draft" | "published" | "cancelled";
   cancelledAt?: string | null;
+  publishAt?: string | null;
   id: string;
   name: string;
   description: string;
@@ -122,6 +123,7 @@ export const api = {
     eventId: string,
     payload: Partial<{
       status: "published";
+      publishAt: string | null;
       name: string;
       description: string;
       venue: string;

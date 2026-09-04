@@ -111,6 +111,7 @@ export function EventDetail({ event }: { event: Event }) {
   const [displayEvent, setDisplayEvent] = useState(event);
   const [isEditing, setIsEditing] = useState(false);
   const [editState, setEditState] = useState('');
+  const [publishAt, setPublishAt] = useState(event.publishAt ? toLocalInputValue(event.publishAt) : '');
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [paymentProvider, setPaymentProvider] = useState<'airtel' | 'mtn'>(
     'mtn',
@@ -314,6 +315,15 @@ export function EventDetail({ event }: { event: Event }) {
     } catch (error) { setEditState((error as { message?: string }).message ?? 'Unable to publish.'); }
   }
 
+  async function schedulePublication() {
+    if (!session) return;
+    try {
+      const updated = await api.updateEvent(displayEvent.id, { publishAt: publishAt ? new Date(publishAt).toISOString() : null }, session.token);
+      setDisplayEvent(updated);
+      setEditState(updated.publishAt ? 'Publication scheduled.' : 'Publication schedule removed.');
+    } catch (error) { setEditState((error as { message?: string }).message ?? 'Unable to schedule publication.'); }
+  }
+
   return (
     <section
       className={`event-detail-page event-detail-page--${detailMood} mx-auto mt-5 grid w-[min(var(--content-max),calc(100%-var(--content-gutter)*2))] max-w-(--content-max) gap-5 text-text`}
@@ -422,6 +432,11 @@ export function EventDetail({ event }: { event: Event }) {
             {cancelled && <p role="status" className="rounded-lg bg-accent-soft p-3 text-text">This event has been cancelled. Ticket sales are closed. Existing tickets remain in your purchase history.</p>}
             {isDraft && <p role="status">Private draft. Save your details, then publish when ready.</p>}
             {ownedBySession && isDraft && <button className={primaryAction} type="button" onClick={() => void publishDraft()}>Publish draft</button>}
+            {ownedBySession && isDraft && <div className={formGrid}>
+              <label>Publish automatically at<input type="datetime-local" value={publishAt} onChange={e => setPublishAt(e.target.value)} /></label>
+              <button className={secondaryAction} type="button" onClick={() => void schedulePublication()}>{publishAt ? 'Schedule publication' : 'Remove schedule'}</button>
+              {displayEvent.publishAt && <p>Scheduled for {dateTime.format(new Date(displayEvent.publishAt))}</p>}
+            </div>}
             {ownedBySession && !cancelled && (
               <button
                 className={secondaryAction}

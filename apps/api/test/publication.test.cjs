@@ -1,0 +1,36 @@
+const { test, after } = require('node:test');
+const assert = require('node:assert/strict');
+const { randomUUID } = require('node:crypto');
+const { PrismaClient } = require('@prisma/client');
+const { EventsService } = require('../dist/events/events.service');
+const prisma = new PrismaClient();
+const events = new EventsService(prisma);
+after(() => prisma.$disconnect());
+test('scheduled drafts remain private until due and publish automatically', async () => {
+  const owner = await prisma.user.create({ data: { id: randomUUID(), name: 'Host', email: `${randomUUID()}@example.com`, passwordHash: 'unused' } });
+  const draft = await events.createDraft({}, owner);
+  const publishAt = new Date(Date.now() + 3600_000);
+  await assert.rejects(events.update(draft.id, { publishAt }, owner), /before publishing/);
+  await events.update(draft.id, { name: 'Scheduled', description: 'Description', venue: 'Venue', startsAt: new Date(Date.now() + 86400_000) }, owner);
+  await assert.rejects(events.update(draft.id, { publishAt: new Date(0) }, owner), /in the future/);
+  await events.update(draft.id, { publishAt }, owner);
+  await assert.rejects(events.update(draft.id, { description: '' }, owner), /before publishing/);
+  await assert.rejects(events.findOne(draft.id), /Event not found/);
+  await events.publishDue(new Date(publishAt.getTime() - 1));
+  assert.equal((await events.findOne(draft.id, owner)).status, 'draft');
+  await events.publishDue(publishAt);
+  assert.equal((await events.findOne(draft.id)).status, 'published');
+  assert.equal((await events.findOne(draft.id)).publishAt, null);
+});
+test('removing a schedule keeps the event private; manual publication clears its schedule', async () => {
+  const owner = await prisma.user.create({ data: { id: randomUUID(), name: 'Host', email: `${randomUUID()}@example.com`, passwordHash: 'unused' } });
+  const draft = await events.createDraft({ name: 'Scheduled', description: 'Description', venue: 'Venue', startsAt: new Date(Date.now() + 86400_000) }, owner);
+  const publishAt = new Date(Date.now() + 3600_000);
+  await events.update(draft.id, { publishAt }, owner);
+  await events.update(draft.id, { publishAt: null }, owner);
+  await events.publishDue(publishAt);
+  assert.equal((await events.findOne(draft.id, owner)).status, 'draft');
+  await events.update(draft.id, { publishAt }, owner);
+  const published = await events.update(draft.id, { status: 'published' }, owner);
+  assert.equal(published.publishAt, null);
+});
