@@ -32,7 +32,8 @@ async function bootstrap() {
 
   const port =
     config.get<string>('PORT') ?? config.get<string>('API_PORT') ?? '3000';
-  await app.listen(port);
+  app.enableShutdownHooks();
+  await app.listen(port, config.get<string>('API_HOST') ?? '0.0.0.0');
 }
 
 bootstrap();

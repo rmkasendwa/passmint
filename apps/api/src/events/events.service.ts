@@ -173,6 +173,7 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
     await this.publishDue();
     this.publicationTimer = setInterval(() => { void this.publishDue().catch(() => this.logger.error("Scheduled publication failed; retrying on the next tick.")); }, 30_000);
     this.publicationTimer.unref();
+    if (process.env.NODE_ENV === 'production' && process.env.SEED_DEMO_DATA !== 'true') return;
     const seededNames = seedEvents.map((event) => event.name);
     const existingEvents = await this.prisma.event.findMany({
       select: { id: true, name: true, thumbnailUrl: true, mapLocation: true },
