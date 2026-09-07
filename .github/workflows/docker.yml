@@ -19,3 +19,4 @@ jobs:
           node-version: 22
       - run: docker build -t passmint:ci .
       - run: node scripts/docker-smoke.mjs passmint:ci
+      - run: node scripts/docker-smoke.mjs passmint:ci --initialize-at-startup

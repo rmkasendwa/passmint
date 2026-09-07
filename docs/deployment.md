@@ -13,7 +13,24 @@ node scripts/docker-smoke.mjs passmint:local
 
 The smoke test requires Node.js 22+ and Docker. It creates uniquely named, isolated PostgreSQL/container/volume resources and removes only those resources afterward. It verifies same-origin API routing, database readiness, static/public assets, ordinary-user ownership, guest issuance, scan/duplicate handling, upload persistence, container replacement and process shutdown. No existing application database is used.
 
-The build uses the frozen pnpm lockfile, generates Prisma Client and runs type checks and application builds inside Linux. The runtime intentionally includes the locked Node dependencies and Prisma CLI for operator-run schema setup; it favors a straightforward deployable artifact over a minimal standalone image. No dependency install or schema mutation occurs at application startup. No `.env` files, local modules, caches or upload data are copied from the host.
+The build uses the frozen pnpm lockfile, generates Prisma Client and runs type checks and application builds inside Linux. The runtime intentionally includes the locked Node dependencies and Prisma CLI for operator-run schema setup; it favors a straightforward deployable artifact over a minimal standalone image. Startup does not install dependencies. Schema initialization is disabled by default; explicit opt-in only initializes an empty schema. No `.env` files, local modules, caches or upload data are copied from the host.
+
+## Coolify deployment (Dockerfile build pack)
+
+Use the repository Dockerfile with a separate PostgreSQL 16 resource in Coolify. The standalone-host Compose file below requires a local `.env.production` and is not the Coolify configuration.
+
+1. Create/start PostgreSQL in Coolify. Ensure the app and database share a reachable Docker network; use its internal connection URL as `DATABASE_URL`, not `localhost`.
+2. Connect `rmkasendwa/passmint`, branch `main`. Select **Dockerfile** build pack, base directory `/`, Dockerfile `/Dockerfile`, and **Ports Exposes `8088`**. Keep the image's default start command. The web listens on `0.0.0.0:8088`; the internal API on port 3000 must remain private.
+3. Add runtime environment variables: `DATABASE_URL`, a unique random `AUTH_SECRET` (at least 32 characters), `PORT=8088`, `PUBLIC_API_URL=/api`, `SEED_DEMO_DATA=false`. Leave `ADMIN_EMAILS` empty. Do not override `NEXT_PUBLIC_API_URL`; `/api` is already built into the image. Secrets need runtime availability, not build-time injection.
+4. For a **new, empty database**, set `INITIALIZE_DATABASE=true` for the first deploy. The initializer checks for tables and creates the schema before starting the API. A database advisory lock serializes concurrent first starts. Existing tables cause setup to be skipped entirely; this is not an upgrade/migration mechanism. After the first successful deploy, remove the variable or set it to `false`.
+5. Add persistent storage with destination `/app/uploads`, writable by UID 1000, or configure external S3 storage. Prefer a named volume; an empty root-owned bind directory needs its permissions prepared. Keep the same storage on redeploy.
+6. Assign your HTTPS domain and retain the image's health check. It uses Node (already installed) to call `/api/ready`; no curl installation is required. Deploy and check the logs, healthy state, event creation, upload and ticket scan.
+
+Coolify's pre-deployment hook runs in the old container and cannot initialize the first deployment. Post-deployment is also too late for an API that needs tables to start. Use the opt-in empty-schema initializer above, or initialize separately with the image's Prisma CLI before deploying. For later schema upgrades, back up and apply a reviewed migration explicitly; leaving `INITIALIZE_DATABASE=true` does not update existing tables.
+
+The same first-start flow is covered by `node scripts/docker-smoke.mjs passmint:local --initialize-at-startup`, including a redeploy that proves existing records and extra schema objects are preserved. This validates the container behavior, not your particular Coolify server, DNS or database credentials.
+
+References: [Coolify Dockerfile build pack](https://coolify.io/docs/applications/build-packs/dockerfile), [deployment-hook behavior](https://next.coolify.io/docs/applications/builds/dockerfile), and [health-check precedence](https://coolify.io/docs/knowledge-base/health-checks).
 
 ## First deployment on a Docker host
 
@@ -44,6 +61,7 @@ PostgreSQL has no published host port in the production Compose file. Database a
 | --- | --- |
 | `DATABASE_URL` | Required by the image; Compose constructs an internal PostgreSQL URL |
 | `AUTH_SECRET` | Required; rotation invalidates existing bearer sessions |
+| `INITIALIZE_DATABASE` | Default off; `true` initializes only an empty schema before the API starts; skips any schema with tables |
 | `PORT` / `WEB_PORT` | Image web listener, default 8088; production Compose fixes container port to 8088 and uses `WEB_PORT` for host mapping |
 | Internal API | Fixed loopback port 3000, not exposed by production Compose; do not use 3000 as the web port |
 | Browser API | Built as relative `/api`, proxied by Next to internal API; works across domains without rebuilding |

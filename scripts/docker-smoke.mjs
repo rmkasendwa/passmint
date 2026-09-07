@@ -4,6 +4,7 @@ import { randomBytes } from 'node:crypto';
 
 // Only creates/removes resources named for this run; never uses the developer DB.
 const image = process.argv[2] ?? 'passmint:local';
+const initializeAtStartup = process.argv.includes('--initialize-at-startup');
 const prefix = `passmint-smoke-${randomBytes(6).toString('hex')}`;
 const network = `${prefix}-net`;
 const db = `${prefix}-db`;
@@ -42,7 +43,8 @@ async function request(path, { token, body, method = 'GET' } = {}) {
 async function startApp() {
   docker(['run', '-d', '--init', '--name', app, '--network', network,
     '-p', '127.0.0.1::8088', '-v', `${volume}:/app/uploads`,
-    '-e', `DATABASE_URL=${databaseUrl}`, '-e', `AUTH_SECRET=${authSecret}`, image]);
+    '-e', `DATABASE_URL=${databaseUrl}`, '-e', `AUTH_SECRET=${authSecret}`,
+    ...(initializeAtStartup ? ['-e', 'INITIALIZE_DATABASE=true'] : []), image]);
   resources.app = true;
   await waitFor(() => {
     const ports = JSON.parse(docker(['inspect', '--format', '{{json .NetworkSettings.Ports}}', app]));
@@ -59,8 +61,10 @@ try {
     '-e', 'POSTGRES_USER=passmint', '-e', 'POSTGRES_DB=passmint',
     '-e', `POSTGRES_PASSWORD=${password}`, 'postgres:16-alpine']); resources.db = true;
   await waitFor(() => docker(['exec', db, 'pg_isready', '-h', '127.0.0.1', '-U', 'passmint']).includes('accepting connections'), 'PostgreSQL');
-  docker(['run', '--rm', '--network', network, '-e', `DATABASE_URL=${databaseUrl}`, image,
-    'node', 'node_modules/prisma/build/index.js', 'db', 'push', '--skip-generate']);
+  if (!initializeAtStartup) {
+    docker(['run', '--rm', '--network', network, '-e', `DATABASE_URL=${databaseUrl}`, image,
+      'node', 'node_modules/prisma/build/index.js', 'db', 'push', '--skip-generate']);
+  }
   await startApp();
   await waitFor(async () => (await request('/ready')).status === 200, 'web/API/database readiness');
   assert.equal((await request('/health')).body.status, 'ok');
@@ -109,9 +113,18 @@ try {
   docker(['stop', '--time', '15', app]);
   assert.equal(docker(['inspect', '--format', '{{.State.ExitCode}}', app]), '0', 'clean signal shutdown');
   docker(['rm', app]); resources.app = false;
+  // Startup initialization must not reconcile or remove existing schema objects.
+  if (initializeAtStartup) {
+    docker(['exec', db, 'psql', '-U', 'passmint', '-d', 'passmint', '-c',
+      "CREATE TABLE retained_marker (value text); INSERT INTO retained_marker VALUES ('keep');"]);
+  }
   await startApp();
   await waitFor(async () => (await request('/ready')).status === 200, 'recreated container');
   assert.equal((await request(`/events/${eventId}`)).status, 200, 'database survives replacement');
+  if (initializeAtStartup) {
+    assert.equal(docker(['exec', db, 'psql', '-U', 'passmint', '-d', 'passmint', '-tAc',
+      'SELECT value FROM retained_marker']), 'keep', 'nonempty schema is never auto-synchronized');
+  }
   assert.equal((await fetch(`${origin}${uploaded.body.url}`)).status, 200, 'upload survives replacement');
   assert.equal((await request('/gate/scan', { method: 'POST', token: owner, body: { code } })).body.result, 'duplicate');
 

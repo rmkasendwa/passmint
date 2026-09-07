@@ -103,3 +103,5 @@ pnpm run docker:smoke
 ```
 
 Use `compose.production.yml` and `.env.production.example` for deployment. The original Compose file and `docker:up` remain for local development and require a real `AUTH_SECRET`. Current ticket issuance does not confirm payments or send email; deploying the image does not enable those pending integrations.
+
+For Coolify, use the Dockerfile build pack with exposed port **8088** and follow the [Coolify setup](docs/deployment.md#coolify-deployment-dockerfile-build-pack), including first-deploy database initialization and persistent uploads.

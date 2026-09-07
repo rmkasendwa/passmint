@@ -26,7 +26,7 @@ ENV NEXT_PUBLIC_API_URL=/api
 ENV WEB_PORT=8088
 ENV LOCAL_UPLOAD_DIR=/app/uploads
 # Keep the locked toolchain/Prisma CLI for an explicit, operator-run schema setup.
-# No schema mutation or dependency download happens when the app starts.
+# Schema setup at startup requires explicit opt-in and an empty database schema.
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=build /app/apps/web/node_modules ./apps/web/node_modules
@@ -36,7 +36,7 @@ COPY --from=build /app/apps/web/public ./apps/web/public
 COPY apps/web/next.config.mjs apps/web/package.json ./apps/web/
 COPY package.json pnpm-workspace.yaml ./
 COPY prisma prisma
-COPY scripts/start-production.mjs scripts/container-health.mjs ./scripts/
+COPY scripts/start-production.mjs scripts/container-health.mjs scripts/initialize-database.mjs ./scripts/
 RUN mkdir -p /app/uploads && chown node:node /app/uploads
 USER node
 EXPOSE 8088
