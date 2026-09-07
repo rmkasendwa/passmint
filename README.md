@@ -95,9 +95,11 @@ pnpm run lint      # type-check all workspaces
 
 ## Docker Image
 
-The production Dockerfile builds the API and web app into one image. Docker Compose keeps that app image behind an explicit profile so local development can use only the database container.
+The Dockerfile builds the web and API into one non-root image with same-origin API routing, generated Prisma Client, persistent-upload support and a database readiness health check. See [Docker deployment](docs/deployment.md) for production Compose setup, schema initialization, HTTPS routing, backups and runtime configuration.
 
 ```bash
 pnpm run docker:build
-pnpm run docker:up
+pnpm run docker:smoke
 ```
+
+Use `compose.production.yml` and `.env.production.example` for deployment. The original Compose file and `docker:up` remain for local development and require a real `AUTH_SECRET`. Current ticket issuance does not confirm payments or send email; deploying the image does not enable those pending integrations.
