@@ -33,6 +33,7 @@ import {
   useInlineFormValidation,
 } from './form-validation';
 import { PhoneNumberInput } from './phone-number-input';
+import { TicketTypeManager } from './ticket-type-manager';
 
 const panel =
   'rounded-lg border border-border bg-surface-raised shadow-[0_18px_52px_rgb(0_0_0/14%)]';
@@ -83,9 +84,9 @@ function ownerName(event: Event) {
   return event.owner.name;
 }
 
-function normalizeQuantity(value: number) {
+function normalizeQuantity(value: number, maximum = 10) {
   if (!Number.isFinite(value)) return 1;
-  return Math.min(10, Math.max(1, Math.trunc(value)));
+  return Math.min(maximum, Math.max(1, Math.trunc(value)));
 }
 
 export function EventDetail({ event }: { event: Event }) {
@@ -100,6 +101,8 @@ export function EventDetail({ event }: { event: Event }) {
     purchaseState,
     quantity,
     session,
+    selectedTicketTypeId,
+    setSelectedTicketTypeId,
     setBuyerEmail,
     setBuyerName,
     setMobileMoneyNumber,
@@ -175,10 +178,17 @@ export function EventDetail({ event }: { event: Event }) {
     return [...byId.values()];
   }, [relevantIssuedTickets, savedTicketsForEvent]);
   const checkoutEvent = displayEvent;
+  const selectedType = displayEvent.ticketTypes?.find(type => type.id === selectedTicketTypeId);
+  const unitPrice = selectedType?.priceCents ?? checkoutEvent.priceCents;
+  const maximumQuantity = Math.max(1, Math.min(selectedType?.maxPerOrder ?? 10, selectedType?.remainingCapacity ?? 100, displayEvent.remainingCapacity ?? 100));
+  const categoryUnavailable = Boolean(displayEvent.ticketTypes?.length && (!selectedType || !selectedType.available));
+  useEffect(() => {
+    if (!displayEvent.ticketTypes?.some(type => type.id === selectedTicketTypeId)) setSelectedTicketTypeId(displayEvent.ticketTypes?.find(type => type.available)?.id ?? '');
+  }, [displayEvent.ticketTypes, selectedTicketTypeId]);
   const isDraft = displayEvent.status === 'draft';
   const cancelled = displayEvent.status === 'cancelled';
   const salesClosed = cancelled || isDraft;
-  const ticketTotalCents = checkoutEvent.priceCents * quantity;
+  const ticketTotalCents = unitPrice * quantity;
   const startsAt = new Date(displayEvent.startsAt);
   const mapQuery = displayEvent.mapLocation || displayEvent.venue;
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`;
@@ -235,7 +245,7 @@ export function EventDetail({ event }: { event: Event }) {
   });
   const checkoutQuantityError = checkoutValidation.fieldError({
     label: 'Quantity',
-    max: 10,
+    max: maximumQuantity,
     min: 1,
     pattern: /^[0-9,]+$/,
     required: true,
@@ -245,11 +255,11 @@ export function EventDetail({ event }: { event: Event }) {
 
   function updateQuantityFromText(value: string) {
     const digits = value.replace(/\D/g, '');
-    setQuantity(normalizeQuantity(Number(digits || '1')));
+    setQuantity(normalizeQuantity(Number(digits || '1'), maximumQuantity));
   }
 
   function stepQuantity(direction: 1 | -1) {
-    setQuantity(normalizeQuantity(quantity + direction));
+    setQuantity(normalizeQuantity(quantity + direction, maximumQuantity));
   }
 
   async function saveEvent(eventForm: FormEvent<HTMLFormElement>) {
@@ -701,6 +711,7 @@ export function EventDetail({ event }: { event: Event }) {
             </section>
           )}
 
+          {ownedBySession && session && !cancelled && <TicketTypeManager event={displayEvent} token={session.token} onSaved={async () => setDisplayEvent(await api.getEvent(event.id, session.token))} />}
           <section className={panelPadded}>
             <div className="flex items-center gap-2.5 text-text [&_svg]:text-accent">
               <QrCode size={22} />
@@ -729,7 +740,7 @@ export function EventDetail({ event }: { event: Event }) {
                         {ticket.buyerName}
                       </h3>
                       <p className="mb-2 text-text-muted">
-                        {ticket.status.replace('_', ' ')}
+                        {ticket.ticketTypeName ?? 'General admission'} · {ticket.status.replace('_', ' ')}
                       </p>
                       <code className="rounded-md bg-surface-elevated px-2 py-1 text-[0.78rem] text-accent">
                         {ticket.code}
@@ -791,15 +802,19 @@ export function EventDetail({ event }: { event: Event }) {
               <div>
                 <p className={kicker}>Select tickets</p>
                 <h2 className="mb-0 text-[1.55rem]">
-                  1 ticket category available
+                  {displayEvent.ticketTypes?.length || 1} ticket categories
                 </h2>
               </div>
             </div>
+            {Boolean(displayEvent.ticketTypes?.length) && <label className="grid gap-2">Ticket category<select className="rounded-lg border border-border bg-surface-muted p-3 text-text" value={selectedTicketTypeId} onChange={e => { setSelectedTicketTypeId(e.target.value); setQuantity(1); }}>
+              <option value="">Choose a category</option>
+              {displayEvent.ticketTypes?.map(type => <option key={type.id} value={type.id} disabled={!type.available}>{type.name} — {money.format(type.priceCents / 100)}{type.available ? '' : type.remainingCapacity === 0 ? ' (Sold out)' : ' (Sales closed)'}</option>)}
+            </select></label>}
             <div className="grid gap-3 rounded-lg border border-border bg-surface-muted p-3">
               <div className="flex items-start justify-between gap-3">
-                <strong className="text-text">General admission</strong>
+                <strong className="text-text">{selectedType?.name ?? 'General admission'}</strong>
                 <strong className="text-price">
-                  {money.format(checkoutEvent.priceCents / 100)}
+                  {money.format(unitPrice / 100)}
                 </strong>
               </div>
               <span className="text-[0.9rem] text-text-muted">
@@ -815,13 +830,13 @@ export function EventDetail({ event }: { event: Event }) {
             <button
               className={primaryAction}
               type="button"
-              disabled={salesClosed || checkoutEvent.soldOut}
+              disabled={salesClosed || checkoutEvent.soldOut || categoryUnavailable}
               onClick={() => setCheckoutOpen(true)}
             >
               <CircleDollarSign size={18} />
               {isDraft ? 'Draft — ticket sales closed' : cancelled ? 'Event cancelled' : checkoutEvent.soldOut
                 ? 'Sold out'
-                : checkoutEvent.priceCents === 0
+                : unitPrice === 0
                   ? 'Get ticket'
                   : 'Pay now'}
             </button>
@@ -849,7 +864,7 @@ export function EventDetail({ event }: { event: Event }) {
                   className="mb-0 text-[clamp(1.6rem,3vw,2.35rem)] leading-tight text-text"
                   id="checkout-dialog-title"
                 >
-                  {checkoutEvent.priceCents === 0
+                  {unitPrice === 0
                     ? 'Get your ticket'
                     : 'Complete payment'}
                 </h2>
@@ -867,14 +882,14 @@ export function EventDetail({ event }: { event: Event }) {
             <div className="checkout-dialog__body">
               <div className="grid gap-3 rounded-lg border border-border bg-surface-muted p-3">
                 <div className="flex items-start justify-between gap-3">
-                  <strong className="text-text">General admission</strong>
+                  <strong className="text-text">{selectedType?.name ?? 'General admission'}</strong>
                   <strong className="text-price">
                     {money.format(ticketTotalCents / 100)}
                   </strong>
                 </div>
                 <span className="text-[0.9rem] text-text-muted">
                   {quantity.toLocaleString('en-UG')} x{' '}
-                  {money.format(checkoutEvent.priceCents / 100)}
+                  {money.format(unitPrice / 100)}
                 </span>
                 <span className="text-[0.9rem] text-text-muted">
                   {dateTime.format(new Date(checkoutEvent.startsAt))}
@@ -958,7 +973,7 @@ export function EventDetail({ event }: { event: Event }) {
                       type="button"
                       aria-label="Increase quantity"
                       onClick={() => stepQuantity(1)}
-                      disabled={quantity >= 10}
+                      disabled={quantity >= maximumQuantity}
                     >
                       <Plus size={16} />
                     </button>
@@ -969,7 +984,7 @@ export function EventDetail({ event }: { event: Event }) {
                   />
                 </label>
 
-                {checkoutEvent.priceCents > 0 && (
+                {unitPrice > 0 && (
                   <>
                     <div>
                       <p className={kicker}>Payment method</p>
@@ -1024,9 +1039,9 @@ export function EventDetail({ event }: { event: Event }) {
                   </>
                 )}
 
-                <button className={primaryAction} type="submit" disabled={salesClosed || checkoutEvent.soldOut}>
+                <button className={primaryAction} type="submit" disabled={salesClosed || checkoutEvent.soldOut || categoryUnavailable}>
                   <CircleDollarSign size={18} />
-                  {checkoutEvent.priceCents === 0
+                  {unitPrice === 0
                     ? 'Get ticket'
                     : `Pay with ${
                         paymentProvider === 'mtn' ? 'MTN MoMo' : 'Airtel Money'

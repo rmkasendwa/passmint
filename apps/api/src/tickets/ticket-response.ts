@@ -32,6 +32,9 @@ export async function toTicketResponse(ticket: TicketWithEvent) {
 
   return {
     id: ticket.id,
+    ticketTypeId: ticket.ticketTypeId,
+    ticketTypeName: ticket.ticketTypeName,
+    unitPriceCents: ticket.unitPriceCents ?? ticket.event?.priceCents ?? 0,
     code: ticket.code,
     buyerName: ticket.buyerName,
     buyerEmail: ticket.buyerEmail,

@@ -55,6 +55,8 @@ export function TicketsCheckout() {
     quantity,
     selectedEvent,
     selectedEventId,
+    selectedTicketTypeId,
+    setSelectedTicketTypeId,
     session,
     setBuyerEmail,
     setBuyerName,
@@ -66,6 +68,10 @@ export function TicketsCheckout() {
     visibleEvents,
     buyTickets,
   } = useAppContext();
+  const ticketType = selectedEvent?.ticketTypes?.find(type => type.id === selectedTicketTypeId);
+  const unitPrice = ticketType?.priceCents ?? selectedEvent?.priceCents ?? 0;
+  const maximum = Math.max(1, Math.min(ticketType?.maxPerOrder ?? 10, ticketType?.remainingCapacity ?? 100, selectedEvent?.remainingCapacity ?? 100));
+  const unavailable = !selectedEventId || selectedEvent?.soldOut || selectedEvent?.status === 'cancelled' || selectedEvent?.status === 'draft' || Boolean(selectedEvent?.ticketTypes?.length && (!ticketType || !ticketType.available));
   const validation = useInlineFormValidation();
   const buyerNameError = validation.fieldError({
     label: 'Buyer name',
@@ -80,7 +86,7 @@ export function TicketsCheckout() {
   });
   const quantityError = validation.fieldError({
     label: 'Quantity',
-    max: 10,
+    max: maximum,
     min: 1,
     required: true,
     value: quantity,
@@ -194,6 +200,10 @@ export function TicketsCheckout() {
             </div>
           )}
           <form className={formGrid} {...validation.formProps(buyTickets)}>
+            {Boolean(selectedEvent?.ticketTypes?.length) && <label>Ticket category<select className="rounded-lg border border-border bg-surface-muted p-3 text-text" value={selectedTicketTypeId} onChange={e => { setSelectedTicketTypeId(e.target.value); setQuantity(1); }} required>
+              <option value="">Choose category</option>
+              {selectedEvent?.ticketTypes?.map(type => <option key={type.id} value={type.id} disabled={!type.available}>{type.name} — {money.format(type.priceCents / 100)}{type.available ? '' : ' (Unavailable)'}</option>)}
+            </select></label>}
             <label>
               <RequiredLabel>Buyer name</RequiredLabel>
               <input
@@ -231,7 +241,7 @@ export function TicketsCheckout() {
                 aria-describedby="tickets-quantity-error"
                 aria-invalid={Boolean(quantityError) || undefined}
                 min={1}
-                max={10}
+                max={maximum}
                 type="number"
                 value={quantity}
                 onChange={(event) => setQuantity(Number(event.target.value))}
@@ -239,7 +249,7 @@ export function TicketsCheckout() {
               />
               <FieldMessage error={quantityError} id="tickets-quantity-error" />
             </label>
-            {selectedEvent && selectedEvent.priceCents > 0 && (
+            {selectedEvent && unitPrice > 0 && (
               <PhoneNumberInput
                 label="Mobile money number"
                 value={mobileMoneyNumber}
@@ -250,10 +260,10 @@ export function TicketsCheckout() {
             <button
               className={primaryAction}
               type="submit"
-              disabled={!selectedEventId}
+              disabled={unavailable}
             >
               <CircleDollarSign size={18} />
-              {selectedEvent?.priceCents === 0
+              {unitPrice === 0
                 ? 'Get ticket'
                 : 'Pay with mobile money'}
             </button>
@@ -327,7 +337,7 @@ export function TicketsCheckout() {
                     <span
                       className={`inline-flex min-h-7 items-center rounded-full px-2.5 text-xs font-(--weight-semibold) uppercase ${ticket.status === 'checked_in' ? 'bg-[#dff7e8] text-[#14532d]' : ticket.status === 'cancelled' ? 'bg-[#ffe8df] text-[#8d2718]' : 'bg-accent-soft text-accent'}`}
                     >
-                      {ticket.status.replace('_', ' ')}
+                      {ticket.ticketTypeName ?? 'General admission'} · {ticket.status.replace('_', ' ')}
                     </span>
                   </article>
                 ))

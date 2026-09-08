@@ -33,6 +33,16 @@ export class TicketsService {
       if (!event) throw new NotFoundException("Event not found");
       if (event.status === "draft") throw new NotFoundException("Event not found");
       if (event.status === "cancelled") throw new BadRequestException("This event has been cancelled. Ticket sales are closed.");
+      const types = await tx.ticketType.findMany({ where: { eventId: event.id } });
+      const type = dto.ticketTypeId ? types.find(type => type.id === dto.ticketTypeId) : undefined;
+      if ((types.length > 0 && !type) || (dto.ticketTypeId && !type)) throw new BadRequestException("Choose a valid ticket category for this event.");
+      if (quantity > (type?.maxPerOrder ?? 10)) throw new BadRequestException(`You can buy at most ${type?.maxPerOrder ?? 10} tickets per order.`);
+      if (type) {
+        const now = new Date();
+        if ((type.salesStart && now < type.salesStart) || (type.salesEnd && now >= type.salesEnd)) throw new BadRequestException("This ticket category is outside its sales window.");
+        const typeSold = await tx.ticket.count({ where: { ticketTypeId: type.id, status: { not: TicketStatus.Cancelled } } });
+        if (type.capacity !== null && typeSold + quantity > type.capacity) throw new BadRequestException("Not enough tickets remaining in this category.");
+      }
       const soldCount = await tx.ticket.count({
         where: { eventId: event.id, status: { not: TicketStatus.Cancelled } },
       });
@@ -68,6 +78,9 @@ export class TicketsService {
             data: {
               id: prefixedId("tkt"),
               eventId: event.id,
+              ticketTypeId: type?.id,
+              ticketTypeName: type?.name ?? "General admission",
+              unitPriceCents: type?.priceCents ?? event.priceCents,
               ownerId: authUser?.id,
               buyerName: dto.buyerName,
               buyerEmail,

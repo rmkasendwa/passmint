@@ -2,6 +2,10 @@
 
 A pnpm monorepo ticketing system for publishing events, issuing QR tickets, and validating entry at the gate.
 
+For product, technical, operational and acquisition documentation, start with the [documentation and handover index](docs/README.md). It distinguishes current source capabilities from the broader planned ticketing platform.
+
+**Current scope:** event management and direct QR-ticket issuance. Real payment processing, email delivery, password recovery, tenants and reserved seating are not implemented end to end. Paid-priced ticket issuance does not establish payment success. See the [capability register](docs/handover/02-capability-register.md).
+
 - Next.js frontend for event discovery, event detail checkout, account history, host publishing, event editing, and ticket verification
 - NestJS backend API
 - PostgreSQL database
@@ -32,7 +36,7 @@ Then open:
 - Prisma Studio: http://localhost:5555
 - MinIO console: http://localhost:9001
 
-The default local setup uses Docker only for PostgreSQL. The API and web app run as independent local workspaces.
+The default local setup uses Docker for PostgreSQL and MinIO. The API and web app run as independent local workspaces. `pnpm run dev` generates Prisma Client and synchronizes the development database schema before starting the apps; use a disposable development database.
 
 ## Monorepo Layout
 
@@ -40,8 +44,9 @@ The default local setup uses Docker only for PostgreSQL. The API and web app run
 apps/
   api/      NestJS API and PostgreSQL integration
   web/      Next.js frontend
-infra/
-  postgres/ Database initialization scripts
+prisma/     Database schema
+scripts/    Development, test and startup tooling
+docs/       Product, engineering and acquisition handover documentation
 ```
 
 ## Database IDs
@@ -51,20 +56,16 @@ Entity IDs are application-generated strings with readable prefixes:
 - Users: `usr_...`
 - Events: `evt_...`
 - Tickets: `tkt_...`
+- Ticket types (current working tree): `typ_...`
 
-If you have an older local database with UUID primary keys, wipe it and recreate the schema:
-
-```bash
-docker compose down -v
-pnpm run dev:db
-```
+Do not wipe retained records to change ID or schema formats. Review a migration and backup/restore approach first. Local reset commands delete data and are suitable only for a deliberately disposable development environment; see the [engineering guide](docs/handover/06-engineering.md).
 
 ## Main Flows
 
 1. Registered users create and publish free or paid events.
 2. Discovery cards link to `/event/:eventId`, where attendees review details and buy tickets.
 3. Attendees get tickets anonymously with an email address, or log in first to attach the purchase to account history.
-4. Paid checkout captures a mobile money number for the payment flow.
+4. Priced checkout captures a mobile money number, but the API currently issues tickets without provider payment confirmation.
 5. The API creates unique ticket codes and QR codes.
 6. Tickets already owned for the event are listed on that event detail page when the attendee is signed in.
 7. Event owners can edit their own event details from the event detail page.
@@ -95,7 +96,7 @@ pnpm run lint      # type-check all workspaces
 
 ## Docker Image
 
-The production Dockerfile builds the API and web app into one image. Docker Compose keeps that app image behind an explicit profile so local development can use only the database container.
+The supplied Dockerfile is intended to build the API and web app into one image. Its current build/runtime file-copy gaps must be addressed before relying on it for deployment. Docker Compose keeps the app behind an explicit profile. See the [operations runbook](docs/handover/07-operations.md) for limitations and release validation.
 
 ```bash
 pnpm run docker:build

@@ -37,6 +37,7 @@ model User {
 }
 
 model Event {
+  ticketTypes  TicketType[]
   status       String   @default("published") @db.VarChar
   cancelledAt  DateTime? @db.Timestamptz(6)
   publishAt    DateTime? @db.Timestamptz(6)
@@ -59,6 +60,10 @@ model Event {
 }
 
 model Ticket {
+  ticketTypeId String? @db.VarChar
+  ticketType   TicketType? @relation(fields: [ticketTypeId], references: [id])
+  ticketTypeName String @default("General admission")
+  unitPriceCents Int?
   id          String       @id(map: "PK_343bc942ae261cf7a1377f48fd0") @db.VarChar
   code        String       @unique(map: "IDX_c6e20a830c0f8b571abd331b77") @db.VarChar
   buyerName   String       @db.VarChar
@@ -73,4 +78,20 @@ model Ticket {
   updatedAt   DateTime     @default(now()) @updatedAt @db.Timestamp(6)
 
   @@map("tickets")
+}
+
+model TicketType {
+  id String @id @db.VarChar
+  eventId String @db.VarChar
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name String @db.VarChar
+  priceCents Int
+  capacity Int?
+  maxPerOrder Int @default(10)
+  salesStart DateTime? @db.Timestamptz(6)
+  salesEnd DateTime? @db.Timestamptz(6)
+  tickets Ticket[]
+  createdAt DateTime @default(now())
+  @@index([eventId])
+  @@map("ticket_types")
 }
