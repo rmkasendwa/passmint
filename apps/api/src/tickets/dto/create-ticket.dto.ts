@@ -11,6 +11,9 @@ import {
 } from "class-validator";
 
 export class CreateTicketDto {
+  @IsOptional()
+  @IsString()
+  ticketTypeId?: string;
   @IsString()
   @IsNotEmpty()
   eventId: string;
@@ -26,7 +29,7 @@ export class CreateTicketDto {
   @Type(() => Number)
   @IsInt()
   @IsPositive()
-  @Max(10)
+  @Max(100)
   quantity?: number;
 
   @IsOptional()

@@ -1,6 +1,7 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
 export type Event = {
+  ticketTypes?: TicketType[];
   status?: "draft" | "published" | "cancelled";
   cancelledAt?: string | null;
   publishAt?: string | null;
@@ -20,6 +21,9 @@ export type Event = {
 };
 
 export type Ticket = {
+  ticketTypeId?: string | null;
+  ticketTypeName?: string;
+  unitPriceCents?: number;
   id: string;
   code: string;
   buyerName: string;
@@ -54,7 +58,7 @@ export function getApiUrl() {
   return API_URL;
 }
 
-async function request<T>(
+export async function request<T>(
   path: string,
   init?: RequestInit,
   token?: string,
@@ -145,6 +149,7 @@ export const api = {
     ),
   buyTickets: (
     payload: {
+      ticketTypeId?: string;
       eventId: string;
       buyerName: string;
       buyerEmail: string;
@@ -184,4 +189,10 @@ export const api = {
       body: JSON.stringify(payload),
     }),
   me: (token: string) => request<User>("/auth/me", undefined, token),
+};
+
+export type TicketType = {
+  id: string; name: string; priceCents: number; capacity: number | null;
+  maxPerOrder: number; salesStart: string | null; salesEnd: string | null;
+  remainingCapacity: number | null; ticketsSold: number; available: boolean;
 };

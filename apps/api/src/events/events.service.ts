@@ -7,13 +7,18 @@ import {
   OnModuleDestroy,
   Logger,
 } from "@nestjs/common";
-import { Event, User } from "@prisma/client";
+import { Event, User, TicketType } from "@prisma/client";
 import { AuthUser } from "../auth/auth.types";
 import { prefixedId } from "../common/prefixed-id";
 import { PrismaService } from "../prisma/prisma.service";
 import { UserRole } from "../users/user-role.enum";
 import { CreateEventDto } from "./dto/create-event.dto";
 import { UpdateEventDto } from "./dto/update-event.dto";
+import { TicketTypeDto } from "./dto/ticket-type.dto";
+
+const typeInventory = {
+  ticketTypes: { include: { _count: { select: { tickets: { where: { status: { not: "cancelled" as const } } } } } }, orderBy: { createdAt: "asc" as const } },
+};
 
 type EventWithOwner = Event & { owner: User | null };
 
@@ -227,6 +232,7 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
       where: { status: { not: "draft" } },
       orderBy: { startsAt: "asc" },
       include: {
+        ...typeInventory,
         _count: {
           select: { tickets: { where: { status: { not: "cancelled" } } } },
         },
@@ -241,6 +247,7 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
     const events = await this.prisma.event.findMany({
       where: { ownerId: userId },
       include: {
+        ...typeInventory,
         _count: {
           select: { tickets: { where: { status: { not: "cancelled" } } } },
         },
@@ -256,6 +263,7 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
     const event = await this.prisma.event.findUnique({
       where: { id },
       include: {
+        ...typeInventory,
         owner: true,
         _count: {
           select: { tickets: { where: { status: { not: "cancelled" } } } },
@@ -356,7 +364,7 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
       });
     });
 
-    return this.toEventResponse(updated);
+    return this.findOne(updated.id, authUser);
   }
 
   async cancel(id: string, authUser: AuthUser) {
@@ -379,7 +387,7 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
   }
 
   private toEventResponse(
-    event: (Event | EventWithOwner) & { _count?: { tickets: number } },
+    event: (Event | EventWithOwner) & { _count?: { tickets: number }, ticketTypes?: (TicketType & { _count: { tickets: number } })[] },
   ) {
     const owner = "owner" in event
       ? event.owner ? { id: event.owner.id, name: event.owner.name } : null
@@ -388,6 +396,13 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
     return {
       ...event,
       owner,
+      ticketTypes: event.ticketTypes?.map(type => {
+        const remainingCapacity = type.capacity === null ? null : Math.max(0, type.capacity - type._count.tickets);
+        const now = new Date();
+        return { ...type, ticketsSold: type._count.tickets, remainingCapacity,
+          available: event.status === "published" && remainingCapacity !== 0 && (!type.salesStart || type.salesStart <= now) && (!type.salesEnd || type.salesEnd > now),
+        };
+      }),
       ticketsSold: event._count?.tickets ?? 0,
       remainingCapacity:
         event.capacity === null
@@ -397,5 +412,25 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
         event.capacity !== null &&
         (event._count?.tickets ?? 0) >= event.capacity,
     };
+  }
+
+  async saveTicketType(eventId: string, dto: TicketTypeDto, user: AuthUser, typeId?: string) {
+    return this.prisma.$transaction(async tx => {
+      await tx.$queryRaw`SELECT id FROM events WHERE id = ${eventId} FOR UPDATE`;
+      const event = await tx.event.findUnique({ where: { id: eventId } });
+      if (!event) throw new NotFoundException("Event not found");
+      if (event.ownerId !== user.id && (user.role !== UserRole.Admin || event.status === "draft")) throw new ForbiddenException("You can only manage ticket types for your own events.");
+      if (event.status === "cancelled") throw new BadRequestException("Cancelled events cannot be edited.");
+      const existing = typeId ? await tx.ticketType.findUnique({ where: { id: typeId } }) : null;
+      if (typeId && existing?.eventId !== eventId) throw new NotFoundException("Ticket type not found");
+      const start = dto.salesStart === undefined ? existing?.salesStart : dto.salesStart;
+      const end = dto.salesEnd === undefined ? existing?.salesEnd : dto.salesEnd;
+      if (start && end && start >= end) throw new BadRequestException("Sales must end after they start.");
+      if (dto.capacity != null && typeId) {
+        const sold = await tx.ticket.count({ where: { ticketTypeId: typeId, status: { not: "cancelled" } } });
+        if (dto.capacity < sold) throw new BadRequestException("Ticket type capacity cannot be below active sales.");
+      }
+      return typeId ? tx.ticketType.update({ where: { id: typeId }, data: dto }) : tx.ticketType.create({ data: { ...dto, id: prefixedId("typ"), eventId } });
+    });
   }
 }

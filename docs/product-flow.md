@@ -1,93 +1,59 @@
-# Passmint Product Flow
+# Passmint product workflows
 
-Passmint is an event publishing, ticketing, and gate-verification platform. The core product assumption is that regular people and organisations can create events, issue tickets, and validate tickets for the events they own.
+[Documentation index](README.md) · [Capability status](handover/02-capability-register.md)
 
-## Roles
+This document describes the inspected source on 7 September 2026, including local ticket-type additions. It does not establish a deployed production release. Broader tenant, cinema, bus and seating workflows remain proposals in the [roadmap](handover/09-roadmap-and-decisions.md).
 
-### Guest attendee
+## Roles and product principles
 
-A guest attendee can browse events and get tickets without creating an account. For paid events, the guest pays with mobile money and provides an email address where tickets should be delivered. For free events, the guest still provides an email address so Passmint can send the ticket.
+A guest browses and obtains tickets without creating an account, while supplying buyer name and email. A registered buyer uses the same flow and gets account-linked ticket history. Any registered user can become an organizer by creating events; that person administers their own events.
 
-Guests do not need an account for checkout.
+The current platform-admin role is separate from event ownership and permits selected cross-event actions. Private drafts remain owner-only. Shared organizations and staff roles are planned rather than implemented.
 
-### Registered attendee
+Platform use is intended to remain free during this rollout. No subscription or platform-admin approval is required to organize. Organizers can set an admission price, but real payment processing is not implemented yet.
 
-A registered attendee has a Passmint account. They can track ticket history, event attendance, purchased tickets, and payment methods. After a guest enters an email during checkout, Passmint should offer registration so they can manage the ticket and future purchases from an account.
+## Organizer journey
 
-### Event host
+1. Register or log in through the web application.
+2. Create an event with name, description, venue, start date/time, price and optional capacity, map location and image. Published creation assigns ownership to the signed-in user.
+3. Alternatively, save incomplete content as a private draft. The owner can complete it, publish it or schedule publication before its start time. Publication occurs through a 30-second API timer and catch-up checks on selected requests.
+4. Manage owned events through the dashboard and event-management/detail pages. Unrelated users cannot edit them. A published event cannot be made a draft through the current update contract.
+5. Define ticket categories with prices, optional capacities, sales windows and per-order limits. Customers must choose a category once categories exist.
+6. Cancel a published event with explicit confirmation if it will not proceed. Cancellation keeps the event and tickets, prevents new purchases and scans, and disallows further event edits. It does not send messages or process refunds.
 
-Any registered user can create and publish events on the platform. Hosts configure event details, capacity, price, and artwork. A host can validate tickets for events they created.
+Reusable seat layout design, rooms, movie schedules and bus resources are not available in this flow yet.
 
-### Platform admin
+## Buyer journey
 
-A platform admin can support marketplace operations and validate tickets across events when needed. Admin access is a platform-level override, not the default requirement for creating events.
+1. Browse public events and use text/date filters. Open `/event/:eventId` for details. Drafts are not public; cancelled events may remain visible with their status.
+2. Select a ticket category where configured and enter buyer name, email and quantity. Sign-in is optional. The interface includes a mobile-money number field for priced tickets.
+3. Submit the request. The API checks event/category availability and capacity and issues one unique ticket per requested unit. **It does not charge or verify a payment**, including when the event has a nonzero price.
+4. View returned tickets and QR codes immediately. Signed-in purchases are linked to the account and can be retrieved later. There is no implemented email delivery or secure guest recovery link; do not promise either from the presence of an email field.
+5. Present the QR code or ticket code at entry. The buyer does not need to log in to present it.
 
-## Event Publishing
+Ticket responses include current event details, buyer information and category/price snapshots captured at issuance. No seat is assigned. The purchaser's contact applies to each ticket in a batch; individual passenger/attendee records are future work.
 
-1. A user registers or signs in.
-2. The user creates an event with a name, description, venue, start time, capacity, optional artwork, and price.
-3. The event can be free by setting the price to zero.
-4. The event can be paid by setting a mobile-money payable price.
-5. Published events appear in public discovery.
-6. The publishing user becomes the event owner.
+## Repeat requests and capacity
 
-## Event Discovery And Detail
+If an event/email pair already has tickets, the API returns an additional-purchase confirmation response containing the existing count. The UI asks whether the buyer wants more; explicit confirmation allows another issuance when inventory permits. This is an accidental-repeat prompt, not an order-idempotency mechanism. Current count disclosure does not verify the email's owner and is a documented privacy gap.
 
-Discovery is the public marketplace entry point. Event cards and featured-event calls to action link to `/event/:eventId`.
+Null capacity means unlimited. Issued and checked-in tickets consume capacity; cancelled tickets do not. Event and category limits both apply, and event-row transactions serialize competing purchases and capacity changes. Reducing capacity below active tickets is rejected. There are no expiring reservations: inventory is consumed at issuance.
 
-The event detail page is the primary purchase surface. It shows the event artwork, category, status, date and time, venue, capacity, price, full description, checkout form, and any tickets the signed-in attendee already owns for that event.
+## Gate-operator journey
 
-The old standalone ticket-selection model is no longer the core product flow. Buying should happen in context from the specific event page.
+1. Sign in as the event owner or a platform admin with validation permission.
+2. Use the dashboard's camera scanner or enter a code manually. Camera failure has a manual-entry fallback.
+3. The API finds the ticket and checks the operator's authority, event cancellation and ticket status.
+4. A valid unused ticket is marked `checked_in` with a timestamp and an accepted result. Reuse is rejected as duplicate. Unknown, cancelled and unauthorized tickets have distinct rejection outcomes.
 
-## Event Editing
+Validation is online and single-use. There are no gate/zone or time-window checks, re-entry policies, offline synchronization or delegated check-in staff in the current model. The request carries the code only, so it does not enforce a separately selected gate/event context.
 
-Event owners can edit their own event from the event detail page. Platform admins may update events as an operational override. Users who do not own an event cannot update it.
+## Account and support limitations
 
-Editable event fields are name, description, venue, start time, capacity, price, and artwork URL. Ownership is not editable from the public UI.
+Registration/login works in source and sessions persist in browser local storage. Logout clears local session state; it does not revoke a server-stored session because no such session store exists. Forgot/reset-password screens are placeholders awaiting backend and email integration. Account linking for earlier guest tickets, ticket transfers, refunds and email verification are also proposed.
 
-## Ticket Checkout
+The [operations runbook](handover/07-operations.md) explains triage and evidence needed for real support. Do not manually change ticket or payment records as a substitute for an implemented, authorized support workflow.
 
-1. An attendee opens an event detail page from discovery.
-2. The attendee enters buyer name, ticket delivery email, and quantity.
-3. If the event is paid, the attendee provides a mobile money number and pays with mobile money.
-4. If the event is free, no payment is required.
-5. Passmint issues unique QR tickets and sends them to the provided email address.
-6. Newly issued tickets appear on the event detail page immediately.
-7. If the attendee is signed in, the tickets are attached to their account history and are listed on that event detail page on later visits.
-8. If the attendee is not signed in, checkout still succeeds as long as an email address is provided.
-9. After checkout, Passmint offers the attendee a path to register and track the ticket, attendance, and payment methods.
+## Intended end-to-end evolution
 
-## Repeat Ticket Requests By Email
-
-Passmint tracks tickets by event and email address, even when purchases happen in different sessions.
-
-When an email address already has tickets for the selected event:
-
-1. Passmint pauses checkout before issuing additional tickets.
-2. Passmint tells the attendee how many tickets already exist for that email and event.
-3. The attendee confirms that they want more tickets for the same event.
-4. If confirmed, Passmint issues the new tickets and the total count for that event-email pair increases.
-5. If cancelled, no additional tickets are issued.
-
-This avoids accidental duplicate purchases while still allowing one person to buy more tickets for the same event.
-
-## Gate Verification
-
-1. The verifier signs in.
-2. The verifier scans or enters a ticket QR code.
-3. Passmint checks whether the verifier owns the event connected to that ticket.
-4. Platform admins can verify tickets across events.
-5. Valid unused tickets are accepted and marked as checked in.
-6. Already checked-in tickets are rejected as duplicates.
-7. Cancelled or unknown tickets are rejected.
-8. A user cannot validate tickets for events they did not create unless they are a platform admin.
-
-## Current Implementation Notes
-
-- Event ownership is stored on events.
-- Ticket ownership remains optional so guest checkout can work.
-- Ticket delivery email is normalised before storage.
-- Repeat ticket checkout is guarded by a confirmation step based on event and email.
-- Event detail pages are addressed as `/event/:eventId`.
-- Event updates are guarded by ownership, with platform admins allowed as an override.
-- The current mobile money flow captures the number and product intent; payment provider integration still needs to be connected before real charging and settlement.
+The target flow is: create a free tenant → create an activity and occurrence → optionally apply a reusable layout → publish → customer chooses seats/quantity → hold inventory → complete free checkout or verify payment → issue and deliver tickets → recover/manage tickets → validate admission rules. Future implementations must retain optional buyer accounts and self-service event ownership.

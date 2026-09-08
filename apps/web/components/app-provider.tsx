@@ -78,6 +78,8 @@ type AppContextValue = {
   selectThumbnail: (file: File | null) => void;
   selectedEvent?: Event;
   selectedEventId: string;
+  selectedTicketTypeId: string;
+  setSelectedTicketTypeId: (value: string) => void;
   session: AuthSession | null;
   setAuthConfirmPassword: (value: string) => void;
   setAuthEmail: (value: string) => void;
@@ -163,6 +165,7 @@ export function AppProvider({
   const [mobileMoneyNumber, setMobileMoneyNumber] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [selectedTicketTypeId, setSelectedTicketTypeId] = useState('');
   const [gateCode, setGateCode] = useState("");
   const [gateResult, setGateResult] = useState<GateResult | null>(null);
   const [loading, setLoading] = useState(initialEvents.length === 0);
@@ -415,16 +418,12 @@ export function AppProvider({
   }
 
   async function submitTicketPurchase(confirmAdditional = false) {
-    const selected = selectedEvent;
-    setPurchaseState(
-      selected?.priceCents === 0
-        ? "Creating ticket..."
-        : "Processing mobile money ticket...",
-    );
+    setPurchaseState("Creating tickets...");
 
     const created = await api.buyTickets(
       {
         eventId: selectedEventId,
+        ...(selectedTicketTypeId ? { ticketTypeId: selectedTicketTypeId } : {}),
         buyerName,
         buyerEmail,
         quantity,
@@ -434,6 +433,8 @@ export function AppProvider({
       session?.token,
     );
     setTickets(created);
+    const latest = await api.getEvent(selectedEventId, session?.token).catch(() => null);
+    if (latest) setEvents(current => current.map(event => event.id === latest.id ? latest : event));
     if (session) await loadHistory(session.token);
     setPurchaseState(
       session
@@ -511,6 +512,7 @@ export function AppProvider({
   }
 
   function chooseEvent(eventId: string) {
+    if (eventId !== selectedEventId) { setSelectedTicketTypeId(''); setQuantity(1); }
     setSelectedEventId(eventId);
     setPurchaseState("");
   }
@@ -753,6 +755,8 @@ export function AppProvider({
     selectThumbnail,
     selectedEvent,
     selectedEventId,
+    selectedTicketTypeId,
+    setSelectedTicketTypeId,
     session,
     setAuthConfirmPassword,
     setAuthEmail,
