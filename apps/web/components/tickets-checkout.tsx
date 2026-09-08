@@ -200,6 +200,7 @@ export function TicketsCheckout() {
             </div>
           )}
           <form className={formGrid} {...validation.formProps(buyTickets)}>
+            {selectedEvent && <p>{ticketType?.name ?? 'General admission'} · {money.format(unitPrice * quantity / 100)} total</p>}
             {Boolean(selectedEvent?.ticketTypes?.length) && <label>Ticket category<select className="rounded-lg border border-border bg-surface-muted p-3 text-text" value={selectedTicketTypeId} onChange={e => { setSelectedTicketTypeId(e.target.value); setQuantity(1); }} required>
               <option value="">Choose category</option>
               {selectedEvent?.ticketTypes?.map(type => <option key={type.id} value={type.id} disabled={!type.available}>{type.name} — {money.format(type.priceCents / 100)}{type.available ? '' : ' (Unavailable)'}</option>)}

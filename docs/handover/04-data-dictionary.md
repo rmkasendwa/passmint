@@ -2,7 +2,7 @@
 
 [Documentation index](../README.md)
 
-The authority is [prisma/schema.prisma](../../prisma/schema.prisma). The dictionary includes the local ticket-type additions. There are four models, no tenant, occurrence, order, payment, seat, refund or audit-ledger tables.
+The authority is [prisma/schema.prisma](../../prisma/schema.prisma). The dictionary includes ticket categories. There are four models, no tenant, occurrence, order, payment, seat, refund or audit-ledger tables.
 
 ```mermaid
 erDiagram
@@ -44,7 +44,7 @@ An event is created published or as a draft. A valid draft can be published manu
 
 A ticket starts `issued` and becomes `checked_in` on acceptance. `cancelled` exists in the schema and is checked by inventory/gate logic, but there is no public individual-ticket cancellation endpoint. Event cancellation does not rewrite every ticket status. Refunds, transfers and re-entry are not current lifecycle operations.
 
-Ticket category name and unit price are snapshotted in the local additions; other event details in ticket responses come from the current event record. Editing a venue/time can therefore change displayed ticket details without a separate event-change notification. Legacy null ticket prices fall back to the current event price.
+Ticket category name and unit price are snapshotted when tickets are issued; other event details in ticket responses come from the current event record. Editing a venue/time can therefore change displayed ticket details without a separate event-change notification. Legacy null ticket prices fall back to the current event price.
 
 ## Data classification and proposed handling
 

@@ -46,11 +46,11 @@ Gate validation looks up the code, checks ownership/admin privileges and cancell
 
 The event service publishes due drafts during startup, on a 30-second timer and during selected reads/purchases. It is an in-process mechanism, not a durable job queue. Each API process can run the timer; failure is logged and retried on a later tick.
 
-Startup also inserts named demo events and fills missing image/map details for matching names. There is no inspected production-only seeding exclusion. Separately, server-rendered pages fall back to demo data when API calls fail. These behaviors are useful for demonstration but must be accounted for in production operations and commercial reporting.
+Development startup inserts named demo events and fills missing image/map details for matching names. Production skips this unless `SEED_DEMO_DATA=true`. Server and client demo fallback is disabled in production, so API errors do not become sample inventory. Exclude any deliberately seeded records from commercial reporting.
 
 ## Deployment shape and dependencies
 
-Local development runs the web and API as separate processes and PostgreSQL/MinIO in Docker. The supplied production Dockerfile aims to run both apps in one image; its startup script backgrounds the API and foregrounds the web. The file does not currently copy all required runtime scripts/schema assets. Treat this path as unverified; see [known gaps](12-gaps-and-verification.md).
+Local development runs the web and API as separate processes and PostgreSQL/MinIO in Docker. Production uses one non-root image: a Node supervisor starts Next.js on port 8088 and the API on private loopback port 3000, forwards termination signals and exits if either child fails. Next.js proxies browser `/api` calls to the API; server fetches use `API_INTERNAL_URL`. The container health check calls `/api/ready`, which tests database connectivity. See the [deployment guide](../deployment.md) for configuration and empty-database initialization.
 
 `NEXT_PUBLIC_API_URL` is used by browser and server web code and must be correct at build time. A URL reachable only inside a container will fail for browsers; a localhost URL may point to the wrong process inside containers. Separate public/internal endpoint handling is not implemented.
 

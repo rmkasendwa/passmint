@@ -2,13 +2,14 @@
 
 [Documentation index](../README.md)
 
-This is a source-derived reference, including uncommitted category routes. It is not a versioned public API commitment. Local base URL is `http://localhost:3000`; configuration can change it. Requests and responses are JSON. Dates serialize as ISO strings. Protected routes use `Authorization: Bearer <token>`. No global route prefix or OpenAPI document is configured in the inspected bootstrap.
+This is a source-derived reference, including category routes. It is not a versioned public API commitment. Local base URL is `http://localhost:3000`; the production image exposes these routes through same-origin `/api`. Requests and responses are JSON. Dates serialize as ISO strings. Protected routes use `Authorization: Bearer <token>`. No global route prefix or OpenAPI document is configured in the inspected bootstrap.
 
 ## Routes
 
 | Method and path | Authorization | Behavior / response |
 | --- | --- | --- |
 | GET `/health` | Public | `{ "status": "ok", "service": "passmint-api" }`; process liveness only |
+| GET `/ready` | Public | Database connectivity check; 503 when unavailable |
 | POST `/auth/register` | Public | `{name,email,password}` → `{token,user}`; password minimum 8 characters; normalized unique email |
 | POST `/auth/login` | Public | `{email,password}` → `{token,user}` |
 | GET `/auth/me` | Bearer | Current database user's public fields |
@@ -20,8 +21,8 @@ This is a source-derived reference, including uncommitted category routes. It is
 | PATCH `/events/:id` | Owner or admin; drafts owner-only | Updates fields, publishes or schedules draft; rejects cancelled events |
 | POST `/events/:id/cancel` | Owner or admin; draft rules apply | Requires `{ "confirm": true }`; preserves cancellation timestamp on repeat |
 | POST `/events/uploads` | Bearer | `{fileName,contentType,dataUrl}` → `{url}` |
-| POST `/events/:id/ticket-types` | Owner or admin; drafts owner-only | Creates category; working-tree addition |
-| PATCH `/events/:id/ticket-types/:typeId` | Owner or admin; drafts owner-only | Updates category belonging to event; working-tree addition |
+| POST `/events/:id/ticket-types` | Owner or admin; drafts owner-only | Creates category |
+| PATCH `/events/:id/ticket-types/:typeId` | Owner or admin; drafts owner-only | Updates category belonging to event |
 | POST `/tickets` | Optional bearer | Directly issues an array of tickets; does not confirm payment |
 | GET `/tickets/mine` | Bearer | Tickets linked to caller's user ID, newest first |
 | GET `/tickets/:id` | Ticket owner, event owner or admin | One ticket with QR and public event projection |

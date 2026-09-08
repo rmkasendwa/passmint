@@ -36,7 +36,7 @@ Defaults: web port 8088, API 3000, PostgreSQL 5432, MinIO API 9000, console 9001
 
 ## Working changes and schema discipline
 
-The inspected checkout contains uncommitted ticket-type work in Prisma, API and web files, plus `pnpm-workspace.yaml`; these were not authored or altered by the documentation task. Record the final diff and run validation before treating that work as a release. Do not overwrite or discard it during handover.
+Ticket types span Prisma, API and web files. Schema changes require client generation and a reviewed database update; existing databases are not automatically upgraded by production startup. Record the release SHA and validation evidence before deployment.
 
 `db:push` synchronizes schema without a versioned migration trail. `db:reset` invokes Compose volume deletion and removes local database/image data; it is not a recovery procedure. Establish reviewed migrations, backups and restore drills before applying schema changes to real retained records. Schema changes also require regenerating Prisma Client.
 
@@ -51,7 +51,7 @@ pnpm run build
 
 `lint` is TypeScript checking, not an ESLint/security scan. The [test runner](../../scripts/test.mjs) selects `TEST_DATABASE_URL` or `DATABASE_URL`, creates a unique temporary schema, pushes schema into it, compiles API code, runs `*.test.cjs`, then drops that schema in cleanup. Use a separate test database and appropriate schema permissions. Process termination can prevent normal cleanup; inspect orphaned `test_` schemas before removing only a verified test target.
 
-Tests present cover HTTP auth/ownership, capacity concurrency and unlimited inventory, cancellation/confirmation, draft privacy and scheduled publication. Their existence is not evidence that the latest working tree passes. No dedicated ticket-type test file, browser end-to-end suite, payment integration, disaster-recovery drill or load benchmark was found. Capture actual CI run links and results for the chosen release.
+Tests cover HTTP auth/ownership, capacity concurrency and unlimited inventory, cancellation/confirmation, draft privacy, scheduled publication and ticket-category limits, windows, price snapshots and concurrent purchases. Docker CI also exercises fresh initialization, persistence, uploads and process failure. No browser end-to-end suite, payment integration, disaster-recovery drill or load benchmark is supplied. Capture actual CI run links and results for the chosen release.
 
 CI runs on pull requests and pushes to `main`, installs with a frozen lockfile, generates the client, type-checks, tests and builds with a PostgreSQL service. Deployment, container smoke tests and formal artifact signing are not configured in that workflow.
 
@@ -59,4 +59,4 @@ CI runs on pull requests and pushes to `main`, installs with a frozen lockfile, 
 
 Use small, reviewed changes with behavior-focused validation. Update capability status, API/data documentation and known gaps as features land. For a release, record commit SHA, dependency lockfile, schema transition, environment changes, CI evidence, restore point and rollback compatibility. Do not infer production deployment from a merged PR or a successful source build.
 
-Avoid repository-wide formatting during unrelated work: the checkout uses mixed formatting and currently contains user changes. Keep credentials and production exports outside Git. Before acquisition transfer, capture outstanding branches, issues and uncommitted work with their authors and disposition.
+Avoid repository-wide formatting during unrelated work: the checkout uses mixed formatting. Keep credentials and production exports outside Git. Use descriptive `feat/`, `fix/` or `chore/` branch names. Before acquisition transfer, capture outstanding branches, issues and uncommitted work with their authors and disposition.

@@ -18,7 +18,7 @@ Platform use is intended to remain free during this rollout. No subscription or 
 2. Create an event with name, description, venue, start date/time, price and optional capacity, map location and image. Published creation assigns ownership to the signed-in user.
 3. Alternatively, save incomplete content as a private draft. The owner can complete it, publish it or schedule publication before its start time. Publication occurs through a 30-second API timer and catch-up checks on selected requests.
 4. Manage owned events through the dashboard and event-management/detail pages. Unrelated users cannot edit them. A published event cannot be made a draft through the current update contract.
-5. In the current working tree, define ticket categories with prices, optional capacities, sales windows and per-order limits. Customers must choose a category once categories exist.
+5. Define ticket categories with prices, optional capacities, sales windows and per-order limits. Customers must choose a category once categories exist.
 6. Cancel a published event with explicit confirmation if it will not proceed. Cancellation keeps the event and tickets, prevents new purchases and scans, and disallows further event edits. It does not send messages or process refunds.
 
 Reusable seat layout design, rooms, movie schedules and bus resources are not available in this flow yet.
@@ -31,7 +31,7 @@ Reusable seat layout design, rooms, movie schedules and bus resources are not av
 4. View returned tickets and QR codes immediately. Signed-in purchases are linked to the account and can be retrieved later. There is no implemented email delivery or secure guest recovery link; do not promise either from the presence of an email field.
 5. Present the QR code or ticket code at entry. The buyer does not need to log in to present it.
 
-Ticket responses include current event details, buyer information and category/price snapshots from the local additions. No seat is assigned. The purchaser's contact applies to each ticket in a batch; individual passenger/attendee records are future work.
+Ticket responses include current event details, buyer information and category/price snapshots captured at issuance. No seat is assigned. The purchaser's contact applies to each ticket in a batch; individual passenger/attendee records are future work.
 
 ## Repeat requests and capacity
 

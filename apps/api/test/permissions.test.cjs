@@ -38,6 +38,25 @@ async function request(path, method = 'GET', token, body) {
   return { status: response.status, body: await response.json() };
 }
 const details = { name: 'Hosted', description: 'Description', venue: 'Venue', startsAt: '2030-01-01T00:00:00Z', priceCents: 0, capacity: 10 };
+test('HTTP ticket-category validation and private draft ownership', async () => {
+  const { body: event } = await request('/events/drafts', 'POST', 'host', details);
+  const path = `/events/${event.id}/ticket-types`;
+  const category = { name: 'VIP', priceCents: 2500 };
+  assert.equal((await request(path, 'POST', undefined, category)).status, 401);
+  assert.equal((await request(path, 'POST', 'other', category)).status, 403);
+  assert.equal((await request(path, 'POST', 'admin', category)).status, 403);
+  for (const invalid of [{ ...category, priceCents: -1 }, { ...category, maxPerOrder: null }, { ...category, maxPerOrder: 101 }, { ...category, capacity: 0 }, { ...category, salesStart: 'invalid' }]) {
+    assert.equal((await request(path, 'POST', 'host', invalid)).status, 400);
+  }
+  const created = await request(path, 'POST', 'host', category);
+  assert.equal(created.status, 201);
+  const purchase = { eventId: event.id, ticketTypeId: created.body.id, buyerName: 'Guest', buyerEmail: `${randomUUID()}@example.com` };
+  assert.equal((await request('/tickets', 'POST', undefined, purchase)).status, 404);
+  assert.equal((await request(`/events/${event.id}`, 'PATCH', 'host', { status: 'published' })).status, 200);
+  const issued = await request('/tickets', 'POST', undefined, purchase);
+  assert.equal(issued.status, 201);
+  assert.equal(issued.body[0].ticketTypeName, 'VIP');
+});
 test('HTTP authentication, ownership and admin permissions', async () => {
   assert.equal((await request('/events', 'POST', undefined, details)).status, 401);
   assert.equal((await request('/events', 'POST', 'invalid', details)).status, 401);

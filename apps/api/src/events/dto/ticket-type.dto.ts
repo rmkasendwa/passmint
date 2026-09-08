@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsDate, IsInt, IsNotEmpty, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
+import { IsDate, IsInt, IsNotEmpty, IsOptional, IsString, Max, MaxLength, Min, ValidateIf } from 'class-validator';
 
 export class TicketTypeDto {
   @IsString() @IsNotEmpty() @MaxLength(100)
@@ -8,7 +8,7 @@ export class TicketTypeDto {
   priceCents: number;
   @IsOptional() @Type(() => Number) @IsInt() @Min(1)
   capacity?: number | null;
-  @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(100)
+  @ValidateIf((_object, value) => value !== undefined) @Type(() => Number) @IsInt() @Min(1) @Max(100)
   maxPerOrder?: number;
   @IsOptional() @Type(() => Date) @IsDate()
   salesStart?: Date | null;

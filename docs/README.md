@@ -2,7 +2,7 @@
 
 Passmint is building one free-to-use platform for tickets and gate passes. This documentation explains the product, the software available today, the intended expansion, and what a receiving company needs to verify and take over.
 
-**Prepared:** 7 September 2026. **Document status:** repository-based handover draft, ready for owner and technical review. **Audience:** acquiring-company product, engineering, operations and diligence teams. Treat operational and ownership material as internal; confirm repository visibility before adding company records.
+**Updated:** 8 September 2026. **Document status:** repository-based handover draft, ready for owner and technical review. **Audience:** acquiring-company product, engineering, operations and diligence teams. Treat operational and ownership material as internal; confirm repository visibility before adding company records.
 
 ## Read in this order
 
@@ -16,6 +16,7 @@ Passmint is building one free-to-use platform for tickets and gate passes. This 
 | [API reference](handover/05-api-reference.md) | Current routes, permissions, payloads and errors |
 | [Engineering guide](handover/06-engineering.md) | Setup, repository map, development and testing |
 | [Operations and recovery](handover/07-operations.md) | Configuration, release, monitoring, incidents and recovery procedures |
+| [Docker and Coolify deployment](deployment.md) | Executable deployment setup, database initialization and persistent storage |
 | [Security and privacy](handover/08-security-and-privacy.md) | Observed controls, gaps and evidence needed |
 | [Roadmap and decisions](handover/09-roadmap-and-decisions.md) | Confirmed principles, proposed features and sequencing |
 | [Assets and ownership](handover/10-assets-and-ownership.md) | Software, infrastructure, IP, vendors and transfer records |
@@ -24,10 +25,9 @@ Passmint is building one free-to-use platform for tickets and gate passes. This 
 
 ## Evidence and status rules
 
-The baseline is repository `rmkasendwa/passmint`, commit `8612c6bb40da44815fa730ee7a639c0b4f449d7e` (5 September 2026), **plus the local working tree reviewed on 7 September**. Ticket-type work changes the schema, API and frontend and was uncommitted at inspection. This package is not a description of an identified production release. Freeze and record a clean release before formal handover.
+This package describes the source in this revision of `rmkasendwa/passmint`, including ticket categories and the Docker deployment merged in [PR #67](https://github.com/rmkasendwa/passmint/pull/67). See the [validation record](handover/12-gaps-and-verification.md) for dated evidence. It does not identify a running production release; record the deployed SHA and operational evidence before formal handover.
 
 - **Implemented in source:** the inspected code contains the behavior. This does not establish deployment, test success, usage or commercial readiness.
-- **Working-tree addition:** present locally but not in the recorded commit.
 - **Partial:** some UI or logic exists; the complete business workflow does not.
 - **Proposed:** product direction or GitHub issue; not shipped functionality.
 - **Owner confirmation required:** information cannot be established from the repository. It does not mean the record or service does not exist.

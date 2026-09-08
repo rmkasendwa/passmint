@@ -4,7 +4,7 @@
 
 ## Operating status
 
-The repository supplies development automation and a container deployment attempt. The actual hosting account, public domain, running release, backups, alerting, traffic and support rota are **owner confirmation required**. The procedures below are a handover runbook to validate in staging, not evidence of an already operating production service.
+The repository supplies development automation and a tested container deployment setup. The actual hosting account, public domain, running release, backups, alerting, traffic and support rota are **owner confirmation required**. The procedures below are a handover runbook to validate in staging, not evidence of an already operating production service.
 
 ## Configuration inventory
 
@@ -16,10 +16,12 @@ Never place real values in this document. [`.env.example`](../../.env.example) c
 | `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | Local connection/default construction and Compose; password secret |
 | `TEST_DATABASE_URL` | Isolated test connection; secret; overrides test runner target |
 | `APP_DATABASE_URL` | Compose application's database URL; default uses `postgres` hostname |
-| `API_PORT`, `WEB_PORT`, `PORT` | API/web listeners; API bootstrap gives `PORT` precedence |
-| `NEXT_PUBLIC_API_URL` | Public API address compiled into web bundle; not a secret; also used for server fetches |
+| `API_PORT`, `WEB_PORT`, `PORT`, `API_HOST` | Development listener settings; production supervisor reserves loopback port 3000 for API and uses `PORT`/`WEB_PORT` (8088 default) for web |
+| `NEXT_PUBLIC_API_URL`, `API_INTERNAL_URL` | Browser API address (image builds `/api`) and internal server fetch address (loopback in image) |
 | `CORS_ORIGIN` | Allowed browser origin; default local web origin; Compose app currently sets localhost explicitly |
 | `AUTH_SECRET` | HMAC token signing secret; must replace development fallback |
+| `INITIALIZE_DATABASE` | Explicit first-deploy opt-in; initializes only an empty schema, skips existing tables; turn off after initial deployment |
+| `SEED_DEMO_DATA` | Production seeding is disabled unless explicitly set to `true` |
 | `ADMIN_EMAILS` | Comma-separated email list assigning platform-admin role at registration; privileged configuration |
 | `MINIO_API_PORT`, `MINIO_CONSOLE_PORT`, `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD` | Local storage service and administrative credentials |
 | `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT`, `S3_FORCE_PATH_STYLE` | Object destination and addressing; custom endpoint forces path-style behavior in service |
@@ -28,13 +30,13 @@ Never place real values in this document. [`.env.example`](../../.env.example) c
 | `IMAGE_UPLOAD_MAX_BYTES` | Decoded image maximum, default 5 MiB; API request body limit is separately 7 MB |
 | `LOCAL_UPLOAD_DIR`, `PUBLIC_API_URL` | Filesystem fallback directory and public URL prefix |
 
-The storage service chooses S3 when bucket/access key/secret are populated. Standard scripts populate these from local defaults; merely removing S3 lines from `.env` does not necessarily activate filesystem fallback. Validate effective configuration without printing secrets. Blank values also differ from missing values because of nullish defaulting.
+The storage service chooses S3 when bucket/access key/secret are populated. Development scripts populate local defaults; merely removing S3 lines from development `.env` does not necessarily activate filesystem fallback. Production startup does not load those development defaults. Its default upload directory `/app/uploads` must be persisted and writable by UID 1000. Validate effective configuration without printing secrets.
 
 ## Release procedure to establish
 
 1. Identify release SHA and resolve working-tree additions. Capture passing CI and a tested build artifact.
 2. Inventory target environment, secret custodian, database and storage locations; confirm there is a recoverable backup.
-3. Address [container gaps](12-gaps-and-verification.md) before using the Dockerfile. Source builds alone do not validate the image.
+3. Follow the [Docker/Coolify guide](../deployment.md), build the image and run both documented smoke modes. Source builds alone do not validate the image.
 4. Review schema delta and run a staged migration/restore rehearsal. Do not use automatic development `db push` as a production migration strategy.
 5. Configure HTTPS routing, browser/server API reachability, CORS, private database access and persistent image storage. Define an explicit demo-seed/fallback policy before launch.
 6. Deploy to staging and execute the smoke scenario below, then approve the release for its actual supported scope.
@@ -42,17 +44,17 @@ The storage service chooses S3 when bucket/access key/secret are populated. Stan
 
 ### Smoke scenario
 
-In an isolated environment, register two ordinary users; create a free event as one; confirm the other cannot edit or scan it. Save a private draft, publish it, issue guest/member tickets, inspect QR results and account history, scan once and reject the second scan. Exercise limited capacity and cancellation. Upload an image and retrieve it from a fresh browser. Verify that API unavailability is detected despite the frontend demo fallback. Use synthetic contact details. Paid checkout is not a valid payment smoke test until provider integration exists.
+In an isolated environment, register two ordinary users; create a free event as one; confirm the other cannot edit or scan it. Save a private draft, publish it, issue guest/member tickets, inspect QR results and account history, scan once and reject the second scan. Exercise category selection, limited capacity and cancellation. Upload an image and retrieve it from a fresh browser. Verify that API unavailability is detected and production shows no demo fallback. Use synthetic contact details. Paid checkout is not a valid payment smoke test until provider integration exists.
 
-### Current container concerns
+### Container behavior and remaining operational work
 
-The build stage copies manifests and `apps`, but package build commands call root scripts that are not copied. The Prisma schema/client-generation path is also absent from the build setup. The runtime copies only `scripts/start-production.sh`, while package startup uses `scripts/run-with-env.mjs` and `root-env.mjs`; web public assets are not copied either. These are static-inspection findings, not a newly executed image build result.
+The image includes generated Prisma Client, compiled apps, public assets and direct startup scripts. The supervisor requires a database URL and non-placeholder signing secret of at least 32 characters. It forwards shutdown signals and exits when either child stops. `/api/ready` tests database connectivity. CI tests normal setup and optional empty-schema initialization, including retained data and uploads after container replacement.
 
-The two-process startup script does not establish independent API health supervision. Compose config is local-oriented and does not prove a reverse proxy, TLS, production secret store or backup service. Container repair is separate implementation work.
+Production Compose supplies a private PostgreSQL service and persistent volumes. Coolify supplies routing/TLS when configured according to the deployment guide. A live reverse proxy, secret store, monitoring and backup service still require deployment-specific evidence.
 
 ## Monitoring to establish
 
-Monitor API reachability and latency, authenticated requests, database connectivity/locks, issuance errors, duplicate/failed scans, upload failures, overdue draft publication, disk/object capacity and application restarts. `/health` is a static liveness response: use a separate functional database check and synthetic journey. Do not infer health from a rendered homepage because it can show demo data during API failure.
+Monitor API reachability and latency, authenticated requests, database connectivity/locks, issuance errors, duplicate/failed scans, upload failures, overdue draft publication, disk/object capacity and application restarts. `/health` is static liveness; `/ready` checks the database (both under `/api` through the image). Add a synthetic user journey to test application behavior beyond connectivity.
 
 There is no verified alert destination, SLO, dashboard or on-call rotation in source. Record owners and targets in the transition checklist. Define desired recovery-point and recovery-time objectives before selecting backup intervals; no achieved RPO/RTO is claimed here.
 
@@ -60,7 +62,7 @@ There is no verified alert destination, SLO, dashboard or on-call rotation in so
 
 | Symptom | First investigation | Handling |
 | --- | --- | --- |
-| Demo listings or empty account history | API URL, actual API response, DB connectivity; frontend can hide errors | Confirm real service state before telling customers records are missing |
+| Unexpected listings or empty account history | API URL, actual API response, DB connectivity and seed configuration | Confirm real service state before telling customers records are missing |
 | Tickets appear without payment | Current direct-issuance design | Do not report them as settled sales; payment integration is pending |
 | Duplicate scan | Confirm prior acceptance and authorized event owner | Do not reset used status to bypass validation without a reviewed support process |
 | Sales fail at capacity | Event and category counts, limits and sale windows | Verify inventory; do not raise capacity beyond actual venue allowance |

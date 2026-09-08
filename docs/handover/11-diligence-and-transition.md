@@ -31,7 +31,7 @@ Confirm transaction scope with the responsible company representatives: assets/a
 
 ### 2. Receiving-team familiarization
 
-Walk through the company/product overview and capability register. Demonstrate the supported free-event flow, ownership boundaries, drafts, capacity, tickets and duplicate scan rejection in a test environment. Explain payment/email placeholders and demo fallback explicitly. Review architecture, schema and known gaps with the incoming engineering team.
+Walk through the company/product overview and capability register. Demonstrate the supported free-event flow, ownership boundaries, drafts, capacity, tickets and duplicate scan rejection in a test environment. Explain payment/email placeholders and development-only demo fallback explicitly. Review architecture, schema and known gaps with the incoming engineering team.
 
 ### 3. Access and recovery rehearsal
 

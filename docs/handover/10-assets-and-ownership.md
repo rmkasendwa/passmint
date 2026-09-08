@@ -9,7 +9,7 @@ This is a transfer inventory, not a declaration that all rights belong to a lega
 | Asset | Evidence available | Owner / transfer information required |
 | --- | --- | --- |
 | Passmint source | [GitHub repository](https://github.com/rmkasendwa/passmint), local checkout | Legal owner, contributors, rights assignments, authorized repository transfer recipient |
-| Uncommitted source additions | Ticket-type API/web/schema changes in reviewed working tree | Author, review status, final commit or disposition |
+| Ticket-category source | API/web/schema implementation and integration tests | Commit history, review record and contributor IP assignments |
 | Product requirements and backlog | Repository docs and GitHub issues, especially #65 | Export of issues/comments and product decision owner |
 | Brand, name and logo | Passmint naming and web icon in source | Trademark status, authorship, rights and design originals |
 | Domains and DNS | Owner confirmation required | Registrar, registrant, renewal, DNS zone and transfer authority |

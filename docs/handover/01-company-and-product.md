@@ -6,7 +6,7 @@
 
 Passmint is a web-based event publishing, ticket issuance and gate-verification product. Its broader direction is a single platform where individuals and organizations manage admission to events, screenings, journeys, facilities and private sites. Buyers should be able to obtain tickets with or without a Passmint account.
 
-The current software centers on individually owned events and QR tickets. It includes discovery, registration/login, event management, draft publication, optional capacity and online single-use validation. Ticket categories are present in the inspected working tree. Organizations, reserved seating and specialized vertical workflows are future work.
+The current software centers on individually owned events and QR tickets. It includes discovery, registration/login, event management, draft publication, optional capacity and online single-use validation. Ticket categories support separate prices, inventory and sales windows. Organizations, reserved seating and specialized vertical workflows are future work.
 
 ## Customers and problems addressed
 

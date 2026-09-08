@@ -418,12 +418,7 @@ export function AppProvider({
   }
 
   async function submitTicketPurchase(confirmAdditional = false) {
-    const selected = selectedEvent;
-    setPurchaseState(
-      selected?.priceCents === 0
-        ? "Creating ticket..."
-        : "Processing mobile money ticket...",
-    );
+    setPurchaseState("Creating tickets...");
 
     const created = await api.buyTickets(
       {

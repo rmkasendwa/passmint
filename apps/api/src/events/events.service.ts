@@ -400,7 +400,7 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
         const remainingCapacity = type.capacity === null ? null : Math.max(0, type.capacity - type._count.tickets);
         const now = new Date();
         return { ...type, ticketsSold: type._count.tickets, remainingCapacity,
-          available: remainingCapacity !== 0 && (!type.salesStart || type.salesStart <= now) && (!type.salesEnd || type.salesEnd > now),
+          available: event.status === "published" && remainingCapacity !== 0 && (!type.salesStart || type.salesStart <= now) && (!type.salesEnd || type.salesEnd > now),
         };
       }),
       ticketsSold: event._count?.tickets ?? 0,
