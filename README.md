@@ -56,7 +56,7 @@ Entity IDs are application-generated strings with readable prefixes:
 - Users: `usr_...`
 - Events: `evt_...`
 - Tickets: `tkt_...`
-- Ticket types (current working tree): `typ_...`
+- Ticket types: `typ_...`
 
 Do not wipe retained records to change ID or schema formats. Review a migration and backup/restore approach first. Local reset commands delete data and are suitable only for a deliberately disposable development environment; see the [engineering guide](docs/handover/06-engineering.md).
 
@@ -96,9 +96,13 @@ pnpm run lint      # type-check all workspaces
 
 ## Docker Image
 
-The supplied Dockerfile is intended to build the API and web app into one image. Its current build/runtime file-copy gaps must be addressed before relying on it for deployment. Docker Compose keeps the app behind an explicit profile. See the [operations runbook](docs/handover/07-operations.md) for limitations and release validation.
+The Dockerfile builds the web and API into one non-root image with same-origin API routing, generated Prisma Client, persistent-upload support and a database readiness health check. See [Docker deployment](docs/deployment.md) for production Compose setup, schema initialization, HTTPS routing, backups and runtime configuration.
 
 ```bash
 pnpm run docker:build
-pnpm run docker:up
+pnpm run docker:smoke
 ```
+
+Use `compose.production.yml` and `.env.production.example` for deployment. The original Compose file and `docker:up` remain for local development and require a real `AUTH_SECRET`. Current ticket issuance does not confirm payments or send email; deploying the image does not enable those pending integrations.
+
+For Coolify, use the Dockerfile build pack with exposed port **8088** and follow the [Coolify setup](docs/deployment.md#coolify-deployment-dockerfile-build-pack), including first-deploy database initialization and persistent uploads.

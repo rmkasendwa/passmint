@@ -216,10 +216,13 @@ export function AppProvider({
         setSelectedEventId(data[0]?.id ?? "");
       })
       .catch(() => {
-        setEvents(demoEvents);
-        setSelectedEventId(demoEvents[0].id);
+        const fallback = process.env.NODE_ENV === 'production' ? [] : demoEvents;
+        setEvents(fallback);
+        setSelectedEventId(fallback[0]?.id ?? "");
         setPurchaseState(
-          "Demo events loaded. Start the API to issue real tickets.",
+          process.env.NODE_ENV === 'production'
+            ? "Events are temporarily unavailable. Please try again."
+            : "Demo events loaded. Start the API to issue real tickets.",
         );
       })
       .finally(() => setLoading(false));

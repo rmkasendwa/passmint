@@ -1,0 +1,56 @@
+name: passmint-production
+
+x-app: &app
+  image: ${PASSMINT_IMAGE:-passmint:local}
+  build:
+    context: .
+    target: production
+  env_file: .env.production
+  environment:
+    DATABASE_URL: postgresql://passmint:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/passmint
+    AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET}
+    PORT: '8088'
+  init: true
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: passmint
+      POSTGRES_USER: passmint
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U passmint -d passmint']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # Explicit operation, not an automatic app startup step. No --accept-data-loss.
+  db-setup:
+    <<: *app
+    profiles: [tools]
+    command: ['node', 'node_modules/prisma/build/index.js', 'db', 'push', '--skip-generate']
+    healthcheck:
+      disable: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  app:
+    <<: *app
+    restart: unless-stopped
+    ports:
+      - '${BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-8088}:8088'
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    stop_grace_period: 20s
+
+volumes:
+  postgres-data:
+  uploads:
