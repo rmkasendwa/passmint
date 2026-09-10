@@ -84,6 +84,7 @@ export async function request<T>(
 }
 
 export const api = {
+  duplicateEvent: (eventId: string, startsAt: string, token: string) => request<Event>(`/events/${eventId}/duplicate`, { method: "POST", body: JSON.stringify({ startsAt }) }, token),
   createDraft: (payload: Partial<Pick<Event, "name" | "description" | "venue" | "startsAt" | "capacity" | "priceCents" | "mapLocation" | "thumbnailUrl">>, token: string) => request<Event>("/events/drafts", { method: "POST", body: JSON.stringify(payload) }, token),
   cancelEvent: (eventId: string, token: string) => request<Event>(`/events/${eventId}/cancel`, { method: "POST", body: JSON.stringify({ confirm: true }) }, token),
   listEvents: () => request<Event[]>("/events"),

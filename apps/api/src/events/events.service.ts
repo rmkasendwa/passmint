@@ -307,6 +307,32 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
     return this.toEventResponse(draft);
   }
 
+  async duplicate(id: string, startsAt: Date, user: AuthUser) {
+    if (!(startsAt instanceof Date) || !Number.isFinite(startsAt.getTime()) || startsAt <= new Date()) {
+      throw new BadRequestException("Choose a future date for the new event.");
+    }
+    const duplicate = await this.prisma.$transaction(async tx => {
+      await tx.$queryRaw`SELECT id FROM events WHERE id = ${id} FOR UPDATE`;
+      const source = await tx.event.findUnique({ where: { id }, include: { ticketTypes: true } });
+      if (!source) throw new NotFoundException("Event not found");
+      if (source.ownerId !== user.id) throw new ForbiddenException("You can only duplicate events you created.");
+      const offset = startsAt.getTime() - source.startsAt.getTime();
+      const shift = (date: Date | null) => date ? new Date(date.getTime() + offset) : null;
+      return tx.event.create({ data: {
+        id: prefixedId("evt"), ownerId: user.id, status: "draft",
+        name: source.name, description: source.description, venue: source.venue,
+        mapLocation: source.mapLocation, startsAt, capacity: source.capacity,
+        priceCents: source.priceCents, thumbnailUrl: source.thumbnailUrl,
+        ticketTypes: { create: source.ticketTypes.map(type => ({
+          id: prefixedId("typ"), name: type.name, priceCents: type.priceCents,
+          capacity: type.capacity, maxPerOrder: type.maxPerOrder,
+          salesStart: shift(type.salesStart), salesEnd: shift(type.salesEnd),
+        })) },
+      } });
+    });
+    return this.findOne(duplicate.id, user);
+  }
+
   private validatePublication(event: Pick<Event, "name" | "description" | "venue" | "startsAt">) {
     if (!event.name.trim() || !event.description.trim() || !event.venue.trim() || event.startsAt.getTime() === 0) {
       throw new BadRequestException("Add an event name, description, venue, and start date before publishing.");

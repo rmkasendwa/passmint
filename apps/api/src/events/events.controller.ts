@@ -12,6 +12,7 @@ import { AuthGuard } from "../auth/auth.guard";
 import { OptionalAuthGuard } from "../auth/optional-auth.guard";
 import { AuthenticatedRequest } from "../auth/auth.types";
 import { CreateEventDto } from "./dto/create-event.dto";
+import { DuplicateEventDto } from "./dto/duplicate-event.dto";
 import { CancelEventDto } from "./dto/cancel-event.dto";
 import { TicketTypeDto } from "./dto/ticket-type.dto";
 import { UpdateEventDto } from "./dto/update-event.dto";
@@ -75,6 +76,12 @@ export class EventsController {
   @UseGuards(AuthGuard)
   cancel(@Param("id") id: string, @Body() dto: CancelEventDto, @Req() request: AuthenticatedRequest) {
     return this.eventsService.cancel(id, request.user!);
+  }
+
+  @Post(":id/duplicate")
+  @UseGuards(AuthGuard)
+  duplicate(@Param("id") id: string, @Body() dto: DuplicateEventDto, @Req() request: AuthenticatedRequest) {
+    return this.eventsService.duplicate(id, dto.startsAt, request.user!);
   }
 
   @Post(":id/ticket-types")

@@ -18,6 +18,7 @@ This is a source-derived reference, including category routes. It is not a versi
 | GET `/events/:id` | Optional bearer | Event details; draft returns 404 unless caller is owner, including for unrelated platform admins |
 | POST `/events` | Bearer | Creates published event owned by caller |
 | POST `/events/drafts` | Bearer | Creates draft using partial details; missing start defaults to epoch sentinel |
+| POST `/events/:id/duplicate` | Owner only | Requires future `startsAt`; copies details, capacity, artwork and categories into a new private draft; shifts category sales windows by the date difference; excludes tickets, cancellation and publication schedule |
 | PATCH `/events/:id` | Owner or admin; drafts owner-only | Updates fields, publishes or schedules draft; rejects cancelled events |
 | POST `/events/:id/cancel` | Owner or admin; draft rules apply | Requires `{ "confirm": true }`; preserves cancellation timestamp on repeat |
 | POST `/events/uploads` | Bearer | `{fileName,contentType,dataUrl}` → `{url}` |
