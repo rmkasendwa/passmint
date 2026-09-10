@@ -38,6 +38,20 @@ async function request(path, method = 'GET', token, body) {
   return { status: response.status, body: await response.json() };
 }
 const details = { name: 'Hosted', description: 'Description', venue: 'Venue', startsAt: '2030-01-01T00:00:00Z', priceCents: 0, capacity: 10 };
+test('HTTP duplication requires the owner and a valid future date', async () => {
+  const { body: event } = await request('/events', 'POST', 'host', details);
+  const path = `/events/${event.id}/duplicate`;
+  const body = { startsAt: '2030-02-01T00:00:00Z' };
+  assert.equal((await request(path, 'POST', undefined, body)).status, 401);
+  for (const token of ['other', 'admin']) assert.equal((await request(path, 'POST', token, body)).status, 403);
+  for (const invalid of [{}, { startsAt: null }, { startsAt: 'invalid' }, { startsAt: '2000-01-01' }, { ...body, ownerId: users.other.id }]) {
+    assert.equal((await request(path, 'POST', 'host', invalid)).status, 400);
+  }
+  const copy = await request(path, 'POST', 'host', body);
+  assert.equal(copy.status, 201);
+  assert.equal(copy.body.status, 'draft');
+  assert.notEqual(copy.body.id, event.id);
+});
 test('HTTP ticket-category validation and private draft ownership', async () => {
   const { body: event } = await request('/events/drafts', 'POST', 'host', details);
   const path = `/events/${event.id}/ticket-types`;
