@@ -15,6 +15,7 @@ import { UserRole } from "../users/user-role.enum";
 import { CreateEventDto } from "./dto/create-event.dto";
 import { UpdateEventDto } from "./dto/update-event.dto";
 import { TicketTypeDto } from "./dto/ticket-type.dto";
+import { AttendeeQueryDto } from "./dto/attendee-query.dto";
 
 const typeInventory = {
   ticketTypes: { include: { _count: { select: { tickets: { where: { status: { not: "cancelled" as const } } } } } }, orderBy: { createdAt: "asc" as const } },
@@ -282,6 +283,26 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
     });
     if (!event) throw new NotFoundException("Event not found");
     return event;
+  }
+
+  async findAttendees(id: string, query: AttendeeQueryDto, user: AuthUser) {
+    const event = await this.prisma.event.findUnique({ where: { id }, select: { ownerId: true, status: true } });
+    if (!event || (event.status === "draft" && event.ownerId !== user.id)) throw new NotFoundException("Event not found");
+    if (event.ownerId !== user.id && user.role !== UserRole.Admin) throw new ForbiddenException("You can only view attendees for your own events.");
+    const search = query.search?.trim();
+    const page = query.page ?? 1;
+    const pageSize = 50;
+    const attendees = await this.prisma.ticket.findMany({
+      where: { eventId: id, ...(search ? { OR: [
+        { buyerName: { contains: search, mode: "insensitive" as const } },
+        { buyerEmail: { contains: search, mode: "insensitive" as const } },
+      ] } : {}) },
+      select: { id: true, buyerName: true, buyerEmail: true, ticketTypeName: true, status: true, createdAt: true, checkedInAt: true },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      skip: (page - 1) * pageSize,
+      take: pageSize + 1,
+    });
+    return { attendees: attendees.slice(0, pageSize), page, pageSize, hasMore: attendees.length > pageSize };
   }
 
   async create(dto: CreateEventDto, authUser: AuthUser) {

@@ -38,6 +38,60 @@ async function request(path, method = 'GET', token, body) {
   return { status: response.status, body: await response.json() };
 }
 const details = { name: 'Hosted', description: 'Description', venue: 'Venue', startsAt: '2030-01-01T00:00:00Z', priceCents: 0, capacity: 10 };
+test('HTTP attendee lists are scoped, searchable and omit ticket credentials', async () => {
+  const { body: event } = await request('/events', 'POST', 'host', details);
+  const { body: foreign } = await request('/events', 'POST', 'other', details);
+  const checkedInAt = new Date('2026-09-01T12:30:00Z');
+  const makeTicket = (eventId, buyerName, buyerEmail, extra = {}) => ({ id: randomUUID(), code: randomUUID(), eventId, buyerName, buyerEmail, ...extra });
+  await prisma.ticket.createMany({ data: [
+    makeTicket(event.id, 'Alice Guest', 'alice@example.com', { ticketTypeName: 'Early bird', status: 'checked_in', checkedInAt }),
+    makeTicket(event.id, 'Bob Member', users.buyer.email, { ownerId: users.buyer.id }),
+    makeTicket(event.id, 'Cancelled Buyer', 'cancelled@example.com', { status: 'cancelled' }),
+    makeTicket(foreign.id, 'Alice Foreign', 'foreign@example.com'),
+  ] });
+  const path = `/events/${event.id}/attendees`;
+  assert.equal((await request(path)).status, 401);
+  for (const user of ['other', 'buyer']) assert.equal((await request(path, 'GET', user)).status, 403);
+  assert.equal((await request('/events/missing/attendees', 'GET', 'host')).status, 404);
+  for (const user of ['host', 'admin']) {
+    const result = await request(path, 'GET', user);
+    assert.equal(result.status, 200);
+    assert.equal(result.body.attendees.length, 3);
+    assert.equal(result.body.hasMore, false);
+    for (const row of result.body.attendees) assert.deepEqual(Object.keys(row).sort(), ['id', 'buyerName', 'buyerEmail', 'ticketTypeName', 'status', 'createdAt', 'checkedInAt'].sort());
+    assert.ok(!JSON.stringify(result.body).includes('foreign@example.com'));
+    assert.deepEqual(result.body.attendees.map(row => row.status).sort(), ['cancelled', 'checked_in', 'issued']);
+  }
+  const matched = await request(`${path}?search=ALICE`, 'GET', 'host');
+  assert.equal(matched.body.attendees.length, 1);
+  assert.equal(matched.body.attendees[0].ticketTypeName, 'Early bird');
+  assert.equal(matched.body.attendees[0].checkedInAt, checkedInAt.toISOString());
+  const emailSearch = await request(`${path}?search=${encodeURIComponent(users.buyer.email.toUpperCase())}`, 'GET', 'host');
+  assert.equal(emailSearch.body.attendees[0].buyerName, 'Bob Member');
+  assert.equal((await request(`${path}?search=no-match`, 'GET', 'host')).body.attendees.length, 0);
+  for (const query of ['page=0', 'page=-1', 'page=1.5', 'page=NaN', 'page=100001', 'search=' + 'x'.repeat(101), 'search[a]=b']) assert.equal((await request(`${path}?${query}`, 'GET', 'host')).status, 400);
+  await request(`/events/${event.id}/cancel`, 'POST', 'host', { confirm: true });
+  assert.equal((await request(path, 'GET', 'host')).body.attendees.length, 3);
+  const { body: draft } = await request('/events/drafts', 'POST', 'host', {});
+  for (const user of ['other', 'admin']) assert.equal((await request(`/events/${draft.id}/attendees`, 'GET', user)).status, 404);
+  assert.equal((await request(`/events/${draft.id}/attendees`, 'GET', 'host')).body.attendees.length, 0);
+});
+
+test('HTTP attendee pagination has stable boundaries and applies search before paging', async () => {
+  const { body: event } = await request('/events', 'POST', 'host', details);
+  await prisma.ticket.createMany({ data: Array.from({ length: 53 }, (_, index) => ({ id: randomUUID(), code: randomUUID(), eventId: event.id, buyerName: `Guest ${index}`, buyerEmail: `${index}@example.com`, createdAt: new Date('2026-09-01') })) });
+  const path = `/events/${event.id}/attendees`;
+  const first = (await request(path, 'GET', 'host')).body;
+  const second = (await request(`${path}?page=2`, 'GET', 'host')).body;
+  assert.equal(first.attendees.length, 50);
+  assert.equal(first.hasMore, true);
+  assert.equal(second.attendees.length, 3);
+  assert.equal(second.hasMore, false);
+  assert.equal(new Set([...first.attendees, ...second.attendees].map(row => row.id)).size, 53);
+  assert.deepEqual((await request(path, 'GET', 'host')).body, first);
+  assert.equal((await request(`${path}?search=Guest%2052`, 'GET', 'host')).body.attendees.length, 1);
+  assert.equal((await request(`${path}?page=3`, 'GET', 'host')).body.attendees.length, 0);
+});
 test('HTTP ticket-category validation and private draft ownership', async () => {
   const { body: event } = await request('/events/drafts', 'POST', 'host', details);
   const path = `/events/${event.id}/ticket-types`;

@@ -34,6 +34,7 @@ import {
 } from './form-validation';
 import { PhoneNumberInput } from './phone-number-input';
 import { TicketTypeManager } from './ticket-type-manager';
+import { EventAttendees } from './event-attendees';
 
 const panel =
   'rounded-lg border border-border bg-surface-raised shadow-[0_18px_52px_rgb(0_0_0/14%)]';
@@ -711,6 +712,7 @@ export function EventDetail({ event }: { event: Event }) {
             </section>
           )}
 
+          {ownedBySession && session && <EventAttendees key={`${displayEvent.id}:${session.user.id}`} eventId={displayEvent.id} token={session.token} />}
           {ownedBySession && session && !cancelled && <TicketTypeManager event={displayEvent} token={session.token} onSaved={async () => setDisplayEvent(await api.getEvent(event.id, session.token))} />}
           <section className={panelPadded}>
             <div className="flex items-center gap-2.5 text-text [&_svg]:text-accent">

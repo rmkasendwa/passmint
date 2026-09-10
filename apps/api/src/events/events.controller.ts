@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from "@nestjs/common";
@@ -12,6 +13,7 @@ import { AuthGuard } from "../auth/auth.guard";
 import { OptionalAuthGuard } from "../auth/optional-auth.guard";
 import { AuthenticatedRequest } from "../auth/auth.types";
 import { CreateEventDto } from "./dto/create-event.dto";
+import { AttendeeQueryDto } from "./dto/attendee-query.dto";
 import { CancelEventDto } from "./dto/cancel-event.dto";
 import { TicketTypeDto } from "./dto/ticket-type.dto";
 import { UpdateEventDto } from "./dto/update-event.dto";
@@ -47,6 +49,12 @@ export class EventsController {
   @UseGuards(AuthGuard)
   uploadImage(@Body() body: UploadEventImageDto) {
     return this.imageStorage.uploadImage(body);
+  }
+
+  @Get(":id/attendees")
+  @UseGuards(AuthGuard)
+  attendees(@Param("id") id: string, @Query() query: AttendeeQueryDto, @Req() request: AuthenticatedRequest) {
+    return this.eventsService.findAttendees(id, query, request.user!);
   }
 
   @Post()
