@@ -42,6 +42,21 @@ export type GateResult = {
   ticket?: Ticket;
 };
 
+export type AttendeePage = {
+  attendees: {
+    id: string;
+    buyerName: string;
+    buyerEmail: string;
+    ticketTypeName: string;
+    status: Ticket['status'];
+    createdAt: string;
+    checkedInAt: string | null;
+  }[];
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+};
+
 export type User = {
   id: string;
   name: string;
@@ -84,6 +99,7 @@ export async function request<T>(
 }
 
 export const api = {
+  eventAttendees: (eventId: string, search: string, page: number, token: string) => request<AttendeePage>(`/events/${eventId}/attendees?${new URLSearchParams({ search, page: String(page) })}`, undefined, token),
   duplicateEvent: (eventId: string, startsAt: string, token: string) => request<Event>(`/events/${eventId}/duplicate`, { method: "POST", body: JSON.stringify({ startsAt }) }, token),
   createDraft: (payload: Partial<Pick<Event, "name" | "description" | "venue" | "startsAt" | "capacity" | "priceCents" | "mapLocation" | "thumbnailUrl">>, token: string) => request<Event>("/events/drafts", { method: "POST", body: JSON.stringify(payload) }, token),
   cancelEvent: (eventId: string, token: string) => request<Event>(`/events/${eventId}/cancel`, { method: "POST", body: JSON.stringify({ confirm: true }) }, token),

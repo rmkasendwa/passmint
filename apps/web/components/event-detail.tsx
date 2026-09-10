@@ -34,6 +34,7 @@ import {
 } from './form-validation';
 import { PhoneNumberInput } from './phone-number-input';
 import { TicketTypeManager } from './ticket-type-manager';
+import { EventAttendees } from './event-attendees';
 import { EventDuplicate } from './event-duplicate';
 
 const panel =
@@ -712,6 +713,7 @@ export function EventDetail({ event }: { event: Event }) {
             </section>
           )}
 
+          {ownedBySession && session && <EventAttendees key={`${displayEvent.id}:${session.user.id}`} eventId={displayEvent.id} token={session.token} />}
           {session && ownerId(displayEvent) === session.user.id && <EventDuplicate eventId={displayEvent.id} token={session.token} />}
           {ownedBySession && session && !cancelled && <TicketTypeManager event={displayEvent} token={session.token} onSaved={async () => setDisplayEvent(await api.getEvent(event.id, session.token))} />}
           <section className={panelPadded}>
