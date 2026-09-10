@@ -92,6 +92,21 @@ test('HTTP attendee pagination has stable boundaries and applies search before p
   assert.equal((await request(`${path}?search=Guest%2052`, 'GET', 'host')).body.attendees.length, 1);
   assert.equal((await request(`${path}?page=3`, 'GET', 'host')).body.attendees.length, 0);
 });
+
+test('HTTP duplication requires the owner and a valid future date', async () => {
+  const { body: event } = await request('/events', 'POST', 'host', details);
+  const path = `/events/${event.id}/duplicate`;
+  const body = { startsAt: '2030-02-01T00:00:00Z' };
+  assert.equal((await request(path, 'POST', undefined, body)).status, 401);
+  for (const token of ['other', 'admin']) assert.equal((await request(path, 'POST', token, body)).status, 403);
+  for (const invalid of [{}, { startsAt: null }, { startsAt: 'invalid' }, { startsAt: '2000-01-01' }, { ...body, ownerId: users.other.id }]) {
+    assert.equal((await request(path, 'POST', 'host', invalid)).status, 400);
+  }
+  const copy = await request(path, 'POST', 'host', body);
+  assert.equal(copy.status, 201);
+  assert.equal(copy.body.status, 'draft');
+  assert.notEqual(copy.body.id, event.id);
+});
 test('HTTP ticket-category validation and private draft ownership', async () => {
   const { body: event } = await request('/events/drafts', 'POST', 'host', details);
   const path = `/events/${event.id}/ticket-types`;
