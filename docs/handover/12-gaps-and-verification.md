@@ -28,7 +28,7 @@ Priority here describes recommended handover attention, not a claim of exploitab
 | G14 | No ownership/license/contract evidence supplied | Repository metadata alone | Complete asset and diligence registers |
 | G15 | Scan policy is one-use online, without time/gate scope | Gate body is code only | State limitation; implement #58 where needed |
 | G16 | Ticket retry is not idempotent and QR rendering follows commit | Ticket service | Define retry/order semantics and reconcile response failures |
-| G17 | Images lack content-processing pipeline; data rights unverified | Storage service, external artwork | Review upload processing and asset provenance |
+| G17 | Upload processing implemented 11 September 2026; data rights remain unverified | Validated, resized, metadata-stripped WebP uploads; external artwork URLs are not processed | Review asset provenance and retain image regression/container checks |
 | G18 | Sessions lack server revocation and use browser local storage | Auth service and app provider | Review security requirements and document accepted design |
 
 ## Validation record

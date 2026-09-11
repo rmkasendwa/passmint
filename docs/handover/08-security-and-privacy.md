@@ -12,7 +12,7 @@ This records inspected implementation and unresolved evidence. It is not a penet
 - Protected routes require bearer auth; public issuance intentionally permits guests. DTO validation rejects unrecognized fields.
 - Ticket codes are unique random UUIDs. QR contents contain the code, not buyer contact data. Online scans use a transaction to reject reuse.
 - Inventory operations lock the event row to serialize conflicting writes. Public ticket retrieval is not allowed: ticket, event-owner or platform-admin authorization is required.
-- Image uploads require sign-in, supported declared media type, a non-empty decoded payload and a size limit.
+- Image uploads require sign-in, matching decoded JPEG/PNG/WebP/GIF content, byte and pixel limits, and successful static WebP re-encoding. Stored uploads have generated `.webp` names and omit source metadata; external artwork URLs are not processed.
 
 ## Material gaps for review
 

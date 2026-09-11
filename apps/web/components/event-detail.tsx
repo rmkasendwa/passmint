@@ -19,7 +19,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { api, Event } from '../api';
 import { eventCategory, eventStatus, eventTone } from '../event-utils';
 import { dateTime, money } from '../formatters';
@@ -119,6 +119,9 @@ export function EventDetail({ event }: { event: Event }) {
   const salesNow = useSalesClock();
   const [isEditing, setIsEditing] = useState(false);
   const [editState, setEditState] = useState('');
+  const [artworkFile, setArtworkFile] = useState<File | null>(null);
+  const artworkInput = useRef<HTMLInputElement>(null);
+  const [savingEvent, setSavingEvent] = useState(false);
   const [publishAt, setPublishAt] = useState(event.publishAt ? toLocalInputValue(event.publishAt) : '');
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [paymentProvider, setPaymentProvider] = useState<'airtel' | 'mtn'>(
@@ -278,14 +281,26 @@ export function EventDetail({ event }: { event: Event }) {
 
   async function saveEvent(eventForm: FormEvent<HTMLFormElement>) {
     eventForm.preventDefault();
+    if (savingEvent) return;
     if (!session) {
       setEditState('Sign in to edit this event.');
       return;
     }
 
     setEditState('Saving event...');
+    setSavingEvent(true);
 
     try {
+      let thumbnailUrl = draft.thumbnailUrl;
+      if (artworkFile) {
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result));
+          reader.onerror = () => reject(new Error('Unable to read artwork.'));
+          reader.readAsDataURL(artworkFile);
+        });
+        thumbnailUrl = (await api.uploadEventImage({ fileName: artworkFile.name, contentType: artworkFile.type, dataUrl }, session.token)).url;
+      }
       const updated = await api.updateEvent(
         displayEvent.id,
         {
@@ -296,7 +311,7 @@ export function EventDetail({ event }: { event: Event }) {
           ...(draft.startsAt ? { startsAt: new Date(draft.startsAt).toISOString() } : {}),
           capacity: draft.capacity,
           priceCents: Number(draft.priceCents),
-          ...(draft.thumbnailUrl ? { thumbnailUrl: draft.thumbnailUrl } : {}),
+          thumbnailUrl,
         },
         session.token,
       );
@@ -312,10 +327,13 @@ export function EventDetail({ event }: { event: Event }) {
         thumbnailUrl: updated.thumbnailUrl ?? '',
       });
       setIsEditing(false);
+      setArtworkFile(null);
       setEditState('Event updated.');
     } catch (error) {
       const fallback = error as { message?: string };
       setEditState(fallback.message ?? 'Event could not be updated.');
+    } finally {
+      setSavingEvent(false);
     }
   }
 
@@ -702,19 +720,34 @@ export function EventDetail({ event }: { event: Event }) {
                 <label>
                   Artwork URL
                   <input
+                    disabled={savingEvent}
                     value={draft.thumbnailUrl}
                     onChange={(input) =>
-                      setDraft((current) => ({
+                      { setArtworkFile(null); if (artworkInput.current) artworkInput.current.value = ''; setDraft((current) => ({
                         ...current,
                         thumbnailUrl: input.target.value,
-                      }))
+                      })); }
                     }
                     placeholder="https://..."
                   />
                 </label>
-                <button className={primaryAction} type="submit">
+                <label>
+                  Upload replacement artwork
+                  <input ref={artworkInput} type="file" accept="image/jpeg,image/png,image/webp,image/gif" disabled={savingEvent} onChange={input => {
+                    const file = input.target.files?.[0] ?? null;
+                    if (file && (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type) || file.size > 5 * 1024 * 1024)) {
+                      setEditState('Choose a JPEG, PNG, WebP or GIF image up to 5 MB.');
+                      input.target.value = ''; setArtworkFile(null); return;
+                    }
+                    setArtworkFile(file); setEditState('');
+                  }} />
+                  <span>Up to 5 MB. Uploads become static banners; animated images use the first frame.</span>
+                </label>
+                {artworkFile && <p role="status">{artworkFile.name} will replace the artwork when saved.</p>}
+                <button className={secondaryAction} type="button" disabled={savingEvent} onClick={() => { setArtworkFile(null); if (artworkInput.current) artworkInput.current.value = ''; setDraft(current => ({ ...current, thumbnailUrl: '' })); }}>Remove artwork</button>
+                <button className={primaryAction} type="submit" disabled={savingEvent}>
                   <Save size={17} />
-                  Save event
+                  {savingEvent ? 'Saving event…' : 'Save event'}
                 </button>
               </form>
               {editState && (

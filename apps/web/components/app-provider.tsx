@@ -569,8 +569,8 @@ export function AppProvider({
       return;
     }
 
-    if (!file.type.startsWith("image/")) {
-      setHostState("Choose an image file for the event artwork.");
+    if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      setHostState("Choose a JPEG, PNG, WebP or GIF image up to 5 MB.");
       return;
     }
 
