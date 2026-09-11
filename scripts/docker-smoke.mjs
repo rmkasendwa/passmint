@@ -107,7 +107,12 @@ try {
   } });
   assert.equal(uploaded.status, 201);
   assert.match(uploaded.body.url, /^\/api\/uploads\//);
-  assert.equal((await fetch(`${origin}${uploaded.body.url}`)).status, 200);
+  assert.match(uploaded.body.url, /\.webp$/);
+  const banner = await fetch(`${origin}${uploaded.body.url}`);
+  assert.equal(banner.status, 200);
+  assert.match(banner.headers.get('content-type'), /image\/webp/);
+  const bannerBytes = Buffer.from(await banner.arrayBuffer());
+  assert.equal(bannerBytes.toString('ascii', 8, 12), 'WEBP');
   await waitFor(() => docker(['inspect', '--format', '{{.State.Health.Status}}', app]) === 'healthy', 'Docker health check');
 
   docker(['stop', '--time', '15', app]);

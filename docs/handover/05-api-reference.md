@@ -22,7 +22,7 @@ This is a source-derived reference, including category routes. It is not a versi
 | POST `/events/:id/duplicate` | Owner only | Requires future `startsAt`; copies details, capacity, artwork and categories into a new private draft; shifts category sales windows by the date difference; excludes tickets, cancellation and publication schedule |
 | PATCH `/events/:id` | Owner or admin; drafts owner-only | Updates fields, publishes or schedules draft; rejects cancelled events |
 | POST `/events/:id/cancel` | Owner or admin; draft rules apply | Requires `{ "confirm": true }`; preserves cancellation timestamp on repeat |
-| POST `/events/uploads` | Bearer | `{fileName,contentType,dataUrl}` → `{url}` |
+| POST `/events/uploads` | Bearer | `{fileName,contentType,dataUrl}` → `{url}`; validates JPEG/PNG/WebP/GIF bytes (5 MB default, 40 megapixels), stores oriented static WebP within 1920×1920 without enlargement or metadata; animated uploads use first frame |
 | POST `/events/:id/ticket-types` | Owner or admin; drafts owner-only | Creates category |
 | PATCH `/events/:id/ticket-types/:typeId` | Owner or admin; drafts owner-only | Updates category belonging to event |
 | POST `/tickets` | Optional bearer | Directly issues an array of tickets; does not confirm payment |
