@@ -6,7 +6,8 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { createHmac, createHash, randomUUID } from 'crypto';
 import { mkdir, writeFile } from 'fs/promises';
-import { dirname, extname, join } from 'path';
+import { dirname, join } from 'path';
+import sharp = require('sharp');
 
 type UploadImageInput = {
   fileName: string;
@@ -26,11 +27,11 @@ const allowedImageTypes = new Set([
   'image/gif',
 ]);
 
-const extensionByType: Record<string, string> = {
-  'image/jpeg': '.jpg',
-  'image/png': '.png',
-  'image/webp': '.webp',
-  'image/gif': '.gif',
+const formatByType: Record<string, string> = {
+  'image/jpeg': 'jpeg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
 };
 
 @Injectable()
@@ -44,8 +45,8 @@ export class ImageStorageService {
   }
 
   async uploadImage(input: UploadImageInput) {
-    const decoded = this.decodeImage(input);
-    const key = this.createObjectKey(input.fileName, decoded.contentType);
+    const decoded = await this.optimizeImage(this.decodeImage(input));
+    const key = `event-images/${new Date().getFullYear()}/${randomUUID()}.webp`;
 
     if (this.hasS3Config()) {
       return { url: await this.uploadToS3(key, decoded) };
@@ -70,6 +71,9 @@ export class ImageStorageService {
       throw new BadRequestException('Unsupported image type.');
     }
 
+    if (payload.length % 4 !== 0 || !/^[A-Za-z0-9+/]*={0,2}$/.test(payload)) {
+      throw new BadRequestException('Image must contain valid base64 data.');
+    }
     const buffer = Buffer.from(payload, 'base64');
 
     if (buffer.length === 0) {
@@ -83,14 +87,25 @@ export class ImageStorageService {
     return { buffer, contentType };
   }
 
-  private createObjectKey(fileName: string, contentType: string) {
-    const rawExtension = extname(fileName).toLowerCase();
-    const extension =
-      rawExtension && rawExtension.length <= 8
-        ? rawExtension
-        : extensionByType[contentType];
-
-    return `event-images/${new Date().getFullYear()}/${randomUUID()}${extension}`;
+  private async optimizeImage(image: DecodedImage): Promise<DecodedImage> {
+    try {
+      const processor = sharp(image.buffer, { failOn: 'warning', limitInputPixels: 40_000_000 });
+      const metadata = await processor.metadata();
+      if (metadata.format !== formatByType[image.contentType]) {
+        throw new BadRequestException('Image contents do not match the declared type.');
+      }
+      // Banners are static: use the first frame, orient, resize without cropping,
+      // and strip metadata by re-encoding instead of retaining the original bytes.
+      const buffer = await processor.rotate()
+        .resize({ width: 1920, height: 1920, fit: 'inside', withoutEnlargement: true })
+        .webp({ quality: 82 })
+        .toBuffer();
+      if (buffer.length > this.maxImageBytes) throw new BadRequestException('Optimized image file is too large.');
+      return { buffer, contentType: 'image/webp' };
+    } catch (error) {
+      if (error instanceof BadRequestException) throw error;
+      throw new BadRequestException('Choose a valid JPEG, PNG, WebP or GIF image up to 40 megapixels.');
+    }
   }
 
   private hasS3Config() {
