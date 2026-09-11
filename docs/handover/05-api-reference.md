@@ -34,6 +34,8 @@ There are no current routes for logout/revocation, email verification, password 
 
 ## Payloads
 
+Ticket-category `salesStart` and `salesEnd` are optional instants. Sales open at `salesStart` and close at `salesEnd`; clearing either field removes that bound. Availability combines the sales window, category inventory, event capacity and event status. Checkout uses the device clock for live window labels and refreshes server data while visible; the server clock and locked inventory check determine whether issuance succeeds.
+
 Published event creation requires `name`, `description`, `venue`, `startsAt` and nonnegative integer `priceCents`. Optional `capacity` is null or a positive integer; optional `mapLocation` and `thumbnailUrl` supply presentation data. Example for an isolated demonstration environment:
 
 ```json

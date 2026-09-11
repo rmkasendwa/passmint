@@ -14,7 +14,7 @@ Status reflects the source reviewed on 8 September 2026, not a deployed-release 
 | Cancellation | Implemented in source | Preserves records, blocks sales and entry; does not refund or notify |
 | Event images | Implemented in source | [Storage service](../../apps/api/src/events/image-storage.service.ts); S3-compatible PUT or local fallback, no image transformation pipeline |
 | Capacity | Implemented in source | Nullable capacity; transactional event locking prevents competing operations overselling at the inspected service boundary |
-| Ticket categories and sale windows | Implemented in source | [Schema](../../prisma/schema.prisma), event/ticket services and [category manager](../../apps/web/components/ticket-type-manager.tsx); price, quantity, capacity, limits and windows |
+| Ticket categories and sale windows | Implemented in source (11 September 2026) | [Schema](../../prisma/schema.prisma), event/ticket services and [category manager](../../apps/web/components/ticket-type-manager.tsx); price, quantity, capacity, limits and windows. Checkout updates window states while open and refreshes availability every 30 seconds/on tab return; server enforces inclusive start and exclusive end |
 | Guest and member issuance | Implemented in source | [Ticket service](../../apps/api/src/tickets/tickets.service.ts); name/email required, account linkage optional |
 | Repeat-request confirmation | Implemented with privacy gap | Returns count for submitted event/email before additional issuance; no proof of email control |
 | QR generation and ticket history | Implemented in source | [Ticket response](../../apps/api/src/tickets/ticket-response.ts); code and QR returned to buyer, member history via account |

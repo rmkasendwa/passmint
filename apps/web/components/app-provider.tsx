@@ -360,6 +360,24 @@ export function AppProvider({
     () => events.find((event) => event.id === selectedEventId),
     [events, selectedEventId],
   );
+  useEffect(() => {
+    if (pathname !== '/tickets' || !selectedEventId) return;
+    let active = true;
+    let pending = false;
+    const refresh = async () => {
+      if (document.hidden || pending) return;
+      pending = true;
+      try {
+        const latest = await api.getEvent(selectedEventId, session?.token);
+        if (active) setEvents(current => current.map(event => event.id === latest.id ? latest : event));
+      } catch { /* Purchase validation remains authoritative if refresh fails. */ }
+      finally { pending = false; }
+    };
+    void refresh();
+    const timer = window.setInterval(() => void refresh(), 30000);
+    document.addEventListener('visibilitychange', refresh);
+    return () => { active = false; window.clearInterval(timer); document.removeEventListener('visibilitychange', refresh); };
+  }, [pathname, selectedEventId, session?.token]);
   const featuredEvent = filteredEvents[0] ?? events[0];
   const visibleEvents = filteredEvents.length > 0 ? filteredEvents : events;
   const upcomingEvents = visibleEvents.filter(

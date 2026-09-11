@@ -36,7 +36,7 @@ function TicketTypeForm({ eventId, token, initial, onSaved }: { eventId: string;
   }
   return <form onSubmit={save} className="mt-3 grid gap-3 sm:grid-cols-2">
     {[
-      ['name', 'Category name', 'text'], ['price', 'Price in UGX (0 for free)', 'number'], ['capacity', 'Capacity (blank for unlimited)', 'number'], ['maxPerOrder', 'Maximum per order', 'number'], ['salesStart', 'Sales start (optional)', 'datetime-local'], ['salesEnd', 'Sales end (optional)', 'datetime-local'],
+      ['name', 'Category name', 'text'], ['price', 'Price in UGX (0 for free)', 'number'], ['capacity', 'Capacity (blank for unlimited)', 'number'], ['maxPerOrder', 'Maximum per order', 'number'], ['salesStart', 'Sales start (your local time, optional)', 'datetime-local'], ['salesEnd', 'Sales end (your local time, optional)', 'datetime-local'],
     ].map(([key, label, type]) => <label key={key} className="grid gap-1">{label}<input className="rounded-lg border border-border bg-surface-muted p-2 text-text" type={type} value={values[key]} onChange={e => setValues(current => ({ ...current, [key]: e.target.value }))} required={['name', 'price', 'maxPerOrder'].includes(key)} min={key === 'price' ? 0 : type === 'number' ? 1 : undefined} max={key === 'maxPerOrder' ? 100 : undefined} step={key === 'price' ? '0.01' : undefined} /></label>)}
     <button disabled={busy} className="rounded-lg bg-accent p-3 text-white">{busy ? 'Saving...' : 'Save category'}</button>
     {message && <p role="status">{message}</p>}
