@@ -8,6 +8,7 @@ import {
 import { randomUUID } from "crypto";
 import { AuthUser } from "../auth/auth.types";
 import { prefixedId } from "../common/prefixed-id";
+import { isWithinSalesWindow } from "../common/ticket-sales";
 import { EventsService } from "../events/events.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { UserRole } from "../users/user-role.enum";
@@ -38,8 +39,7 @@ export class TicketsService {
       if ((types.length > 0 && !type) || (dto.ticketTypeId && !type)) throw new BadRequestException("Choose a valid ticket category for this event.");
       if (quantity > (type?.maxPerOrder ?? 10)) throw new BadRequestException(`You can buy at most ${type?.maxPerOrder ?? 10} tickets per order.`);
       if (type) {
-        const now = new Date();
-        if ((type.salesStart && now < type.salesStart) || (type.salesEnd && now >= type.salesEnd)) throw new BadRequestException("This ticket category is outside its sales window.");
+        if (!isWithinSalesWindow(type)) throw new BadRequestException("This ticket category is outside its sales window.");
         const typeSold = await tx.ticket.count({ where: { ticketTypeId: type.id, status: { not: TicketStatus.Cancelled } } });
         if (type.capacity !== null && typeSold + quantity > type.capacity) throw new BadRequestException("Not enough tickets remaining in this category.");
       }

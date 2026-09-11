@@ -36,6 +36,8 @@ import { PhoneNumberInput } from './phone-number-input';
 import { TicketTypeManager } from './ticket-type-manager';
 import { EventAttendees } from './event-attendees';
 import { EventDuplicate } from './event-duplicate';
+import { ticketSalesState, salesStateLabels } from '../ticket-sales';
+import { useSalesClock } from './use-sales-clock';
 
 const panel =
   'rounded-lg border border-border bg-surface-raised shadow-[0_18px_52px_rgb(0_0_0/14%)]';
@@ -114,6 +116,7 @@ export function EventDetail({ event }: { event: Event }) {
     visibleEvents,
   } = useAppContext();
   const [displayEvent, setDisplayEvent] = useState(event);
+  const salesNow = useSalesClock();
   const [isEditing, setIsEditing] = useState(false);
   const [editState, setEditState] = useState('');
   const [artworkFile, setArtworkFile] = useState<File | null>(null);
@@ -144,10 +147,18 @@ export function EventDetail({ event }: { event: Event }) {
 
   useEffect(() => {
     let active = true;
-    void api.getEvent(event.id, session?.token).then((latest) => {
-      if (active) setDisplayEvent(latest);
-    }).catch(() => {});
-    return () => { active = false; };
+    let pending = false;
+    const refresh = async () => {
+      if (document.hidden || pending) return;
+      pending = true;
+      try { const latest = await api.getEvent(event.id, session?.token); if (active) setDisplayEvent(latest); }
+      catch { /* Checkout still validates availability on the server. */ }
+      finally { pending = false; }
+    };
+    void refresh();
+    const timer = window.setInterval(() => void refresh(), 30000);
+    document.addEventListener('visibilitychange', refresh);
+    return () => { active = false; window.clearInterval(timer); document.removeEventListener('visibilitychange', refresh); };
   }, [event.id, tickets, session?.token]);
 
   useEffect(() => {
@@ -186,10 +197,11 @@ export function EventDetail({ event }: { event: Event }) {
   const selectedType = displayEvent.ticketTypes?.find(type => type.id === selectedTicketTypeId);
   const unitPrice = selectedType?.priceCents ?? checkoutEvent.priceCents;
   const maximumQuantity = Math.max(1, Math.min(selectedType?.maxPerOrder ?? 10, selectedType?.remainingCapacity ?? 100, displayEvent.remainingCapacity ?? 100));
-  const categoryUnavailable = Boolean(displayEvent.ticketTypes?.length && (!selectedType || !selectedType.available));
+  const selectedSalesState = ticketSalesState(displayEvent, selectedType, salesNow);
+  const categoryUnavailable = Boolean(displayEvent.ticketTypes?.length && selectedSalesState !== 'available');
   useEffect(() => {
-    if (!displayEvent.ticketTypes?.some(type => type.id === selectedTicketTypeId)) setSelectedTicketTypeId(displayEvent.ticketTypes?.find(type => type.available)?.id ?? '');
-  }, [displayEvent.ticketTypes, selectedTicketTypeId]);
+    if (!displayEvent.ticketTypes?.some(type => type.id === selectedTicketTypeId)) setSelectedTicketTypeId(displayEvent.ticketTypes?.find(type => ticketSalesState(displayEvent, type, salesNow) === 'available')?.id ?? '');
+  }, [displayEvent, selectedTicketTypeId, salesNow]);
   const isDraft = displayEvent.status === 'draft';
   const cancelled = displayEvent.status === 'cancelled';
   const salesClosed = cancelled || isDraft;
@@ -845,8 +857,9 @@ export function EventDetail({ event }: { event: Event }) {
             </div>
             {Boolean(displayEvent.ticketTypes?.length) && <label className="grid gap-2">Ticket category<select className="rounded-lg border border-border bg-surface-muted p-3 text-text" value={selectedTicketTypeId} onChange={e => { setSelectedTicketTypeId(e.target.value); setQuantity(1); }}>
               <option value="">Choose a category</option>
-              {displayEvent.ticketTypes?.map(type => <option key={type.id} value={type.id} disabled={!type.available}>{type.name} — {money.format(type.priceCents / 100)}{type.available ? '' : type.remainingCapacity === 0 ? ' (Sold out)' : ' (Sales closed)'}</option>)}
+              {displayEvent.ticketTypes?.map(type => { const state = ticketSalesState(displayEvent, type, salesNow); return <option key={type.id} value={type.id} disabled={state !== 'available'}>{type.name} — {money.format(type.priceCents / 100)}{state === 'available' ? '' : ` (${salesStateLabels[state]})`}</option>; })}
             </select></label>}
+            {selectedType && <p role="status" className="m-0 text-text-muted">{salesStateLabels[selectedSalesState]}{selectedType.salesStart ? ` · Opens ${dateTime.format(new Date(selectedType.salesStart))}` : ''}{selectedType.salesEnd ? ` · Ends ${dateTime.format(new Date(selectedType.salesEnd))}` : ''} (your local time)</p>}
             <div className="grid gap-3 rounded-lg border border-border bg-surface-muted p-3">
               <div className="flex items-start justify-between gap-3">
                 <strong className="text-text">{selectedType?.name ?? 'General admission'}</strong>
@@ -917,6 +930,7 @@ export function EventDetail({ event }: { event: Event }) {
             </div>
 
             <div className="checkout-dialog__body">
+              {categoryUnavailable && <p role="status" className="text-text">{salesStateLabels[selectedSalesState]}. Choose an available category to continue.</p>}
               <div className="grid gap-3 rounded-lg border border-border bg-surface-muted p-3">
                 <div className="flex items-start justify-between gap-3">
                   <strong className="text-text">{selectedType?.name ?? 'General admission'}</strong>

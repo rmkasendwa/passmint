@@ -10,6 +10,7 @@ import {
 import { Event, User, TicketType } from "@prisma/client";
 import { AuthUser } from "../auth/auth.types";
 import { prefixedId } from "../common/prefixed-id";
+import { isWithinSalesWindow } from "../common/ticket-sales";
 import { PrismaService } from "../prisma/prisma.service";
 import { UserRole } from "../users/user-role.enum";
 import { CreateEventDto } from "./dto/create-event.dto";
@@ -439,15 +440,16 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
     const owner = "owner" in event
       ? event.owner ? { id: event.owner.id, name: event.owner.name } : null
       : event.ownerId;
+    const now = new Date();
+    const eventSoldOut = event.capacity !== null && (event._count?.tickets ?? 0) >= event.capacity;
 
     return {
       ...event,
       owner,
       ticketTypes: event.ticketTypes?.map(type => {
         const remainingCapacity = type.capacity === null ? null : Math.max(0, type.capacity - type._count.tickets);
-        const now = new Date();
         return { ...type, ticketsSold: type._count.tickets, remainingCapacity,
-          available: event.status === "published" && remainingCapacity !== 0 && (!type.salesStart || type.salesStart <= now) && (!type.salesEnd || type.salesEnd > now),
+          available: event.status === "published" && !eventSoldOut && remainingCapacity !== 0 && isWithinSalesWindow(type, now),
         };
       }),
       ticketsSold: event._count?.tickets ?? 0,

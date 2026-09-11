@@ -15,6 +15,8 @@ import { EventThumbnail } from './event-thumbnail';
 import { eventTone } from '../event-utils';
 import { dateTime, money, shortDate } from '../formatters';
 import { PhoneNumberInput } from './phone-number-input';
+import { ticketSalesState, salesStateLabels } from '../ticket-sales';
+import { useSalesClock } from './use-sales-clock';
 import {
   FieldMessage,
   RequiredLabel,
@@ -69,9 +71,11 @@ export function TicketsCheckout() {
     buyTickets,
   } = useAppContext();
   const ticketType = selectedEvent?.ticketTypes?.find(type => type.id === selectedTicketTypeId);
+  const salesNow = useSalesClock();
+  const selectedSalesState = ticketSalesState(selectedEvent, ticketType, salesNow);
   const unitPrice = ticketType?.priceCents ?? selectedEvent?.priceCents ?? 0;
   const maximum = Math.max(1, Math.min(ticketType?.maxPerOrder ?? 10, ticketType?.remainingCapacity ?? 100, selectedEvent?.remainingCapacity ?? 100));
-  const unavailable = !selectedEventId || selectedEvent?.soldOut || selectedEvent?.status === 'cancelled' || selectedEvent?.status === 'draft' || Boolean(selectedEvent?.ticketTypes?.length && (!ticketType || !ticketType.available));
+  const unavailable = !selectedEventId || selectedEvent?.soldOut || selectedEvent?.status === 'cancelled' || selectedEvent?.status === 'draft' || Boolean(selectedEvent?.ticketTypes?.length && selectedSalesState !== 'available');
   const validation = useInlineFormValidation();
   const buyerNameError = validation.fieldError({
     label: 'Buyer name',
@@ -203,8 +207,9 @@ export function TicketsCheckout() {
             {selectedEvent && <p>{ticketType?.name ?? 'General admission'} · {money.format(unitPrice * quantity / 100)} total</p>}
             {Boolean(selectedEvent?.ticketTypes?.length) && <label>Ticket category<select className="rounded-lg border border-border bg-surface-muted p-3 text-text" value={selectedTicketTypeId} onChange={e => { setSelectedTicketTypeId(e.target.value); setQuantity(1); }} required>
               <option value="">Choose category</option>
-              {selectedEvent?.ticketTypes?.map(type => <option key={type.id} value={type.id} disabled={!type.available}>{type.name} — {money.format(type.priceCents / 100)}{type.available ? '' : ' (Unavailable)'}</option>)}
+              {selectedEvent?.ticketTypes?.map(type => { const state = ticketSalesState(selectedEvent, type, salesNow); return <option key={type.id} value={type.id} disabled={state !== 'available'}>{type.name} — {money.format(type.priceCents / 100)}{state === 'available' ? '' : ` (${salesStateLabels[state]})`}</option>; })}
             </select></label>}
+            {ticketType && <p role="status" className={helperLine}>{salesStateLabels[selectedSalesState]}{ticketType.salesStart ? ` · Opens ${dateTime.format(new Date(ticketType.salesStart))}` : ''}{ticketType.salesEnd ? ` · Ends ${dateTime.format(new Date(ticketType.salesEnd))}` : ''} (your local time)</p>}
             <label>
               <RequiredLabel>Buyer name</RequiredLabel>
               <input
