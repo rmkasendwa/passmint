@@ -1,4 +1,5 @@
 "use client";
+import { useState } from 'react';
 
 import {
   CalendarDays,
@@ -11,7 +12,7 @@ import {
   Upload,
   XCircle,
 } from "lucide-react";
-import { dateTime, money } from "../formatters";
+import { dateTime } from "../formatters";
 import {
   eventCategory,
   eventStatus,
@@ -20,6 +21,8 @@ import {
 } from "../event-utils";
 import { useAppContext } from "./app-provider";
 import { EventThumbnail } from "./event-thumbnail";
+import { emptyHostedEventFilters, filterHostedEvents, hostedEventStatus, HostedEventStatus } from '../hosted-event-filters';
+import { useHostedEvents } from './use-hosted-events';
 import { SalesOverview } from './sales-overview';
 import {
   FieldMessage,
@@ -54,10 +57,7 @@ export function DashboardWorkbench() {
     cameraEnabled,
     canPublishEvents,
     canVerifyTickets,
-    dashboardCapacity,
-    dashboardEvents,
-    dashboardRevenuePotential,
-    dashboardUpcomingCount,
+    dashboardEvents: cachedHostedEvents,
     gateCode,
     gateResult,
     hostEvent,
@@ -75,6 +75,13 @@ export function DashboardWorkbench() {
     updateHostEvent,
     videoRef,
   } = useAppContext();
+  const hosted = useHostedEvents(session?.token, cachedHostedEvents);
+  const dashboardEvents = hosted.events;
+  const [eventFilters, setEventFilters] = useState(emptyHostedEventFilters);
+  const now = Date.now();
+  const matchingEvents = filterHostedEvents(dashboardEvents, eventFilters, now);
+  const dashboardUpcomingCount = dashboardEvents.filter(event => hostedEventStatus(event, now) === 'upcoming').length;
+  const invalidDateRange = Boolean(eventFilters.from && eventFilters.to && eventFilters.from > eventFilters.to);
   const validation = useInlineFormValidation();
   const eventNameError = validation.fieldError({
     label: "Event name",
@@ -143,19 +150,19 @@ export function DashboardWorkbench() {
       >
         <article className={statCard}>
           <small>Hosted events</small>
-          <strong>{dashboardEvents.length}</strong>
+          <strong>{hosted.loading ? '—' : dashboardEvents.length}</strong>
         </article>
         <article className={statCard}>
           <small>Upcoming</small>
-          <strong>{dashboardUpcomingCount}</strong>
+          <strong>{hosted.loading ? '—' : dashboardUpcomingCount}</strong>
         </article>
         <article className={statCard}>
-          <small>Total capacity</small>
-          <strong>{dashboardCapacity.toLocaleString("en-UG")}</strong>
+          <small>Tickets (not cancelled)</small>
+          <strong>{hosted.loading ? '—' : dashboardEvents.reduce((total, event) => total + (event.ticketsSold ?? 0), 0).toLocaleString('en-UG')}</strong>
         </article>
         <article className={statCard}>
-          <small>Sellout value</small>
-          <strong>{money.format(dashboardRevenuePotential / 100)}</strong>
+          <small>Drafts</small>
+          <strong>{hosted.loading ? '—' : dashboardEvents.filter(event => event.status === 'draft').length}</strong>
         </article>
       </section>
 
@@ -329,15 +336,28 @@ export function DashboardWorkbench() {
               <CalendarDays size={22} />
               <h2>Your events</h2>
             </div>
-            {dashboardEvents.length === 0 ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="grid gap-1 text-sm text-text">Search events<input className="min-h-11 rounded-lg border border-border bg-surface-muted px-3" type="search" value={eventFilters.search} onChange={event => setEventFilters(current => ({ ...current, search: event.target.value }))} placeholder="Name, venue or description" /></label>
+              <label className="grid gap-1 text-sm text-text">Status<select className="min-h-11 rounded-lg border border-border bg-surface-muted px-3" value={eventFilters.status} onChange={event => setEventFilters(current => ({ ...current, status: event.target.value as HostedEventStatus }))}>
+                <option value="all">All events</option><option value="upcoming">Upcoming</option><option value="past">Past start dates</option><option value="draft">Drafts</option><option value="cancelled">Cancelled</option>
+              </select></label>
+              <label className="grid gap-1 text-sm text-text">From (local date)<input className="min-h-11 rounded-lg border border-border bg-surface-muted px-3" type="date" value={eventFilters.from} onChange={event => setEventFilters(current => ({ ...current, from: event.target.value }))} /></label>
+              <label className="grid gap-1 text-sm text-text">Through (local date)<input className="min-h-11 rounded-lg border border-border bg-surface-muted px-3" type="date" value={eventFilters.to} min={eventFilters.from || undefined} onChange={event => setEventFilters(current => ({ ...current, to: event.target.value }))} /></label>
+              <label className="grid gap-1 text-sm text-text">Sort<select className="min-h-11 rounded-lg border border-border bg-surface-muted px-3" value={eventFilters.sort} onChange={event => setEventFilters(current => ({ ...current, sort: event.target.value as 'soonest' | 'latest' }))}><option value="soonest">Earliest first</option><option value="latest">Latest first</option></select></label>
+              <div className="flex flex-wrap items-end gap-2"><button className={secondaryAction} type="button" onClick={() => setEventFilters(emptyHostedEventFilters)}>Clear filters</button><button className={secondaryAction} type="button" disabled={hosted.refreshing} onClick={hosted.refresh}>{hosted.refreshing ? 'Refreshing…' : 'Refresh'}</button></div>
+            </div>
+            {hosted.error && <p role="alert" className={stateLine}>{hosted.error}</p>}
+            {invalidDateRange && <p role="alert" className={stateLine}>The end date must be on or after the start date.</p>}
+            {!hosted.loading && <p role="status" className={helperLine}>{matchingEvents.length} of {dashboardEvents.length} events · Refreshes every 30 seconds while visible.</p>}
+            {hosted.loading ? <p role="status" className={helperLine}>Loading your events…</p> : hosted.error && dashboardEvents.length === 0 ? null : dashboardEvents.length === 0 ? (
               <div className="grid min-h-55 place-items-center gap-2 rounded-4.5 border border-dashed border-border-strong bg-surface-muted p-5.5 text-center text-text-muted [&_strong]:text-[1.2rem] [&_strong]:text-text [&_svg]:text-accent">
                 <TicketIcon size={34} />
                 <strong>No hosted events yet</strong>
                 <span>Create your first event and it will appear here.</span>
               </div>
-            ) : (
+            ) : matchingEvents.length === 0 ? <p className={helperLine}>No events match these filters.</p> : (
               <div className="grid gap-3">
-                {dashboardEvents.map((event, index) => (
+                {matchingEvents.map((event, index) => (
                   <article
                     className="grid min-w-0 grid-cols-[190px_minmax(0,1fr)] gap-4 rounded-4.5 border border-border bg-surface-muted p-3 max-[820px]:grid-cols-1"
                     key={event.id}
@@ -365,7 +385,7 @@ export function DashboardWorkbench() {
                       <div className="flex flex-wrap gap-2 [&_span]:inline-flex [&_span]:min-h-8 [&_span]:items-center [&_span]:gap-1.75 [&_span]:rounded-full [&_span]:bg-surface-raised [&_span]:px-2.5 [&_span]:text-[0.82rem] [&_span]:font-(--weight-medium) [&_span]:text-text-muted [&_svg]:text-accent">
                         <span>
                           <CalendarDays size={15} />
-                          {dateTime.format(new Date(event.startsAt))}
+                          {new Date(event.startsAt).getTime() === 0 ? 'Start date not set' : dateTime.format(new Date(event.startsAt))}
                         </span>
                         <span>
                           <MapPin size={15} />
@@ -377,6 +397,7 @@ export function DashboardWorkbench() {
                           spots
                         </strong>
                       </div>
+                      <p className="my-3 text-sm text-text-muted">{event.ticketsSold ?? 0} tickets (not cancelled) · {event.status === 'draft' ? 'Sales not open' : event.status === 'cancelled' ? 'Sales closed; history retained' : event.soldOut ? 'Sold out' : event.remainingCapacity == null ? 'Unlimited event capacity' : `${event.remainingCapacity} remaining at event level`}</p>
                       <a className={secondaryAction} href={`/dashboard/events/${event.id}`}>Manage event</a>
                     </div>
                   </article>
