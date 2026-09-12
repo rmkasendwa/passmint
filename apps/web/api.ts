@@ -42,6 +42,20 @@ export type GateResult = {
   ticket?: Ticket;
 };
 
+export type SalesSummary = {
+  ticketsIssued: number;
+  ticketsCancelled: number;
+  checkedIn: number;
+  faceValueCents: number;
+  unpricedTickets: number;
+  events: number;
+  remainingCapacity: number;
+  unlimitedEvents: number;
+  verifiedRevenueCents: null;
+  daily: { day: string; ticketsIssued: number }[];
+  generatedAt: string;
+};
+
 export type AttendeePage = {
   attendees: {
     id: string;
@@ -99,6 +113,7 @@ export async function request<T>(
 }
 
 export const api = {
+  salesSummary: (token: string, eventId?: string) => request<SalesSummary>(eventId ? `/events/${eventId}/sales-summary` : '/events/sales-summary', { cache: 'no-store' }, token),
   eventAttendees: (eventId: string, search: string, page: number, token: string) => request<AttendeePage>(`/events/${eventId}/attendees?${new URLSearchParams({ search, page: String(page) })}`, undefined, token),
   duplicateEvent: (eventId: string, startsAt: string, token: string) => request<Event>(`/events/${eventId}/duplicate`, { method: "POST", body: JSON.stringify({ startsAt }) }, token),
   createDraft: (payload: Partial<Pick<Event, "name" | "description" | "venue" | "startsAt" | "capacity" | "priceCents" | "mapLocation" | "thumbnailUrl">>, token: string) => request<Event>("/events/drafts", { method: "POST", body: JSON.stringify(payload) }, token),

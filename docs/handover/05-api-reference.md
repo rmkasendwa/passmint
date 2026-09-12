@@ -15,6 +15,8 @@ This is a source-derived reference, including category routes. It is not a versi
 | GET `/auth/me` | Bearer | Current database user's public fields |
 | GET `/events` | Public | Array of non-draft events, ascending `startsAt`; includes cancelled events |
 | GET `/events/mine` | Bearer | Events whose `ownerId` is this user; includes own drafts |
+| GET `/events/sales-summary` | Bearer | Caller-owned events only, including for admins; all-time issuance, cancellations, check-ins, saved face value and published-event capacity, plus 30 UTC daily issuance buckets; verified revenue is null |
+| GET `/events/:id/sales-summary` | Owner or admin; drafts owner-only | Same report for a single event; snapshot reads, no buyer details, `Cache-Control: no-store` |
 | GET `/events/:id/attendees` | Owner or admin; drafts owner-only | Optional `search` (name/email, up to 100 characters) and `page` (positive integer, default 1); returns 50 tickets per page plus `hasMore`; includes ticket category, issue status and check-in time, excludes QR credentials |
 | GET `/events/:id` | Optional bearer | Event details; draft returns 404 unless caller is owner, including for unrelated platform admins |
 | POST `/events` | Bearer | Creates published event owned by caller |
