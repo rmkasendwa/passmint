@@ -9,6 +9,7 @@ Status reflects the source reviewed on 8 September 2026, not a deployed-release 
 | Public event discovery and details | Implemented in source | [Web data loading](../../apps/web/server-events.ts), [event service](../../apps/api/src/events/events.service.ts); excludes drafts, includes cancelled events; UI search/date filters |
 | Registration and login | Implemented in source | [Auth service](../../apps/api/src/auth/auth.service.ts); email/password and signed bearer sessions |
 | Self-service event ownership | Implemented in source | Any authenticated user creates; owner edits/scans; selected platform-admin overrides |
+| Organizer event management | Implemented in source (12 September 2026) | Own-event dashboard with search, lifecycle/local-date filters, sorting, refresh and ticket/capacity summaries; create/edit/draft/cancel flows retain their server permissions; stale/error states are explicit and undated drafts do not display 1970 |
 | Drafts and scheduled publication | Implemented in source | Private owner-only drafts, scheduled publication, 30-second in-process poll and request-triggered catch-up |
 | Event duplication | Implemented in source (10 September 2026) | Owner selects a future date; details and categories copy into an editable private draft with fresh IDs, shifted sales windows and no ticket history; [regression tests](../../apps/api/test/duplication.test.cjs) |
 | Cancellation | Implemented in source | Preserves records, blocks sales and entry; does not refund or notify |
