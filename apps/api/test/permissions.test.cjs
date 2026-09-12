@@ -38,6 +38,23 @@ async function request(path, method = 'GET', token, body) {
   return { status: response.status, body: await response.json() };
 }
 const details = { name: 'Hosted', description: 'Description', venue: 'Venue', startsAt: '2030-01-01T00:00:00Z', priceCents: 0, capacity: 10 };
+test('HTTP sales summaries require authentication and event ownership', async () => {
+  const { body: event } = await request('/events', 'POST', 'host', details);
+  const path = `/events/${event.id}/sales-summary`;
+  assert.equal((await request('/events/sales-summary')).status, 401);
+  assert.equal((await request(path)).status, 401);
+  assert.equal((await request(path, 'GET', 'other')).status, 403);
+  for (const token of ['host', 'admin']) {
+    const response = await fetch(`${url}${path}`, { headers: { Authorization: `Bearer ${token}` } });
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    const report = await response.json();
+    assert.equal(report.events, 1);
+    assert.equal(report.verifiedRevenueCents, null);
+    assert.equal(report.daily.length, 30);
+  }
+  assert.equal((await request('/events/sales-summary', 'GET', 'other')).body.events, 0);
+});
 test('HTTP attendee lists are scoped, searchable and omit ticket credentials', async () => {
   const { body: event } = await request('/events', 'POST', 'host', details);
   const { body: foreign } = await request('/events', 'POST', 'other', details);

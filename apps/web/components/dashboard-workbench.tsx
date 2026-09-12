@@ -20,6 +20,7 @@ import {
 } from "../event-utils";
 import { useAppContext } from "./app-provider";
 import { EventThumbnail } from "./event-thumbnail";
+import { SalesOverview } from './sales-overview';
 import {
   FieldMessage,
   RequiredLabel,
@@ -158,6 +159,7 @@ export function DashboardWorkbench() {
         </article>
       </section>
 
+      <SalesOverview key={session.user.id} token={session.token} />
       <div className="grid grid-cols-[minmax(360px,430px)_minmax(0,1fr)] items-start gap-4.5 max-[1120px]:grid-cols-1">
         <section className={`${panel} grid gap-3.5 p-4.5`}>
           <div className={panelHeading}>

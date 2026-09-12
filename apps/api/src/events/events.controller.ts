@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Header,
   Param,
   Patch,
   Post,
@@ -38,6 +39,20 @@ export class EventsController {
   @UseGuards(AuthGuard)
   findMine(@Req() request: AuthenticatedRequest) {
     return this.eventsService.findMine(request.user!.id);
+  }
+
+  @Get("sales-summary")
+  @UseGuards(AuthGuard)
+  @Header('Cache-Control', 'no-store')
+  salesSummary(@Req() request: AuthenticatedRequest) {
+    return this.eventsService.salesSummary(request.user!);
+  }
+
+  @Get(":id/sales-summary")
+  @UseGuards(AuthGuard)
+  @Header('Cache-Control', 'no-store')
+  eventSalesSummary(@Param("id") id: string, @Req() request: AuthenticatedRequest) {
+    return this.eventsService.salesSummary(request.user!, id);
   }
 
   @Get(":id")
