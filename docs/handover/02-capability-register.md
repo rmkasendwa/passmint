@@ -21,6 +21,7 @@ Status reflects the source reviewed on 8 September 2026, not a deployed-release 
 | QR generation and ticket history | Implemented in source | [Ticket response](../../apps/api/src/tickets/ticket-response.ts); code and QR returned to buyer, member history via account |
 | Camera/manual validation | Implemented in source | [App provider](../../apps/web/components/app-provider.tsx), [gate controller](../../apps/api/src/gate/gate.controller.ts); online single-use validation |
 | Host attendee list | Implemented in source (10 September 2026) | Owner/admin view with paginated name/email search, category, ticket status and check-in time; includes cancelled history, preserves draft privacy, omits QR credentials; issuance is not payment confirmation |
+| Organizer sales overview | Implemented in source (12 September 2026) | All-owned or single-event reports with 30-second visible refresh, UTC issuance chart and accessible table. Lifetime totals retain cancellations, saved-price face value flags unpriced legacy tickets, and verified revenue stays unavailable pending payments |
 | Mobile-money checkout | Partial | UI/DTO collects number; service neither persists it nor invokes a provider; paid-priced tickets issue without payment confirmation |
 | Email delivery and recovery | Not implemented in inspected source | No mail provider, delivery queue or guest recovery endpoint |
 | Forgot/reset password | UI placeholder | Forms show explanatory messages; no reset-token backend |

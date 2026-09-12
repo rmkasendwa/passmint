@@ -7,7 +7,7 @@ import {
   OnModuleDestroy,
   Logger,
 } from "@nestjs/common";
-import { Event, User, TicketType } from "@prisma/client";
+import { Event, User, TicketType, Prisma } from "@prisma/client";
 import { AuthUser } from "../auth/auth.types";
 import { prefixedId } from "../common/prefixed-id";
 import { isWithinSalesWindow } from "../common/ticket-sales";
@@ -284,6 +284,49 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
     });
     if (!event) throw new NotFoundException("Event not found");
     return event;
+  }
+
+  async salesSummary(user: AuthUser, eventId?: string, now = new Date()) {
+    await this.publishDue();
+    const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 29));
+    const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+    return this.prisma.$transaction(async tx => {
+      if (eventId) {
+        const event = await tx.event.findUnique({ where: { id: eventId }, select: { ownerId: true, status: true } });
+        if (!event || (event.status === 'draft' && event.ownerId !== user.id)) throw new NotFoundException('Event not found');
+        if (event.ownerId !== user.id && user.role !== UserRole.Admin) throw new ForbiddenException('You can only view sales for your own events.');
+      }
+      // All-organizer reports always scope to the caller, including platform admins.
+      const scope = eventId ? Prisma.sql`e.id = ${eventId}` : Prisma.sql`e."ownerId" = ${user.id}`;
+      const [totals] = await tx.$queryRaw<{ ticketsIssued: number; ticketsCancelled: number; checkedIn: number; faceValueCents: number; unpricedTickets: number }[]>(Prisma.sql`
+        SELECT count(*)::int AS "ticketsIssued",
+          count(*) FILTER (WHERE t.status = 'cancelled')::int AS "ticketsCancelled",
+          count(*) FILTER (WHERE t."checkedInAt" IS NOT NULL)::int AS "checkedIn",
+          coalesce(sum(t."unitPriceCents"), 0)::float8 AS "faceValueCents",
+          count(*) FILTER (WHERE t."unitPriceCents" IS NULL)::int AS "unpricedTickets"
+        FROM tickets t JOIN events e ON e.id = t."eventId" WHERE ${scope}`);
+      const [inventory] = await tx.$queryRaw<{ events: number; remainingCapacity: number; unlimitedEvents: number }[]>(Prisma.sql`
+        WITH inventory AS (
+          SELECT e.id, e.status, e.capacity, count(t.id) FILTER (WHERE t.status <> 'cancelled') AS issued
+          FROM events e LEFT JOIN tickets t ON t."eventId" = e.id WHERE ${scope}
+          GROUP BY e.id
+        )
+        SELECT count(*)::int AS events,
+          coalesce(sum(greatest(capacity - issued, 0)) FILTER (WHERE status = 'published' AND capacity IS NOT NULL), 0)::float8 AS "remainingCapacity",
+          count(*) FILTER (WHERE status = 'published' AND capacity IS NULL)::int AS "unlimitedEvents"
+        FROM inventory`);
+      const rows = await tx.$queryRaw<{ day: string; ticketsIssued: number }[]>(Prisma.sql`
+        SELECT to_char(t."createdAt", 'YYYY-MM-DD') AS day, count(*)::int AS "ticketsIssued"
+        FROM tickets t JOIN events e ON e.id = t."eventId"
+        WHERE ${scope} AND t."createdAt" >= ${start.toISOString().slice(0, 19)}::timestamp AND t."createdAt" < ${end.toISOString().slice(0, 19)}::timestamp
+        GROUP BY day ORDER BY day`);
+      const counts = new Map(rows.map(row => [row.day, row.ticketsIssued]));
+      const daily = Array.from({ length: 30 }, (_, index) => {
+        const day = new Date(start.getTime() + index * 86_400_000).toISOString().slice(0, 10);
+        return { day, ticketsIssued: counts.get(day) ?? 0 };
+      });
+      return { ...totals, ...inventory, daily, verifiedRevenueCents: null, generatedAt: now.toISOString() };
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead });
   }
 
   async findAttendees(id: string, query: AttendeeQueryDto, user: AuthUser) {
