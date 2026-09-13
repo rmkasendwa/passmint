@@ -79,9 +79,11 @@ model Ticket {
   updatedAt   DateTime     @default(now()) @updatedAt @db.Timestamp(6)
 
   @@map("tickets")
+  @@index([eventId])
 }
 
 model TicketActivity {
+  decisionDurationMs Int?
   id String @id @db.VarChar
   ticketId String @db.VarChar
   ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)

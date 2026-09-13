@@ -25,6 +25,8 @@ test('concurrent scans retain one acceptance and every duplicate after errors re
   assert.equal(history.activities.filter(row => row.kind === 'duplicate').length, 3);
   assert.equal(history.legacyCheckedInAt, null);
   assert.equal(history.hasMore, false);
+  const recorded = await prisma.ticketActivity.findMany({ where: { ticketId: ticket.id } });
+  assert.ok(recorded.every(row => Number.isInteger(row.decisionDurationMs) && row.decisionDurationMs >= 0));
   for (const row of history.activities) {
     assert.equal(row.operatorId, owner.id);
     assert.equal(row.operatorName, owner.name);

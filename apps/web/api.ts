@@ -113,6 +113,7 @@ export async function request<T>(
 }
 
 export const api = {
+  scanMetrics: (id: string, day: string, token: string) => request<ScanMetrics>(`/events/${encodeURIComponent(id)}/scan-metrics?${new URLSearchParams({ day })}`, { cache: 'no-store' }, token),
   ticketActivity: (id: string, page: number, token: string) => request<TicketActivityPage>(`/tickets/${encodeURIComponent(id)}/activity?page=${page}`, { cache: 'no-store' }, token),
   salesSummary: (token: string, eventId?: string) => request<SalesSummary>(eventId ? `/events/${eventId}/sales-summary` : '/events/sales-summary', { cache: 'no-store' }, token),
   eventAttendees: (eventId: string, search: string, page: number, token: string) => request<AttendeePage>(`/events/${eventId}/attendees?${new URLSearchParams({ search, page: String(page) })}`, undefined, token),
@@ -236,4 +237,11 @@ export type TicketActivityPage = {
   activities: { id: string; kind: string; createdAt: string; operatorId: string; operatorName: string; device: string | null }[];
   page: number;
   hasMore: boolean;
+};
+
+export type ScanMetrics = {
+  day: string; attempts: number; accepted: number; failed: number; duplicates: number;
+  timedScans: number; averageDecisionMs: number | null; peakCheckInHour: string | null; peakCheckIns: number;
+  hourly: { hour: string; attempts: number; accepted: number; failed: number; duplicates: number; timedScans: number; averageDecisionMs: number | null }[];
+  generatedAt: string;
 };

@@ -286,6 +286,52 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
     return event;
   }
 
+  async scanMetrics(id: string, user: AuthUser, requestedDay?: string, now = new Date()) {
+    const day = requestedDay ?? now.toISOString().slice(0, 10);
+    const start = new Date(`${day}T00:00:00.000Z`);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !Number.isFinite(start.getTime()) || start.getUTCFullYear() < 1 || start.toISOString().slice(0, 10) !== day) {
+      throw new BadRequestException('Choose a valid date in YYYY-MM-DD format.');
+    }
+    const end = new Date(start.getTime() + 86400000);
+    return this.prisma.$transaction(async tx => {
+      const event = await tx.event.findUnique({ where: { id }, select: { ownerId: true, status: true } });
+      if (!event || (event.status === 'draft' && event.ownerId !== user.id)) throw new NotFoundException('Event not found');
+      if (event.ownerId !== user.id && user.role !== UserRole.Admin) throw new ForbiddenException('You can only inspect scan metrics for your own events.');
+      const rows = await tx.$queryRaw<{ hour: string; attempts: number; accepted: number; duplicates: number; timedScans: number; totalDurationMs: number }[]>`
+        SELECT to_char(a."createdAt" AT TIME ZONE 'UTC', 'HH24') AS hour,
+          COUNT(*)::int AS attempts,
+          COUNT(*) FILTER (WHERE a.kind = 'accepted')::int AS accepted,
+          COUNT(*) FILTER (WHERE a.kind = 'duplicate')::int AS duplicates,
+          COUNT(a."decisionDurationMs")::int AS "timedScans",
+          COALESCE(SUM(a."decisionDurationMs"), 0)::float8 AS "totalDurationMs"
+        FROM ticket_activities a JOIN tickets t ON t.id = a."ticketId"
+        WHERE t."eventId" = ${id} AND a."createdAt" >= ${start} AND a."createdAt" < ${end}
+          AND a.kind IN ('accepted', 'duplicate', 'cancelled', 'event_cancelled', 'forbidden')
+        GROUP BY 1`;
+      const hourly = Array.from({ length: 24 }, (_, index) => {
+        const hour = String(index).padStart(2, '0');
+        const row = rows.find(row => row.hour === hour);
+        return {
+          hour: `${day}T${hour}:00:00.000Z`, attempts: row?.attempts ?? 0, accepted: row?.accepted ?? 0,
+          failed: (row?.attempts ?? 0) - (row?.accepted ?? 0), duplicates: row?.duplicates ?? 0,
+          timedScans: row?.timedScans ?? 0,
+          averageDecisionMs: row?.timedScans ? row.totalDurationMs / row.timedScans : null,
+        };
+      });
+      const attempts = rows.reduce((sum, row) => sum + row.attempts, 0);
+      const accepted = rows.reduce((sum, row) => sum + row.accepted, 0);
+      const timedScans = rows.reduce((sum, row) => sum + row.timedScans, 0);
+      const peak = hourly.reduce((best, row) => row.accepted > best.accepted ? row : best, hourly[0]);
+      return {
+        day, attempts, accepted, failed: attempts - accepted,
+        duplicates: rows.reduce((sum, row) => sum + row.duplicates, 0), timedScans,
+        averageDecisionMs: timedScans ? rows.reduce((sum, row) => sum + row.totalDurationMs, 0) / timedScans : null,
+        peakCheckInHour: peak.accepted ? peak.hour : null, peakCheckIns: peak.accepted,
+        hourly, generatedAt: now.toISOString(),
+      };
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead });
+  }
+
   async salesSummary(user: AuthUser, eventId?: string, now = new Date()) {
     await this.publishDue();
     const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 29));
