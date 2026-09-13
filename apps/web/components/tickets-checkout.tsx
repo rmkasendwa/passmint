@@ -244,16 +244,18 @@ export function TicketsCheckout() {
             <label>
               <RequiredLabel>Quantity</RequiredLabel>
               <input
-                aria-describedby="tickets-quantity-error"
+                aria-describedby="tickets-quantity-limit tickets-quantity-error"
                 aria-invalid={Boolean(quantityError) || undefined}
                 min={1}
                 max={maximum}
+                step={1}
                 type="number"
                 value={quantity}
                 onChange={(event) => setQuantity(Number(event.target.value))}
                 {...requiredField('Quantity')}
               />
               <FieldMessage error={quantityError} id="tickets-quantity-error" />
+              <span id="tickets-quantity-limit">Maximum {ticketType?.maxPerOrder ?? 10} tickets per order. Availability may reduce this quantity.</span>
             </label>
             {selectedEvent && unitPrice > 0 && (
               <PhoneNumberInput
