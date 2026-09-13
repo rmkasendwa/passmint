@@ -120,7 +120,7 @@ export function AppShell({
           )}
         </div>
       </header>
-      {children}
+      <div className="min-w-0 flex-1">{children}</div>
       <footer className={footerClass}>
         <div className="mx-auto grid min-h-23 w-[min(var(--content-max),calc(100%-var(--content-gutter)*2))] grid-cols-[auto_1fr_auto] items-center gap-5.5 max-[820px]:grid-cols-1 max-[820px]:justify-items-start max-[820px]:py-6">
           <Link
