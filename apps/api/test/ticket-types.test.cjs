@@ -15,6 +15,16 @@ async function setup(capacity = null) {
 }
 const buy = (eventId, ticketTypeId, quantity = 1) => tickets.create({ eventId, ticketTypeId, quantity, buyerName: 'Buyer', buyerEmail: `${randomUUID()}@example.com` });
 
+test('invalid quantities cannot bypass limits when issuing tickets through the service', async () => {
+  const { event } = await setup();
+  for (const quantity of [0, -1, 1.5, NaN, Infinity, 101]) {
+    await assert.rejects(buy(event.id, undefined, quantity), /whole number between 1 and 100/);
+  }
+  await assert.rejects(buy(event.id, undefined, 11), /at most 10/);
+  assert.equal(await prisma.ticket.count({ where: { eventId: event.id } }), 0);
+  assert.equal((await buy(event.id, undefined, 10)).length, 10);
+});
+
 test('category inventory serializes concurrent purchases and retains issue-time price/name', async () => {
   const { owner, event } = await setup();
   const type = await events.saveTicketType(event.id, { name: 'VIP', priceCents: 2500, capacity: 2, maxPerOrder: 2 }, owner);
