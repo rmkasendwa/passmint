@@ -113,6 +113,7 @@ export async function request<T>(
 }
 
 export const api = {
+  ticketActivity: (id: string, page: number, token: string) => request<TicketActivityPage>(`/tickets/${encodeURIComponent(id)}/activity?page=${page}`, { cache: 'no-store' }, token),
   salesSummary: (token: string, eventId?: string) => request<SalesSummary>(eventId ? `/events/${eventId}/sales-summary` : '/events/sales-summary', { cache: 'no-store' }, token),
   eventAttendees: (eventId: string, search: string, page: number, token: string) => request<AttendeePage>(`/events/${eventId}/attendees?${new URLSearchParams({ search, page: String(page) })}`, undefined, token),
   duplicateEvent: (eventId: string, startsAt: string, token: string) => request<Event>(`/events/${eventId}/duplicate`, { method: "POST", body: JSON.stringify({ startsAt }) }, token),
@@ -227,4 +228,12 @@ export type TicketType = {
   id: string; name: string; priceCents: number; capacity: number | null;
   maxPerOrder: number; salesStart: string | null; salesEnd: string | null;
   remainingCapacity: number | null; ticketsSold: number; available: boolean;
+};
+
+export type TicketActivityPage = {
+  issuedAt: string;
+  legacyCheckedInAt: string | null;
+  activities: { id: string; kind: string; createdAt: string; operatorId: string; operatorName: string; device: string | null }[];
+  page: number;
+  hasMore: boolean;
 };

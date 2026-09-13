@@ -38,6 +38,31 @@ async function request(path, method = 'GET', token, body) {
   return { status: response.status, body: await response.json() };
 }
 const details = { name: 'Hosted', description: 'Description', venue: 'Venue', startsAt: '2030-01-01T00:00:00Z', priceCents: 0, capacity: 10 };
+
+test('HTTP ticket activity is private, uncached and records rejected scan responses', async () => {
+  const { body: event } = await request('/events', 'POST', 'host', details);
+  const { body: issued } = await request('/tickets', 'POST', 'buyer', { eventId: event.id, buyerName: 'Buyer', buyerEmail: users.buyer.email });
+  const ticket = issued[0];
+  const path = `/tickets/${ticket.id}/activity`;
+  assert.equal((await request(path)).status, 401);
+  for (const token of ['buyer', 'other']) assert.equal((await request(path, 'GET', token)).status, 403);
+  assert.equal((await request('/gate/scan', 'POST', 'host', { code: ticket.code })).status, 201);
+  assert.equal((await request('/gate/scan', 'POST', 'host', { code: ticket.code })).status, 409);
+  for (const token of ['host', 'admin']) {
+    const response = await fetch(`${url}${path}`, { headers: { Authorization: `Bearer ${token}` } });
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    const history = await response.json();
+    assert.equal(history.activities.length, 2);
+    assert.equal(history.activities[0].kind, 'duplicate');
+    assert.ok(history.activities[0].device);
+    assert.ok(!JSON.stringify(history).includes(ticket.code));
+  }
+  for (const query of ['page=0', 'page=1.5', 'page=NaN', 'page=100001', 'page[a]=1']) assert.equal((await request(`${path}?${query}`, 'GET', 'host')).status, 400);
+  const { body: draft } = await request('/events/drafts', 'POST', 'host', {});
+  await prisma.ticket.update({ where: { id: ticket.id }, data: { eventId: draft.id } });
+  assert.equal((await request(path, 'GET', 'admin')).status, 404);
+});
 test('HTTP sales summaries require authentication and event ownership', async () => {
   const { body: event } = await request('/events', 'POST', 'host', details);
   const path = `/events/${event.id}/sales-summary`;

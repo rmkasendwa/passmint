@@ -11,6 +11,6 @@ export class GateController {
   @Post("scan")
   @UseGuards(AuthGuard)
   scan(@Body() dto: ScanTicketDto, @Req() request: AuthenticatedRequest) {
-    return this.ticketsService.scan(dto.code.trim(), request.user!);
+    return this.ticketsService.scan(dto.code.trim(), request.user!, request.get('user-agent'));
   }
 }
