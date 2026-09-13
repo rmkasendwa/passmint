@@ -998,7 +998,7 @@ export function EventDetail({ event }: { event: Event }) {
                       <Minus size={16} />
                     </button>
                     <input
-                      aria-describedby="detail-quantity-error"
+                      aria-describedby="detail-quantity-limit detail-quantity-error"
                       aria-invalid={Boolean(checkoutQuantityError) || undefined}
                       inputMode="numeric"
                       pattern="[0-9,]*"
@@ -1035,6 +1035,7 @@ export function EventDetail({ event }: { event: Event }) {
                     error={checkoutQuantityError}
                     id="detail-quantity-error"
                   />
+                  <span id="detail-quantity-limit">Maximum {selectedType?.maxPerOrder ?? 10} tickets per order. Availability may reduce this quantity.</span>
                 </label>
 
                 {unitPrice > 0 && (

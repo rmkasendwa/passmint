@@ -26,6 +26,9 @@ export class TicketsService {
   async create(dto: CreateTicketDto, authUser?: AuthUser) {
     await this.eventsService.publishDue();
     const quantity = dto.quantity ?? 1;
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) {
+      throw new BadRequestException("Quantity must be a whole number between 1 and 100.");
+    }
     const buyerEmail = dto.buyerEmail.trim().toLowerCase();
     const tickets = await this.prisma.$transaction(async (tx) => {
       // Serialize inventory changes for this event, including capacity edits.

@@ -38,6 +38,32 @@ async function request(path, method = 'GET', token, body) {
   return { status: response.status, body: await response.json() };
 }
 const details = { name: 'Hosted', description: 'Description', venue: 'Venue', startsAt: '2030-01-01T00:00:00Z', priceCents: 0, capacity: 10 };
+
+test('HTTP purchase limits are owner-configured and enforced for guests and members', async () => {
+  const { body: event } = await request('/events', 'POST', 'host', details);
+  const path = `/events/${event.id}/ticket-types`;
+  const category = { name: 'Admission', priceCents: 0, maxPerOrder: 2 };
+  assert.equal((await request(path, 'POST', 'other', category)).status, 403);
+  for (const maxPerOrder of [0, -1, 1.5, 101, null]) {
+    assert.equal((await request(path, 'POST', 'host', { ...category, maxPerOrder })).status, 400);
+  }
+  const { body: type } = await request(path, 'POST', 'host', category);
+  const purchase = { eventId: event.id, ticketTypeId: type.id, buyerName: 'Buyer', buyerEmail: 'limit@example.com' };
+  for (const token of [undefined, 'buyer']) {
+    for (const quantity of [0, -1, 1.5, 101, 3]) {
+      const result = await request('/tickets', 'POST', token, { ...purchase, quantity });
+      assert.equal(result.status, 400);
+      if (quantity === 3) assert.match(result.body.message, /at most 2 tickets per order/);
+    }
+  }
+  assert.equal(await prisma.ticket.count({ where: { eventId: event.id } }), 0);
+  assert.equal((await request('/tickets', 'POST', undefined, { ...purchase, quantity: 2 })).body.length, 2);
+  assert.equal((await request(`${path}/${type.id}`, 'PATCH', 'host', { ...category, maxPerOrder: 1 })).status, 200);
+  const denied = await request('/tickets', 'POST', 'buyer', { ...purchase, quantity: 2, confirmAdditional: true });
+  assert.equal(denied.status, 400);
+  assert.match(denied.body.message, /at most 1 tickets per order/);
+  assert.equal((await request('/tickets', 'POST', 'buyer', { ...purchase, quantity: 1, confirmAdditional: true })).body.length, 1);
+});
 test('HTTP sales summaries require authentication and event ownership', async () => {
   const { body: event } = await request('/events', 'POST', 'host', details);
   const path = `/events/${event.id}/sales-summary`;
