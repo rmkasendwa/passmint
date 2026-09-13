@@ -35,6 +35,7 @@ import {
 import { PhoneNumberInput } from './phone-number-input';
 import { TicketTypeManager } from './ticket-type-manager';
 import { EventAttendees } from './event-attendees';
+import { EventScanMetrics } from './scan-metrics';
 import { EventDuplicate } from './event-duplicate';
 import { ticketSalesState, salesStateLabels } from '../ticket-sales';
 import { useSalesClock } from './use-sales-clock';
@@ -761,6 +762,7 @@ export function EventDetail({ event }: { event: Event }) {
 
           {ownedBySession && session && <SalesOverview key={`sales:${displayEvent.id}:${session.user.id}`} eventId={displayEvent.id} token={session.token} />}
           {ownedBySession && session && <EventAttendees key={`${displayEvent.id}:${session.user.id}`} eventId={displayEvent.id} token={session.token} />}
+          {ownedBySession && session && <EventScanMetrics key={`${displayEvent.id}:${session.user.id}`} eventId={displayEvent.id} token={session.token} />}
           {session && ownerId(displayEvent) === session.user.id && <EventDuplicate eventId={displayEvent.id} token={session.token} />}
           {ownedBySession && session && !cancelled && <TicketTypeManager event={displayEvent} token={session.token} onSaved={async () => setDisplayEvent(await api.getEvent(event.id, session.token))} />}
           <section className={panelPadded}>

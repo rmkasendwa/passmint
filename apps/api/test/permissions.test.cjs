@@ -39,6 +39,22 @@ async function request(path, method = 'GET', token, body) {
 }
 const details = { name: 'Hosted', description: 'Description', venue: 'Venue', startsAt: '2030-01-01T00:00:00Z', priceCents: 0, capacity: 10 };
 
+test('HTTP scan metrics require event management access and validate report dates', async () => {
+  const { body: event } = await request('/events', 'POST', 'host', details);
+  const path = `/events/${event.id}/scan-metrics`;
+  assert.equal((await request(path)).status, 401);
+  for (const token of ['other', 'buyer']) assert.equal((await request(path, 'GET', token)).status, 403);
+  for (const token of ['host', 'admin']) {
+    const response = await fetch(`${url}${path}?day=2030-05-02`, { headers: { Authorization: `Bearer ${token}` } });
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    const report = await response.json();
+    assert.equal(report.day, '2030-05-02');
+    assert.equal(report.hourly.length, 24);
+  }
+  for (const query of ['day=invalid', 'day=2030-02-29', 'day[a]=2030-05-02', 'day=2030-05-02&day=2030-05-03']) assert.equal((await request(`${path}?${query}`, 'GET', 'host')).status, 400);
+});
+
 test('HTTP ticket activity is private, uncached and records rejected scan responses', async () => {
   const { body: event } = await request('/events', 'POST', 'host', details);
   const { body: issued } = await request('/tickets', 'POST', 'buyer', { eventId: event.id, buyerName: 'Buyer', buyerEmail: users.buyer.email });

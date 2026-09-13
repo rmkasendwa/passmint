@@ -6,6 +6,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { randomUUID } from "crypto";
+import { performance } from 'node:perf_hooks';
 import { AuthUser } from "../auth/auth.types";
 import { prefixedId } from "../common/prefixed-id";
 import { isWithinSalesWindow } from "../common/ticket-sales";
@@ -138,6 +139,7 @@ export class TicketsService {
   }
 
   async scan(code: string, authUser: AuthUser, device?: string) {
+    const startedAt = performance.now();
     const outcome = await this.prisma.$transaction(async (tx) => {
     const reference = await tx.ticket.findUnique({ where: { code }, select: { eventId: true } });
     if (reference?.eventId) await tx.$queryRaw`SELECT id FROM events WHERE id = ${reference.eventId} FOR UPDATE`;
@@ -162,6 +164,7 @@ export class TicketsService {
       id: prefixedId('act'), ticketId: ticket.id, kind,
       operatorId: authUser.id, operatorName: authUser.name,
       createdAt: new Date(),
+      decisionDurationMs: Math.round(performance.now() - startedAt),
       device: device?.replace(/[\x00-\x1f\x7f]/g, '').slice(0, 500) || null,
     } });
 

@@ -15,6 +15,7 @@ import { OptionalAuthGuard } from "../auth/optional-auth.guard";
 import { AuthenticatedRequest } from "../auth/auth.types";
 import { CreateEventDto } from "./dto/create-event.dto";
 import { AttendeeQueryDto } from "./dto/attendee-query.dto";
+import { ScanMetricsQueryDto } from './dto/scan-metrics-query.dto';
 import { DuplicateEventDto } from "./dto/duplicate-event.dto";
 import { CancelEventDto } from "./dto/cancel-event.dto";
 import { TicketTypeDto } from "./dto/ticket-type.dto";
@@ -53,6 +54,13 @@ export class EventsController {
   @Header('Cache-Control', 'no-store')
   eventSalesSummary(@Param("id") id: string, @Req() request: AuthenticatedRequest) {
     return this.eventsService.salesSummary(request.user!, id);
+  }
+
+  @Get(':id/scan-metrics')
+  @UseGuards(AuthGuard)
+  @Header('Cache-Control', 'no-store')
+  scanMetrics(@Param('id') id: string, @Query() query: ScanMetricsQueryDto, @Req() request: AuthenticatedRequest) {
+    return this.eventsService.scanMetrics(id, request.user!, query.day);
   }
 
   @Get(":id")
