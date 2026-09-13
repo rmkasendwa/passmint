@@ -1,10 +1,10 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 
 import {
   Plus,
   ArrowRight,
-  BarChart3,
   CalendarDays,
   CheckCircle2,
   ImagePlus,
@@ -54,7 +54,11 @@ const statCard =
 const compactBadge =
   "inline-flex min-h-7 items-center rounded-full border border-border bg-surface-muted px-2.75 text-[0.74rem] font-(--weight-semibold) uppercase text-text";
 
-export function DashboardWorkbench() {
+export function DashboardWorkbench({
+  view = "events",
+}: {
+  view?: "events" | "reports" | "scan" | "create";
+}) {
   const {
     cameraEnabled,
     canPublishEvents,
@@ -80,13 +84,6 @@ export function DashboardWorkbench() {
   const hosted = useHostedEvents(session?.token, cachedHostedEvents);
   const dashboardEvents = hosted.events;
   const [eventFilters, setEventFilters] = useState(emptyHostedEventFilters);
-  const [view, setView] = useState<"events" | "create" | "reports" | "scan">(
-    "events",
-  );
-  const changeView = (next: typeof view) => {
-    if (next !== "scan") setCameraEnabled(false);
-    setView(next);
-  };
   const now = Date.now();
   const matchingEvents = filterHostedEvents(dashboardEvents, eventFilters, now);
   const dashboardUpcomingCount = dashboardEvents.filter(
@@ -137,44 +134,30 @@ export function DashboardWorkbench() {
         <div>
           <p className={sectionKicker}>Organizer workspace</p>
           <h1 className="mb-2 text-[clamp(1.8rem,4vw,2.5rem)] font-semibold tracking-tight text-text">
-            Welcome back, {session.user.name.split(" ")[0]}.
+            {view === "events"
+              ? "Your events"
+              : view === "reports"
+                ? "Reports"
+                : view === "scan"
+                  ? "Check-in"
+                  : "Create an event"}
           </h1>
           <p className="m-0 text-text-muted">
-            Your next great event starts here.
+            {view === "events"
+              ? "Plan, publish, and manage your events in one place."
+              : view === "reports"
+                ? "Keep track of ticket activity across your events."
+                : view === "scan"
+                  ? "Welcome your guests. Scan a ticket to check them in."
+                  : "Set the details and save a draft, or publish when you�re ready."}
           </p>
         </div>
-        <button
-          type="button"
-          className={primaryAction}
-          onClick={() => changeView("create")}
-        >
-          <Plus size={18} /> Create event
-        </button>
+        {view !== "create" && (
+          <Link className={primaryAction} href="/dashboard/events/new">
+            <Plus size={18} /> Create event
+          </Link>
+        )}
       </header>
-      <nav
-        aria-label="Organizer workspace"
-        className="mb-7 flex gap-1 overflow-x-auto border-b border-border"
-      >
-        {(
-          [
-            { id: "events", label: "Your events", icon: CalendarDays },
-            { id: "reports", label: "Reports", icon: BarChart3 },
-            { id: "scan", label: "Check-in", icon: ScanLine },
-            { id: "create", label: "Create event", icon: Plus },
-          ] as const
-        ).map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            aria-current={view === item.id ? "page" : undefined}
-            onClick={() => changeView(item.id)}
-            className={`inline-flex min-h-12 shrink-0 items-center gap-2 border-b-2 px-4 text-sm font-semibold ${view === item.id ? "border-accent text-text" : "border-transparent text-text-muted hover:text-text"}`}
-          >
-            <item.icon size={17} />
-            {item.label}
-          </button>
-        ))}
-      </nav>
 
       {view === "events" && dashboardEvents.length > 0 && (
         <section
@@ -553,13 +536,9 @@ export function DashboardWorkbench() {
                       get ready to welcome your guests.
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    className={primaryAction}
-                    onClick={() => changeView("create")}
-                  >
+                  <Link className={primaryAction} href="/dashboard/events/new">
                     Create your first event <ArrowRight size={17} />
-                  </button>
+                  </Link>
                   <span className="text-xs text-text-soft">
                     Start with a draft. Publish when you�re ready.
                   </span>

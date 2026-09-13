@@ -308,7 +308,7 @@ export function AppProvider({
   }, [cameraEnabled]);
 
   useEffect(() => {
-    if (pathname === "/dashboard") return;
+    if (pathname === "/dashboard/check-in") return;
     setCameraEnabled(false);
   }, [pathname]);
 
@@ -318,7 +318,7 @@ export function AppProvider({
   }, [pathname]);
 
   useEffect(() => {
-    if (!sessionLoaded || pathname !== "/dashboard" || session) return;
+    if (!sessionLoaded || !(pathname === "/dashboard" || pathname.startsWith("/dashboard/")) || session) return;
     router.replace("/login");
   }, [pathname, router, session, sessionLoaded]);
 

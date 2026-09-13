@@ -1,5 +1,5 @@
-import { DashboardWorkbench } from "../../components/dashboard-workbench";
+import { redirect } from "next/navigation";
 
 export default function DashboardPage() {
-  return <DashboardWorkbench />;
+  redirect("/dashboard/events");
 }
