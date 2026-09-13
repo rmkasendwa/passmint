@@ -60,6 +60,7 @@ model Event {
 }
 
 model Ticket {
+  activities TicketActivity[]
   ticketTypeId String? @db.VarChar
   ticketType   TicketType? @relation(fields: [ticketTypeId], references: [id])
   ticketTypeName String @default("General admission")
@@ -78,6 +79,20 @@ model Ticket {
   updatedAt   DateTime     @default(now()) @updatedAt @db.Timestamp(6)
 
   @@map("tickets")
+}
+
+model TicketActivity {
+  id String @id @db.VarChar
+  ticketId String @db.VarChar
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  kind String @db.VarChar
+  operatorId String @db.VarChar
+  operatorName String
+  device String?
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([ticketId, createdAt, id])
+  @@map("ticket_activities")
 }
 
 model TicketType {

@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Header, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { TicketActivityQueryDto } from './dto/ticket-activity-query.dto';
 import { AuthGuard } from '../auth/auth.guard';
 import { AuthenticatedRequest } from '../auth/auth.types';
 import { OptionalAuthGuard } from '../auth/optional-auth.guard';
@@ -25,5 +26,12 @@ export class TicketsController {
   @UseGuards(AuthGuard)
   findOne(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
     return this.ticketsService.findOne(id, request.user!);
+  }
+
+  @Get(':id/activity')
+  @UseGuards(AuthGuard)
+  @Header('Cache-Control', 'no-store')
+  activity(@Param('id') id: string, @Query() query: TicketActivityQueryDto, @Req() request: AuthenticatedRequest) {
+    return this.ticketsService.activity(id, request.user!, query.page);
   }
 }

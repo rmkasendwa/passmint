@@ -3,8 +3,10 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { api, AttendeePage } from '../api';
 import { dateTime } from '../formatters';
+import { TicketActivity } from './ticket-activity';
 
 export function EventAttendees({ eventId, token }: { eventId: string; token: string }) {
+  const [selected, setSelected] = useState<{ id: string; buyerName: string } | null>(null);
   const [search, setSearch] = useState('');
   const [query, setQuery] = useState({ search: '', page: 1, refresh: 0 });
   const [data, setData] = useState<AttendeePage | null>(null);
@@ -45,13 +47,14 @@ export function EventAttendees({ eventId, token }: { eventId: string; token: str
         <div className="overflow-x-auto" role="region" aria-label="Attendee list" tabIndex={0}>
           <table className="w-full text-left text-sm text-text">
             <caption className="sr-only">Ticket holders, ticket categories, issue status and check-in times</caption>
-            <thead><tr>{['Ticket holder', 'Ticket category', 'Ticket status', 'Issued', 'Check-in'].map(label => <th className="border-b border-border p-3" scope="col" key={label}>{label}</th>)}</tr></thead>
+            <thead><tr>{['Ticket holder', 'Ticket category', 'Ticket status', 'Issued', 'Check-in', 'History'].map(label => <th className="border-b border-border p-3" scope="col" key={label}>{label}</th>)}</tr></thead>
             <tbody>{data.attendees.map(attendee => <tr key={attendee.id}>
               <td className="border-b border-border p-3"><span className="block font-semibold">{attendee.buyerName || 'Name not provided'}</span><span className="break-all text-text-muted">{attendee.buyerEmail || 'Email not provided'}</span></td>
               <td className="border-b border-border p-3">{attendee.ticketTypeName}</td>
               <td className="border-b border-border p-3">{labels[attendee.status]}</td>
               <td className="border-b border-border p-3">{dateTime.format(new Date(attendee.createdAt))}</td>
               <td className="border-b border-border p-3">{attendee.checkedInAt ? dateTime.format(new Date(attendee.checkedInAt)) : 'Not checked in'}</td>
+              <td className="border-b border-border p-3"><button className={button} type="button" aria-label={`View ticket history for ${attendee.buyerName}`} onClick={() => setSelected(attendee)}>View history</button></td>
             </tr>)}</tbody>
           </table>
         </div>}
@@ -61,5 +64,6 @@ export function EventAttendees({ eventId, token }: { eventId: string; token: str
         <button className={button} type="button" disabled={!data.hasMore} onClick={() => setQuery(current => ({ ...current, page: current.page + 1 }))}>Next</button>
       </nav>
     </>}
+    {selected && <TicketActivity key={`${token}:${selected.id}`} ticketId={selected.id} buyerName={selected.buyerName} token={token} onClose={() => setSelected(null)} />}
   </section>;
 }

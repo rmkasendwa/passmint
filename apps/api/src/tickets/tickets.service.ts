@@ -120,8 +120,25 @@ export class TicketsService {
     return Promise.all(tickets.map(toTicketResponse));
   }
 
-  async scan(code: string, authUser: AuthUser) {
-    return this.prisma.$transaction(async (tx) => {
+  async activity(id: string, authUser: AuthUser, page = 1) {
+    if (!Number.isInteger(page) || page < 1 || page > 100000) throw new BadRequestException('Invalid activity page.');
+    const ticket = await this.prisma.ticket.findUnique({ where: { id }, include: { event: true } });
+    if (!ticket?.event || (ticket.event.status === 'draft' && ticket.event.ownerId !== authUser.id)) throw new NotFoundException('Ticket not found');
+    if (ticket.event.ownerId !== authUser.id && authUser.role !== UserRole.Admin) throw new ForbiddenException('You can only inspect ticket activity for events you manage.');
+    const rows = await this.prisma.ticketActivity.findMany({
+      where: { ticketId: id }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], skip: (page - 1) * 50, take: 51,
+      select: { id: true, kind: true, createdAt: true, operatorId: true, operatorName: true, device: true },
+    });
+    const hasRecordedCheckIn = await this.prisma.ticketActivity.count({ where: { ticketId: id, kind: 'accepted' } });
+    return {
+      issuedAt: ticket.createdAt,
+      legacyCheckedInAt: hasRecordedCheckIn ? null : ticket.checkedInAt,
+      activities: rows.slice(0, 50), page, hasMore: rows.length > 50,
+    };
+  }
+
+  async scan(code: string, authUser: AuthUser, device?: string) {
+    const outcome = await this.prisma.$transaction(async (tx) => {
     const reference = await tx.ticket.findUnique({ where: { code }, select: { eventId: true } });
     if (reference?.eventId) await tx.$queryRaw`SELECT id FROM events WHERE id = ${reference.eventId} FOR UPDATE`;
     const ticket = await tx.ticket.findUnique({
@@ -141,36 +158,47 @@ export class TicketsService {
       });
     }
 
+    const record = (kind: string) => tx.ticketActivity.create({ data: {
+      id: prefixedId('act'), ticketId: ticket.id, kind,
+      operatorId: authUser.id, operatorName: authUser.name,
+      createdAt: new Date(),
+      device: device?.replace(/[\x00-\x1f\x7f]/g, '').slice(0, 500) || null,
+    } });
+
     const canValidate =
       authUser.role === UserRole.Admin ||
       ticket.event.ownerId === authUser.id;
 
     if (!canValidate) {
-      throw new ForbiddenException({
+      await record('forbidden');
+      return { error: new ForbiddenException({
         result: "forbidden",
         message: "You can only validate tickets for events you created.",
-      });
+      }) };
     }
 
     if (ticket.event.status === "cancelled") {
-      throw new ConflictException({ result: "cancelled", message: "This event has been cancelled." });
+      await record('event_cancelled');
+      return { error: new ConflictException({ result: "cancelled", message: "This event has been cancelled." }) };
     }
 
     if (ticket.status === TicketStatus.Cancelled) {
-      throw new ConflictException({
+      await record('cancelled');
+      return { error: new ConflictException({
         result: "cancelled",
         message: "Ticket has been cancelled",
         ticket: await toTicketResponse(ticket),
-      });
+      }) };
     }
 
     if (ticket.status === TicketStatus.CheckedIn) {
-      throw new ConflictException({
+      await record('duplicate');
+      return { error: new ConflictException({
         result: "duplicate",
         message: "Ticket has already been checked in",
         checkedInAt: ticket.checkedInAt,
         ticket: await toTicketResponse(ticket),
-      });
+      }) };
     }
 
     const saved = await tx.ticket.update({
@@ -182,11 +210,15 @@ export class TicketsService {
       include: { event: true },
     });
 
-    return {
+    await record('accepted');
+    return { value: {
       result: "accepted",
       message: "Ticket accepted",
       ticket: await toTicketResponse(saved),
-    };
+    } };
     });
+    // Throw only after committing so rejected scans retain their audit record.
+    if (outcome.error) throw outcome.error;
+    return outcome.value;
   }
 }
