@@ -145,27 +145,7 @@ export function eventStatus(event: Event) {
   return startsAt >= now ? "Upcoming" : "Past";
 }
 
-export function eventCategory(event: Event) {
-  const haystack =
-    `${event.name} ${event.description} ${event.venue}`.toLowerCase();
-
-  if (/sport|match|fc|league|basket|stadium|arena/.test(haystack)) {
-    return "Sports";
-  }
-
-  if (/music|dj|concert|brunch|night|club|vibes|show/.test(haystack)) {
-    return "Music";
-  }
-
-  if (/meetup|launch|conference|builder|javascript|talk|demo/.test(haystack)) {
-    return "Conference";
-  }
-
-  if (/film|cinema|screen/.test(haystack)) return "Cinema";
-  if (/theatre|stage|drama/.test(haystack)) return "Theatre";
-
-  return "Event";
-}
+export { eventCategory } from "./event-category";
 
 export function toDateKey(date: Date) {
   const year = date.getFullYear();

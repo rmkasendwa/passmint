@@ -67,14 +67,15 @@ export function DiscoveryFilters({
 
   function moveMonth(offset: number) {
     setCalendarMonth(
-      (current) => new Date(current.getFullYear(), current.getMonth() + offset, 1),
+      (current) =>
+        new Date(current.getFullYear(), current.getMonth() + offset, 1),
     );
   }
 
   return (
     <form
       className="grid w-[min(1040px,calc(100%-var(--content-gutter)*2))] grid-cols-[minmax(280px,1fr)_minmax(230px,286px)_auto] items-end gap-3 max-[820px]:w-full max-[820px]:grid-cols-1"
-      action="/"
+      action="/#events"
       role="search"
     >
       <label className="grid gap-1.75 text-[0.76rem] font-(--weight-semibold) text-text-muted">
@@ -106,7 +107,7 @@ export function DiscoveryFilters({
         </button>
 
         {pickerOpen && (
-          <div className="absolute left-0 top-[calc(100%+8px)] z-40 grid w-[min(340px,calc(100vw-32px))] gap-3 rounded-2xl border border-border bg-surface-raised p-3 text-text shadow-[0_24px_70px_rgb(0_0_0/38%)]">
+          <div className="absolute left-0 top-[calc(100%+8px)] z-40 grid w-[min(340px,calc(100vw-64px))] gap-3 rounded-2xl border border-border bg-surface-raised p-3 text-text shadow-[0_24px_70px_rgb(0_0_0/38%)]">
             <div className="flex items-center justify-between gap-2">
               <button
                 type="button"
@@ -138,7 +139,8 @@ export function DiscoveryFilters({
             <div className="grid grid-cols-7 gap-1">
               {visibleCalendarDays.map((date) => {
                 const dateKey = toDateKey(date);
-                const isOutsideMonth = date.getMonth() !== calendarMonth.getMonth();
+                const isOutsideMonth =
+                  date.getMonth() !== calendarMonth.getMonth();
                 const rangeEnd = dateEnd || dateStart;
                 const isSelected = dateKey === dateStart || dateKey === dateEnd;
                 const isInRange =
