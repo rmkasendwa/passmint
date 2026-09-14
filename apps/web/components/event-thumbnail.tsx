@@ -6,12 +6,18 @@ import type { Event } from "../api";
 import { eventCategory, initials } from "../event-utils";
 
 const toneGradient: Record<string, string> = {
-  "tone-1": "before:bg-[radial-gradient(circle_at_76%_18%,rgb(255_255_255/20%),transparent_24%),linear-gradient(135deg,#174a52,#111827)]",
-  "tone-2": "before:bg-[radial-gradient(circle_at_70%_12%,rgb(250_91_45/24%),transparent_28%),linear-gradient(135deg,#3b1d2d,#0f172a)]",
-  "tone-3": "before:bg-[radial-gradient(circle_at_78%_16%,rgb(248_200_104/26%),transparent_26%),linear-gradient(135deg,#3f3a16,#111827)]",
-  "tone-4": "before:bg-[radial-gradient(circle_at_74%_14%,rgb(121_230_217/25%),transparent_28%),linear-gradient(135deg,#123b44,#14151d)]",
-  "tone-5": "before:bg-[radial-gradient(circle_at_74%_14%,rgb(255_255_255/22%),transparent_28%),linear-gradient(135deg,#3b2f4d,#111827)]",
-  "tone-6": "before:bg-[radial-gradient(circle_at_74%_14%,rgb(250_91_45/22%),transparent_28%),linear-gradient(135deg,#492b20,#101116)]",
+  "tone-1":
+    "before:bg-[radial-gradient(circle_at_76%_18%,rgb(255_255_255/20%),transparent_24%),linear-gradient(135deg,#174a52,#111827)]",
+  "tone-2":
+    "before:bg-[radial-gradient(circle_at_70%_12%,rgb(250_91_45/24%),transparent_28%),linear-gradient(135deg,#3b1d2d,#0f172a)]",
+  "tone-3":
+    "before:bg-[radial-gradient(circle_at_78%_16%,rgb(248_200_104/26%),transparent_26%),linear-gradient(135deg,#3f3a16,#111827)]",
+  "tone-4":
+    "before:bg-[radial-gradient(circle_at_74%_14%,rgb(121_230_217/25%),transparent_28%),linear-gradient(135deg,#123b44,#14151d)]",
+  "tone-5":
+    "before:bg-[radial-gradient(circle_at_74%_14%,rgb(255_255_255/22%),transparent_28%),linear-gradient(135deg,#3b2f4d,#111827)]",
+  "tone-6":
+    "before:bg-[radial-gradient(circle_at_74%_14%,rgb(250_91_45/22%),transparent_28%),linear-gradient(135deg,#492b20,#101116)]",
 };
 
 const baseThumbnail =
@@ -21,8 +27,7 @@ const fallbackDecor =
   "before:absolute before:inset-0 before:z-0 before:content-[''] after:absolute after:right-[-28px] after:bottom-[-38px] after:z-1 after:size-37.5 after:rounded-full after:border-6 after:border-white/12 after:content-['']";
 
 const variantClass = {
-  featured:
-    "min-h-145 max-[820px]:min-h-125 max-[600px]:min-h-65",
+  featured: "min-h-145 max-[820px]:min-h-125 max-[600px]:min-h-65",
   card: "min-h-90 [&_.thumbnail-badge_small]:hidden [&_.thumbnail-frame]:inset-3 [&_.thumbnail-frame]:rounded-2xl [&_.thumbnail-frame]:border-white/14 [&_.thumbnail-frame]:border-b-0 [&_.thumbnail-initials]:text-[4.7rem] [&_.thumbnail-title]:hidden [&_.thumbnail-date]:hidden max-[600px]:min-h-85",
   preview: "min-h-37",
 };
@@ -42,10 +47,14 @@ export function EventThumbnail({
 }) {
   const [imageFailed, setImageFailed] = useState(false);
   const date = new Date(event.startsAt);
-  const day = new Intl.DateTimeFormat("en-UG", { day: "numeric" }).format(date);
-  const month = new Intl.DateTimeFormat("en-UG", { month: "short" }).format(
-    date,
-  );
+  const day = new Intl.DateTimeFormat("en-UG", {
+    timeZone: "Africa/Kampala",
+    day: "numeric",
+  }).format(date);
+  const month = new Intl.DateTimeFormat("en-UG", {
+    timeZone: "Africa/Kampala",
+    month: "short",
+  }).format(date);
   const hasImage = Boolean(event.thumbnailUrl) && !imageFailed;
   const category = eventCategory(event);
   const BadgeIcon = category === "Music" ? Music2 : TicketIcon;
@@ -73,7 +82,9 @@ export function EventThumbnail({
   return (
     <span
       className={`event-thumbnail-${variant} ${baseThumbnail} ${variantClass[variant]} ${
-        hasImage ? "" : `${fallbackDecor} ${toneGradient[tone] ?? toneGradient["tone-1"]}`
+        hasImage
+          ? ""
+          : `${fallbackDecor} ${toneGradient[tone] ?? toneGradient["tone-1"]}`
       }`}
     >
       {hasImage && (
@@ -110,9 +121,7 @@ export function EventThumbnail({
         <strong className="text-[2.15rem] font-(--weight-bold) leading-[0.9]">
           {day}
         </strong>
-        <small className="font-(--weight-semibold) uppercase">
-          {month}
-        </small>
+        <small className="font-(--weight-semibold) uppercase">{month}</small>
       </span>
       <span className="thumbnail-title absolute bottom-6 left-5.5 right-28 z-3 hidden gap-1.25">
         <strong className="overflow-hidden text-[1.35rem] font-(--weight-bold) leading-[1.02]">

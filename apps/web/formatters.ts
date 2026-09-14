@@ -5,11 +5,13 @@ export const money = new Intl.NumberFormat("en-UG", {
 });
 
 export const dateTime = new Intl.DateTimeFormat("en-UG", {
+  timeZone: "Africa/Kampala",
   dateStyle: "medium",
   timeStyle: "short",
 });
 
 export const shortDate = new Intl.DateTimeFormat("en-UG", {
+  timeZone: "Africa/Kampala",
   weekday: "short",
   month: "short",
   day: "numeric",

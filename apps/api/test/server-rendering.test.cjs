@@ -106,3 +106,10 @@ test("invalid tokens cannot establish a server session", async () => {
   );
   assert.equal(writes.length, 0);
 });
+
+test("event timestamps use the same timezone on server and client", () => {
+  const { dateTime, shortDate } = load("formatters.ts", {});
+  assert.equal(dateTime.resolvedOptions().timeZone, "Africa/Kampala");
+  assert.equal(shortDate.resolvedOptions().timeZone, "Africa/Kampala");
+  assert.match(dateTime.format(new Date("2030-09-14T22:00:00Z")), /15/);
+});

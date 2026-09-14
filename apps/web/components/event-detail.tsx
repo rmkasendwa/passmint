@@ -56,12 +56,15 @@ const kicker =
   "mb-2 text-[0.78rem] font-(--weight-semibold) uppercase tracking-[0.08em] text-accent";
 
 const eventDay = new Intl.DateTimeFormat("en-UG", {
+  timeZone: "Africa/Kampala",
   day: "2-digit",
 });
 const eventMonth = new Intl.DateTimeFormat("en-UG", {
+  timeZone: "Africa/Kampala",
   month: "short",
 });
 const eventTime = new Intl.DateTimeFormat("en-UG", {
+  timeZone: "Africa/Kampala",
   hour: "2-digit",
   minute: "2-digit",
 });
