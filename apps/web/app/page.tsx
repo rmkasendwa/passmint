@@ -45,6 +45,10 @@ export default async function HomePage({ searchParams }: SearchProps) {
     end = param(params.end);
   const visibleEvents = filterEvents(events, { q: query, start, end });
   const heroEvent = events.find((event) => eventStatus(event) === "Upcoming");
+  const upcoming = events
+    .filter((event) => eventStatus(event) === "Upcoming")
+    .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt))
+    .slice(0, 3);
   return (
     <>
       <section className="discovery-hero site-container">
@@ -267,48 +271,97 @@ export default async function HomePage({ searchParams }: SearchProps) {
           </div>
         )}
       </section>
-      <section className="site-container organizer-banner">
-        <div>
-          <p className="eyebrow">FOR THE PEOPLE WHO BRING PEOPLE TOGETHER</p>
-          <h2>
-            You bring the idea.
-            <br />
-            We'll bring the tickets.
-          </h2>
-          <p>
-            From your first gathering to your next big night. Publish your
-            event, manage tickets, and welcome guests in one workspace.
-          </p>
-          <Link href="/organizers" className="button-primary">
-            Meet your organizer toolkit <ArrowUpRight size={18} />
-          </Link>
-        </div>
-        <div className="organizer-steps">
-          {[
-            [
-              "01",
-              "Make it yours",
-              "Add your story, artwork, venue and ticket options.",
-            ],
-            [
-              "02",
-              "Open the doors",
-              "Publish your event and share its page with your guests.",
-            ],
-            [
-              "03",
-              "Welcome everyone",
-              "Follow ticket activity and scan guests in at the door.",
-            ],
-          ].map(([n, title, copy]) => (
-            <div key={n}>
-              <span>{n}</span>
-              <div>
-                <h3>{title}</h3>
-                <p>{copy}</p>
-              </div>
+      {!query && !start && !end && upcoming.length > 0 && (
+        <section
+          className="upcoming-section"
+          aria-labelledby="upcoming-heading"
+        >
+          <div className="site-container upcoming-layout">
+            <div className="upcoming-intro">
+              <p className="eyebrow">SOMETHING TO LOOK FORWARD TO</p>
+              <h2 id="upcoming-heading">
+                Make room for
+                <br />
+                <em>a good time.</em>
+              </h2>
+              <p>
+                A few of the next experiences on the calendar. Find your people,
+                pick your plan, and be there.
+              </p>
+              <span className="upcoming-note">
+                <CalendarDays size={18} /> Coming up next
+              </span>
             </div>
-          ))}
+            <div className="upcoming-list">
+              {upcoming.map((event) => (
+                <Link
+                  href={`/event/${event.id}`}
+                  key={event.id}
+                  className="upcoming-event"
+                >
+                  <div className="upcoming-image">
+                    <EventImage
+                      src={event.thumbnailUrl}
+                      name={event.name}
+                      fallbackClassName="upcoming-image-fallback"
+                    />
+                  </div>
+                  <div className="upcoming-event-copy">
+                    <span>{shortDate.format(new Date(event.startsAt))}</span>
+                    <h3>{event.name}</h3>
+                    <p>{event.venue}</p>
+                  </div>
+                  <ArrowUpRight size={22} aria-hidden="true" />
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+      <section className="organizer-section" aria-label="Host with Passmint">
+        <div className="site-container organizer-banner">
+          <div>
+            <p className="eyebrow">FOR THE PEOPLE WHO BRING PEOPLE TOGETHER</p>
+            <h2>
+              You bring the idea.
+              <br />
+              We'll bring the tickets.
+            </h2>
+            <p>
+              From your first gathering to your next big night. Publish your
+              event, manage tickets, and welcome guests in one workspace.
+            </p>
+            <Link href="/organizers" className="button-primary">
+              Meet your organizer toolkit <ArrowUpRight size={18} />
+            </Link>
+          </div>
+          <div className="organizer-steps">
+            {[
+              [
+                "01",
+                "Make it yours",
+                "Add your story, artwork, venue and ticket options.",
+              ],
+              [
+                "02",
+                "Open the doors",
+                "Publish your event and share its page with your guests.",
+              ],
+              [
+                "03",
+                "Welcome everyone",
+                "Follow ticket activity and scan guests in at the door.",
+              ],
+            ].map(([n, title, copy]) => (
+              <div key={n}>
+                <span>{n}</span>
+                <div>
+                  <h3>{title}</h3>
+                  <p>{copy}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
       <section className="site-container help-nudge">
