@@ -49,7 +49,7 @@ export function DataSkeleton({
 }) {
   return (
     <div role="status" aria-label={`Loading ${kind}`} className="grid gap-4">
-      <span className="sr-only">Loading {kind}�</span>
+      <span className="sr-only">Loading {kind}...</span>
       <div aria-hidden="true" className="grid gap-4 motion-safe:animate-pulse">
         {kind === "attendees" || kind === "activity" ? (
           Array.from({ length: kind === "attendees" ? 5 : 3 }, (_, i) => (
@@ -210,7 +210,7 @@ export function PageSkeleton({ view }: { view: SkeletonView }) {
       aria-label={`Loading ${view} page`}
       className="site-container py-10"
     >
-      <span className="sr-only">Loading {view} page�</span>
+      <span className="sr-only">Loading {view} page...</span>
       <div aria-hidden="true" className="grid gap-6 motion-safe:animate-pulse">
         {content}
       </div>

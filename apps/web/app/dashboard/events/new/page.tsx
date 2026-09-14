@@ -1,3 +1,5 @@
+import { requireServerSession } from "../../../../server-session";
+
 import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Create an event",
@@ -5,6 +7,7 @@ export const metadata: Metadata = {
 };
 import { DashboardWorkbench } from "../../../../components/dashboard-workbench";
 
-export default function Page() {
+export default async function Page() {
+  await requireServerSession("/dashboard/events/new");
   return <DashboardWorkbench view="create" />;
 }

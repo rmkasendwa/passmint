@@ -86,7 +86,7 @@ export function TicketActivity({
       >
         Refresh history
       </button>
-      {loading && <p role="status">Loading ticket activity…</p>}
+      {loading && <DataSkeleton kind="activity" />}
       {error && <p role="alert">{error}</p>}
       {data && (
         <>

@@ -1,5 +1,7 @@
 "use client";
+import { PageSkeleton } from "./page-skeleton";
 import { useState } from "react";
+import type { Event, SalesSummary } from "../api";
 import Link from "next/link";
 
 import {
@@ -56,8 +58,12 @@ const compactBadge =
 
 export function DashboardWorkbench({
   view = "events",
+  initialEvents,
+  initialSales,
 }: {
   view?: "events" | "reports" | "scan" | "create";
+  initialEvents?: Event[];
+  initialSales?: SalesSummary;
 }) {
   const {
     cameraEnabled,
@@ -81,7 +87,11 @@ export function DashboardWorkbench({
     updateHostEvent,
     videoRef,
   } = useAppContext();
-  const hosted = useHostedEvents(session?.token, cachedHostedEvents);
+  const hosted = useHostedEvents(
+    session?.token,
+    cachedHostedEvents,
+    initialEvents,
+  );
   const dashboardEvents = hosted.events;
   const [eventFilters, setEventFilters] = useState(emptyHostedEventFilters);
   const now = Date.now();
@@ -126,7 +136,7 @@ export function DashboardWorkbench({
     value: hostEvent.priceCents / 100,
   });
 
-  if (!session) return null;
+  if (!session) return <PageSkeleton view={view} />;
 
   return (
     <section className="mx-auto w-[min(1180px,calc(100%-32px))] py-10">
@@ -193,7 +203,11 @@ export function DashboardWorkbench({
         </section>
       )}
       {view === "reports" && (
-        <SalesOverview key={session.user.id} token={session.token} />
+        <SalesOverview
+          key={session.user.id}
+          token={session.token}
+          initialData={initialSales}
+        />
       )}
       <div className="grid gap-5">
         {view === "create" && (

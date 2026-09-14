@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   CalendarDays,
@@ -18,61 +18,61 @@ import {
   UserPlus,
   Users,
   X,
-} from 'lucide-react';
-import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { api, Event } from '../api';
-import { eventCategory, eventStatus, eventTone } from '../event-utils';
-import { dateTime, money } from '../formatters';
-import { useAppContext } from './app-provider';
-import { EventImage } from './event-image';
+} from "lucide-react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { api, Event } from "../api";
+import { eventCategory, eventStatus, eventTone } from "../event-utils";
+import { dateTime, money } from "../formatters";
+import { useAppContext } from "./app-provider";
+import { EventImage } from "./event-image";
 import {
   FieldMessage,
   RequiredLabel,
   requiredField,
   requiredTextareaField,
   useInlineFormValidation,
-} from './form-validation';
-import { PhoneNumberInput } from './phone-number-input';
-import { TicketTypeManager } from './ticket-type-manager';
-import { EventAttendees } from './event-attendees';
-import { EventScanMetrics } from './scan-metrics';
-import { EventDuplicate } from './event-duplicate';
-import { ticketSalesState, salesStateLabels } from '../ticket-sales';
-import { useSalesClock } from './use-sales-clock';
-import { SalesOverview } from './sales-overview';
+} from "./form-validation";
+import { PhoneNumberInput } from "./phone-number-input";
+import { TicketTypeManager } from "./ticket-type-manager";
+import { EventAttendees } from "./event-attendees";
+import { EventScanMetrics } from "./scan-metrics";
+import { EventDuplicate } from "./event-duplicate";
+import { ticketSalesState, salesStateLabels } from "../ticket-sales";
+import { useSalesClock } from "./use-sales-clock";
+import { SalesOverview } from "./sales-overview";
 
 const panel =
-  'rounded-lg border border-border bg-surface-raised shadow-[0_18px_52px_rgb(0_0_0/14%)]';
+  "rounded-lg border border-border bg-surface-raised shadow-[0_18px_52px_rgb(0_0_0/14%)]";
 const panelPadded = `${panel} grid gap-4 p-4.5`;
 const primaryAction =
-  'inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-(--button-bg) px-4 font-(--weight-bold) text-(--button-text) hover:bg-accent';
+  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-(--button-bg) px-4 font-(--weight-bold) text-(--button-text) hover:bg-accent";
 const secondaryAction =
-  'inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border bg-surface-muted px-4 font-(--weight-bold) text-text';
+  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border bg-surface-muted px-4 font-(--weight-bold) text-text";
 const formGrid =
-  'grid gap-3 [&_label]:grid [&_label]:gap-1.75 [&_label]:text-[0.82rem] [&_label]:font-(--weight-semibold) [&_label]:text-text-muted [&_input]:min-h-11 [&_input]:w-full [&_input]:min-w-0 [&_input]:rounded-lg [&_input]:border [&_input]:border-border [&_input]:bg-surface-elevated [&_input]:px-3 [&_input]:text-text [&_input]:focus:border-accent [&_input]:focus:outline-[3px_solid_rgb(255_122_69/18%)] [&_textarea]:min-h-28 [&_textarea]:w-full [&_textarea]:min-w-0 [&_textarea]:resize-y [&_textarea]:rounded-lg [&_textarea]:border [&_textarea]:border-border [&_textarea]:bg-surface-elevated [&_textarea]:px-3 [&_textarea]:py-2.75 [&_textarea]:text-text [&_textarea]:focus:border-accent [&_textarea]:focus:outline-[3px_solid_rgb(255_122_69/18%)]';
+  "grid gap-3 [&_label]:grid [&_label]:gap-1.75 [&_label]:text-[0.82rem] [&_label]:font-(--weight-semibold) [&_label]:text-text-muted [&_input]:min-h-11 [&_input]:w-full [&_input]:min-w-0 [&_input]:rounded-lg [&_input]:border [&_input]:border-border [&_input]:bg-surface-elevated [&_input]:px-3 [&_input]:text-text [&_input]:focus:border-accent [&_input]:focus:outline-[3px_solid_rgb(255_122_69/18%)] [&_textarea]:min-h-28 [&_textarea]:w-full [&_textarea]:min-w-0 [&_textarea]:resize-y [&_textarea]:rounded-lg [&_textarea]:border [&_textarea]:border-border [&_textarea]:bg-surface-elevated [&_textarea]:px-3 [&_textarea]:py-2.75 [&_textarea]:text-text [&_textarea]:focus:border-accent [&_textarea]:focus:outline-[3px_solid_rgb(255_122_69/18%)]";
 const sectionHeading =
-  'mb-0 text-[clamp(1.45rem,2vw,2rem)] font-(--weight-bold) leading-tight text-text';
+  "mb-0 text-[clamp(1.45rem,2vw,2rem)] font-(--weight-bold) leading-tight text-text";
 const kicker =
-  'mb-2 text-[0.78rem] font-(--weight-semibold) uppercase tracking-[0.08em] text-accent';
+  "mb-2 text-[0.78rem] font-(--weight-semibold) uppercase tracking-[0.08em] text-accent";
 
-const eventDay = new Intl.DateTimeFormat('en-UG', {
-  day: '2-digit',
+const eventDay = new Intl.DateTimeFormat("en-UG", {
+  day: "2-digit",
 });
-const eventMonth = new Intl.DateTimeFormat('en-UG', {
-  month: 'short',
+const eventMonth = new Intl.DateTimeFormat("en-UG", {
+  month: "short",
 });
-const eventTime = new Intl.DateTimeFormat('en-UG', {
-  hour: '2-digit',
-  minute: '2-digit',
+const eventTime = new Intl.DateTimeFormat("en-UG", {
+  hour: "2-digit",
+  minute: "2-digit",
 });
-const quantityFormat = new Intl.NumberFormat('en-US', {
+const quantityFormat = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
 function toLocalInputValue(value: string) {
   const date = new Date(value);
-  if (date.getTime() === 0) return '';
-  if (Number.isNaN(date.getTime())) return '';
+  if (date.getTime() === 0) return "";
+  if (Number.isNaN(date.getTime())) return "";
 
   const offset = date.getTimezoneOffset();
   const local = new Date(date.getTime() - offset * 60_000);
@@ -81,12 +81,12 @@ function toLocalInputValue(value: string) {
 
 function ownerId(event: Event) {
   if (!event.owner) return null;
-  return typeof event.owner === 'string' ? event.owner : event.owner.id;
+  return typeof event.owner === "string" ? event.owner : event.owner.id;
 }
 
 function ownerName(event: Event) {
-  if (!event.owner || typeof event.owner === 'string')
-    return 'Passmint organizer';
+  if (!event.owner || typeof event.owner === "string")
+    return "Passmint organizer";
   return event.owner.name;
 }
 
@@ -95,7 +95,23 @@ function normalizeQuantity(value: number, maximum = 10) {
   return Math.min(maximum, Math.max(1, Math.trunc(value)));
 }
 
-export function EventDetail({ event, management = false }: { event: Event; management?: boolean }) {
+export function EventDetail({
+  event,
+  management = false,
+  initialReports,
+  initialNow,
+  initialTickets = [],
+}: {
+  event: Event;
+  management?: boolean;
+  initialNow?: number;
+  initialTickets?: import("../api").Ticket[];
+  initialReports?: {
+    sales: import("../api").SalesSummary;
+    attendees: import("../api").AttendeePage;
+    scans: import("../api").ScanMetrics;
+  };
+}) {
   const {
     buyerEmail,
     buyerName,
@@ -114,34 +130,37 @@ export function EventDetail({ event, management = false }: { event: Event; manag
     setMobileMoneyNumber,
     setQuantity,
     ticketHistory,
+    ticketHistoryLoaded,
     tickets,
     visibleEvents,
   } = useAppContext();
   const [displayEvent, setDisplayEvent] = useState(event);
   useEffect(() => {
-    document.title = `${management ? 'Manage ' : ''}${displayEvent.name} | Passmint`;
+    document.title = `${management ? "Manage " : ""}${displayEvent.name} | Passmint`;
   }, [displayEvent.name, management]);
-  const salesNow = useSalesClock();
+  const salesNow = useSalesClock(initialNow);
   const [isEditing, setIsEditing] = useState(false);
-  const [editState, setEditState] = useState('');
+  const [editState, setEditState] = useState("");
   const [artworkFile, setArtworkFile] = useState<File | null>(null);
   const artworkInput = useRef<HTMLInputElement>(null);
   const [savingEvent, setSavingEvent] = useState(false);
-  const [publishAt, setPublishAt] = useState(event.publishAt ? toLocalInputValue(event.publishAt) : '');
+  const [publishAt, setPublishAt] = useState(
+    event.publishAt ? toLocalInputValue(event.publishAt) : "",
+  );
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [paymentProvider, setPaymentProvider] = useState<'airtel' | 'mtn'>(
-    'mtn',
+  const [paymentProvider, setPaymentProvider] = useState<"airtel" | "mtn">(
+    "mtn",
   );
   const formattedQuantity = quantityFormat.format(quantity);
   const [draft, setDraft] = useState({
     name: event.name,
     description: event.description,
     venue: event.venue,
-    mapLocation: event.mapLocation ?? '',
+    mapLocation: event.mapLocation ?? "",
     startsAt: toLocalInputValue(event.startsAt),
     capacity: event.capacity,
     priceCents: event.priceCents,
-    thumbnailUrl: event.thumbnailUrl ?? '',
+    thumbnailUrl: event.thumbnailUrl ?? "",
   });
   const editValidation = useInlineFormValidation();
   const checkoutValidation = useInlineFormValidation();
@@ -156,21 +175,30 @@ export function EventDetail({ event, management = false }: { event: Event; manag
     const refresh = async () => {
       if (document.hidden || pending) return;
       pending = true;
-      try { const latest = await api.getEvent(event.id, session?.token); if (active) setDisplayEvent(latest); }
-      catch { /* Checkout still validates availability on the server. */ }
-      finally { pending = false; }
+      try {
+        const latest = await api.getEvent(event.id, session?.token);
+        if (active) setDisplayEvent(latest);
+      } catch {
+        /* Checkout still validates availability on the server. */
+      } finally {
+        pending = false;
+      }
     };
     void refresh();
     const timer = window.setInterval(() => void refresh(), 30000);
-    document.addEventListener('visibilitychange', refresh);
-    return () => { active = false; window.clearInterval(timer); document.removeEventListener('visibilitychange', refresh); };
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", refresh);
+    };
   }, [event.id, tickets, session?.token]);
 
   useEffect(() => {
     if (!checkoutOpen) return;
 
     const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
 
     return () => {
       document.body.style.overflow = originalOverflow;
@@ -178,15 +206,18 @@ export function EventDetail({ event, management = false }: { event: Event; manag
   }, [checkoutOpen]);
 
   const ownedBySession =
-    session?.user.role === 'admin' ||
+    session?.user.role === "admin" ||
     Boolean(session && ownerId(displayEvent) === session.user.id) ||
     dashboardEvents.some((ownedEvent) => ownedEvent.id === displayEvent.id);
   const relevantIssuedTickets = tickets.filter(
     (ticket) => ticket.event.id === displayEvent.id,
   );
   const savedTicketsForEvent = useMemo(
-    () => ticketHistory.filter((ticket) => ticket.event.id === displayEvent.id),
-    [displayEvent.id, ticketHistory],
+    () =>
+      (ticketHistoryLoaded ? ticketHistory : initialTickets).filter(
+        (ticket) => ticket.event.id === displayEvent.id,
+      ),
+    [displayEvent.id, ticketHistory, ticketHistoryLoaded, initialTickets],
   );
   const ticketsForEvent = useMemo(() => {
     const byId = new Map(
@@ -199,16 +230,41 @@ export function EventDetail({ event, management = false }: { event: Event; manag
     return [...byId.values()];
   }, [relevantIssuedTickets, savedTicketsForEvent]);
   const checkoutEvent = displayEvent;
-  const selectedType = displayEvent.ticketTypes?.find(type => type.id === selectedTicketTypeId);
+  const selectedType = displayEvent.ticketTypes?.find(
+    (type) => type.id === selectedTicketTypeId,
+  );
   const unitPrice = selectedType?.priceCents ?? checkoutEvent.priceCents;
-  const maximumQuantity = Math.max(1, Math.min(selectedType?.maxPerOrder ?? 10, selectedType?.remainingCapacity ?? 100, displayEvent.remainingCapacity ?? 100));
-  const selectedSalesState = ticketSalesState(displayEvent, selectedType, salesNow);
-  const categoryUnavailable = Boolean(displayEvent.ticketTypes?.length && selectedSalesState !== 'available');
+  const maximumQuantity = Math.max(
+    1,
+    Math.min(
+      selectedType?.maxPerOrder ?? 10,
+      selectedType?.remainingCapacity ?? 100,
+      displayEvent.remainingCapacity ?? 100,
+    ),
+  );
+  const selectedSalesState = ticketSalesState(
+    displayEvent,
+    selectedType,
+    salesNow,
+  );
+  const categoryUnavailable = Boolean(
+    displayEvent.ticketTypes?.length && selectedSalesState !== "available",
+  );
   useEffect(() => {
-    if (!displayEvent.ticketTypes?.some(type => type.id === selectedTicketTypeId)) setSelectedTicketTypeId(displayEvent.ticketTypes?.find(type => ticketSalesState(displayEvent, type, salesNow) === 'available')?.id ?? '');
+    if (
+      !displayEvent.ticketTypes?.some(
+        (type) => type.id === selectedTicketTypeId,
+      )
+    )
+      setSelectedTicketTypeId(
+        displayEvent.ticketTypes?.find(
+          (type) =>
+            ticketSalesState(displayEvent, type, salesNow) === "available",
+        )?.id ?? "",
+      );
   }, [displayEvent, selectedTicketTypeId, salesNow]);
-  const isDraft = displayEvent.status === 'draft';
-  const cancelled = displayEvent.status === 'cancelled';
+  const isDraft = displayEvent.status === "draft";
+  const cancelled = displayEvent.status === "cancelled";
   const salesClosed = cancelled || isDraft;
   const ticketTotalCents = unitPrice * quantity;
   const startsAt = new Date(displayEvent.startsAt);
@@ -216,68 +272,68 @@ export function EventDetail({ event, management = false }: { event: Event; manag
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`;
   const mapEmbedUrl = displayEvent.mapLocation
     ? `https://www.google.com/maps?q=${encodeURIComponent(displayEvent.mapLocation)}&output=embed`
-    : '';
+    : "";
   const eventIndex = visibleEvents.findIndex(
     (listedEvent) => listedEvent.id === displayEvent.id,
   );
-  const detailMood = eventIndex === 0 ? 'gold' : 'green';
+  const detailMood = eventIndex === 0 ? "gold" : "green";
   const detailTone = eventTone(Math.max(eventIndex, 0));
   const editNameError = editValidation.fieldError({
-    label: 'Event name',
+    label: "Event name",
     required: true,
     value: draft.name,
   });
   const editDescriptionError = editValidation.fieldError({
-    label: 'Description',
+    label: "Description",
     required: true,
     value: draft.description,
   });
   const editVenueError = editValidation.fieldError({
-    label: 'Venue',
+    label: "Venue",
     required: true,
     value: draft.venue,
   });
   const editStartsError = editValidation.fieldError({
-    label: 'Starts',
+    label: "Starts",
     required: true,
     value: draft.startsAt,
   });
   const editCapacityError = editValidation.fieldError({
-    label: 'Capacity',
+    label: "Capacity",
     min: 1,
     required: false,
-    value: draft.capacity ?? '',
+    value: draft.capacity ?? "",
   });
   const editPriceError = editValidation.fieldError({
-    label: 'Price in UGX',
+    label: "Price in UGX",
     min: 0,
     required: true,
     value: draft.priceCents / 100,
   });
   const checkoutBuyerNameError = checkoutValidation.fieldError({
-    label: 'Buyer name',
+    label: "Buyer name",
     required: true,
     value: buyerName,
   });
   const checkoutBuyerEmailError = checkoutValidation.fieldError({
-    label: 'Buyer email',
+    label: "Buyer email",
     required: true,
-    type: 'email',
+    type: "email",
     value: buyerEmail,
   });
   const checkoutQuantityError = checkoutValidation.fieldError({
-    label: 'Quantity',
+    label: "Quantity",
     max: maximumQuantity,
     min: 1,
     pattern: /^[0-9,]+$/,
     required: true,
-    title: 'Please enter a whole number.',
+    title: "Please enter a whole number.",
     value: formattedQuantity,
   });
 
   function updateQuantityFromText(value: string) {
-    const digits = value.replace(/\D/g, '');
-    setQuantity(normalizeQuantity(Number(digits || '1'), maximumQuantity));
+    const digits = value.replace(/\D/g, "");
+    setQuantity(normalizeQuantity(Number(digits || "1"), maximumQuantity));
   }
 
   function stepQuantity(direction: 1 | -1) {
@@ -288,11 +344,11 @@ export function EventDetail({ event, management = false }: { event: Event; manag
     eventForm.preventDefault();
     if (savingEvent) return;
     if (!session) {
-      setEditState('Sign in to edit this event.');
+      setEditState("Sign in to edit this event.");
       return;
     }
 
-    setEditState('Saving event...');
+    setEditState("Saving event...");
     setSavingEvent(true);
 
     try {
@@ -301,10 +357,19 @@ export function EventDetail({ event, management = false }: { event: Event; manag
         const dataUrl = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => resolve(String(reader.result));
-          reader.onerror = () => reject(new Error('Unable to read artwork.'));
+          reader.onerror = () => reject(new Error("Unable to read artwork."));
           reader.readAsDataURL(artworkFile);
         });
-        thumbnailUrl = (await api.uploadEventImage({ fileName: artworkFile.name, contentType: artworkFile.type, dataUrl }, session.token)).url;
+        thumbnailUrl = (
+          await api.uploadEventImage(
+            {
+              fileName: artworkFile.name,
+              contentType: artworkFile.type,
+              dataUrl,
+            },
+            session.token,
+          )
+        ).url;
       }
       const updated = await api.updateEvent(
         displayEvent.id,
@@ -313,7 +378,9 @@ export function EventDetail({ event, management = false }: { event: Event; manag
           description: draft.description,
           venue: draft.venue,
           mapLocation: draft.mapLocation,
-          ...(draft.startsAt ? { startsAt: new Date(draft.startsAt).toISOString() } : {}),
+          ...(draft.startsAt
+            ? { startsAt: new Date(draft.startsAt).toISOString() }
+            : {}),
           capacity: draft.capacity,
           priceCents: Number(draft.priceCents),
           thumbnailUrl,
@@ -325,50 +392,81 @@ export function EventDetail({ event, management = false }: { event: Event; manag
         name: updated.name,
         description: updated.description,
         venue: updated.venue,
-        mapLocation: updated.mapLocation ?? '',
+        mapLocation: updated.mapLocation ?? "",
         startsAt: toLocalInputValue(updated.startsAt),
         capacity: updated.capacity,
         priceCents: updated.priceCents,
-        thumbnailUrl: updated.thumbnailUrl ?? '',
+        thumbnailUrl: updated.thumbnailUrl ?? "",
       });
       setIsEditing(false);
       setArtworkFile(null);
-      setEditState('Event updated.');
+      setEditState("Event updated.");
     } catch (error) {
       const fallback = error as { message?: string };
-      setEditState(fallback.message ?? 'Event could not be updated.');
+      setEditState(fallback.message ?? "Event could not be updated.");
     } finally {
       setSavingEvent(false);
     }
   }
 
   async function cancelEvent() {
-    if (!session || !window.confirm('Cancel this event? Ticket sales will stop and existing tickets will remain in purchase history.')) return;
+    if (
+      !session ||
+      !window.confirm(
+        "Cancel this event? Ticket sales will stop and existing tickets will remain in purchase history.",
+      )
+    )
+      return;
     try {
       setDisplayEvent(await api.cancelEvent(displayEvent.id, session.token));
       setCheckoutOpen(false);
       setIsEditing(false);
-      setEditState('Event cancelled.');
+      setEditState("Event cancelled.");
     } catch (error) {
-      setEditState((error as { message?: string }).message ?? 'Unable to cancel event.');
+      setEditState(
+        (error as { message?: string }).message ?? "Unable to cancel event.",
+      );
     }
   }
 
   async function publishDraft() {
     if (!session) return;
     try {
-      setDisplayEvent(await api.updateEvent(displayEvent.id, { status: 'published' }, session.token));
-      setEditState('Event published.');
-    } catch (error) { setEditState((error as { message?: string }).message ?? 'Unable to publish.'); }
+      setDisplayEvent(
+        await api.updateEvent(
+          displayEvent.id,
+          { status: "published" },
+          session.token,
+        ),
+      );
+      setEditState("Event published.");
+    } catch (error) {
+      setEditState(
+        (error as { message?: string }).message ?? "Unable to publish.",
+      );
+    }
   }
 
   async function schedulePublication() {
     if (!session) return;
     try {
-      const updated = await api.updateEvent(displayEvent.id, { publishAt: publishAt ? new Date(publishAt).toISOString() : null }, session.token);
+      const updated = await api.updateEvent(
+        displayEvent.id,
+        { publishAt: publishAt ? new Date(publishAt).toISOString() : null },
+        session.token,
+      );
       setDisplayEvent(updated);
-      setEditState(updated.publishAt ? 'Publication scheduled.' : 'Publication schedule removed.');
-    } catch (error) { setEditState((error as { message?: string }).message ?? 'Unable to schedule publication.'); }
+      setEditState(
+        updated.publishAt
+          ? "Publication scheduled."
+          : "Publication schedule removed.",
+      );
+    } catch (error) {
+      setEditState(
+        (error as { message?: string }).message ??
+          "Unable to schedule publication.",
+      );
+    }
   }
 
   return (
@@ -444,8 +542,8 @@ export function EventDetail({ event, management = false }: { event: Event; manag
             </span>
             <span>
               <Users size={16} />
-              {displayEvent.capacity?.toLocaleString('en-UG') ??
-                'Unlimited'}{' '}
+              {displayEvent.capacity?.toLocaleString("en-UG") ??
+                "Unlimited"}{" "}
               total spots
             </span>
           </div>
@@ -476,14 +574,54 @@ export function EventDetail({ event, management = false }: { event: Event; manag
             <p className="mb-0 text-[1.02rem] leading-[1.65] text-text-muted">
               {displayEvent.description}
             </p>
-            {cancelled && <p role="status" className="rounded-lg bg-accent-soft p-3 text-text">This event has been cancelled. Ticket sales are closed. Existing tickets remain in your purchase history.</p>}
-            {isDraft && <p role="status">Private draft. Save your details, then publish when ready.</p>}
-            {ownedBySession && isDraft && <button className={primaryAction} type="button" onClick={() => void publishDraft()}>Publish draft</button>}
-            {ownedBySession && isDraft && <div className={formGrid}>
-              <label>Publish automatically at<input type="datetime-local" value={publishAt} onChange={e => setPublishAt(e.target.value)} /></label>
-              <button className={secondaryAction} type="button" onClick={() => void schedulePublication()}>{publishAt ? 'Schedule publication' : 'Remove schedule'}</button>
-              {displayEvent.publishAt && <p>Scheduled for {dateTime.format(new Date(displayEvent.publishAt))}</p>}
-            </div>}
+            {cancelled && (
+              <p
+                role="status"
+                className="rounded-lg bg-accent-soft p-3 text-text"
+              >
+                This event has been cancelled. Ticket sales are closed. Existing
+                tickets remain in your purchase history.
+              </p>
+            )}
+            {isDraft && (
+              <p role="status">
+                Private draft. Save your details, then publish when ready.
+              </p>
+            )}
+            {ownedBySession && isDraft && (
+              <button
+                className={primaryAction}
+                type="button"
+                onClick={() => void publishDraft()}
+              >
+                Publish draft
+              </button>
+            )}
+            {ownedBySession && isDraft && (
+              <div className={formGrid}>
+                <label>
+                  Publish automatically at
+                  <input
+                    type="datetime-local"
+                    value={publishAt}
+                    onChange={(e) => setPublishAt(e.target.value)}
+                  />
+                </label>
+                <button
+                  className={secondaryAction}
+                  type="button"
+                  onClick={() => void schedulePublication()}
+                >
+                  {publishAt ? "Schedule publication" : "Remove schedule"}
+                </button>
+                {displayEvent.publishAt && (
+                  <p>
+                    Scheduled for{" "}
+                    {dateTime.format(new Date(displayEvent.publishAt))}
+                  </p>
+                )}
+              </div>
+            )}
             {ownedBySession && !cancelled && (
               <button
                 className={secondaryAction}
@@ -491,10 +629,18 @@ export function EventDetail({ event, management = false }: { event: Event; manag
                 onClick={() => setIsEditing((value) => !value)}
               >
                 <Edit3 size={17} />
-                {isEditing ? 'Close editor' : 'Edit event'}
+                {isEditing ? "Close editor" : "Edit event"}
               </button>
             )}
-            {ownedBySession && !cancelled && <button className={secondaryAction} type="button" onClick={() => void cancelEvent()}>Cancel event</button>}
+            {ownedBySession && !cancelled && (
+              <button
+                className={secondaryAction}
+                type="button"
+                onClick={() => void cancelEvent()}
+              >
+                Cancel event
+              </button>
+            )}
             {editState && !isEditing && <p role="status">{editState}</p>}
           </section>
 
@@ -554,16 +700,16 @@ export function EventDetail({ event, management = false }: { event: Event; manag
             <div className="grid grid-cols-3 gap-3 max-[820px]:grid-cols-1">
               {[
                 [
-                  'Bring your ticket QR',
-                  'Your purchased QR code appears here immediately after checkout.',
+                  "Bring your ticket QR",
+                  "Your purchased QR code appears here immediately after checkout.",
                 ],
                 [
-                  'Arrive on time',
+                  "Arrive on time",
                   `Doors are based around the ${eventTime.format(startsAt)} start time.`,
                 ],
                 [
-                  'Check the venue',
-                  'Use the map link before leaving so your route is clear.',
+                  "Check the venue",
+                  "Use the map link before leaving so your route is clear.",
                 ],
               ].map(([title, copy]) => (
                 <article
@@ -587,7 +733,9 @@ export function EventDetail({ event, management = false }: { event: Event; manag
               </div>
               <form
                 className={formGrid}
-                {...(isDraft ? { noValidate: true, onSubmit: saveEvent } : editValidation.formProps(saveEvent))}
+                {...(isDraft
+                  ? { noValidate: true, onSubmit: saveEvent }
+                  : editValidation.formProps(saveEvent))}
               >
                 <label>
                   <RequiredLabel>Event name</RequiredLabel>
@@ -601,7 +749,7 @@ export function EventDetail({ event, management = false }: { event: Event; manag
                         name: input.target.value,
                       }))
                     }
-                    {...requiredField('Event name')}
+                    {...requiredField("Event name")}
                   />
                   <FieldMessage
                     error={editNameError}
@@ -620,7 +768,7 @@ export function EventDetail({ event, management = false }: { event: Event; manag
                         description: input.target.value,
                       }))
                     }
-                    {...requiredTextareaField('Description')}
+                    {...requiredTextareaField("Description")}
                   />
                   <FieldMessage
                     error={editDescriptionError}
@@ -639,7 +787,7 @@ export function EventDetail({ event, management = false }: { event: Event; manag
                         venue: input.target.value,
                       }))
                     }
-                    {...requiredField('Venue')}
+                    {...requiredField("Venue")}
                   />
                   <FieldMessage error={editVenueError} id="edit-venue-error" />
                 </label>
@@ -670,7 +818,7 @@ export function EventDetail({ event, management = false }: { event: Event; manag
                           startsAt: input.target.value,
                         }))
                       }
-                      {...requiredField('Starts')}
+                      {...requiredField("Starts")}
                     />
                     <FieldMessage
                       error={editStartsError}
@@ -684,12 +832,12 @@ export function EventDetail({ event, management = false }: { event: Event; manag
                       aria-invalid={Boolean(editCapacityError) || undefined}
                       min={1}
                       type="number"
-                      value={draft.capacity ?? ''}
+                      value={draft.capacity ?? ""}
                       onChange={(input) =>
                         setDraft((current) => ({
                           ...current,
                           capacity:
-                            input.target.value === ''
+                            input.target.value === ""
                               ? null
                               : Number(input.target.value),
                         }))
@@ -714,7 +862,7 @@ export function EventDetail({ event, management = false }: { event: Event; manag
                           priceCents: Number(input.target.value) * 100,
                         }))
                       }
-                      {...requiredField('Price in UGX')}
+                      {...requiredField("Price in UGX")}
                     />
                     <FieldMessage
                       error={editPriceError}
@@ -727,32 +875,76 @@ export function EventDetail({ event, management = false }: { event: Event; manag
                   <input
                     disabled={savingEvent}
                     value={draft.thumbnailUrl}
-                    onChange={(input) =>
-                      { setArtworkFile(null); if (artworkInput.current) artworkInput.current.value = ''; setDraft((current) => ({
+                    onChange={(input) => {
+                      setArtworkFile(null);
+                      if (artworkInput.current) artworkInput.current.value = "";
+                      setDraft((current) => ({
                         ...current,
                         thumbnailUrl: input.target.value,
-                      })); }
-                    }
+                      }));
+                    }}
                     placeholder="https://..."
                   />
                 </label>
                 <label>
                   Upload replacement artwork
-                  <input ref={artworkInput} type="file" accept="image/jpeg,image/png,image/webp,image/gif" disabled={savingEvent} onChange={input => {
-                    const file = input.target.files?.[0] ?? null;
-                    if (file && (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type) || file.size > 5 * 1024 * 1024)) {
-                      setEditState('Choose a JPEG, PNG, WebP or GIF image up to 5 MB.');
-                      input.target.value = ''; setArtworkFile(null); return;
-                    }
-                    setArtworkFile(file); setEditState('');
-                  }} />
-                  <span>Up to 5 MB. Uploads become static banners; animated images use the first frame.</span>
+                  <input
+                    ref={artworkInput}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    disabled={savingEvent}
+                    onChange={(input) => {
+                      const file = input.target.files?.[0] ?? null;
+                      if (
+                        file &&
+                        (![
+                          "image/jpeg",
+                          "image/png",
+                          "image/webp",
+                          "image/gif",
+                        ].includes(file.type) ||
+                          file.size > 5 * 1024 * 1024)
+                      ) {
+                        setEditState(
+                          "Choose a JPEG, PNG, WebP or GIF image up to 5 MB.",
+                        );
+                        input.target.value = "";
+                        setArtworkFile(null);
+                        return;
+                      }
+                      setArtworkFile(file);
+                      setEditState("");
+                    }}
+                  />
+                  <span>
+                    Up to 5 MB. Uploads become static banners; animated images
+                    use the first frame.
+                  </span>
                 </label>
-                {artworkFile && <p role="status">{artworkFile.name} will replace the artwork when saved.</p>}
-                <button className={secondaryAction} type="button" disabled={savingEvent} onClick={() => { setArtworkFile(null); if (artworkInput.current) artworkInput.current.value = ''; setDraft(current => ({ ...current, thumbnailUrl: '' })); }}>Remove artwork</button>
-                <button className={primaryAction} type="submit" disabled={savingEvent}>
+                {artworkFile && (
+                  <p role="status">
+                    {artworkFile.name} will replace the artwork when saved.
+                  </p>
+                )}
+                <button
+                  className={secondaryAction}
+                  type="button"
+                  disabled={savingEvent}
+                  onClick={() => {
+                    setArtworkFile(null);
+                    if (artworkInput.current) artworkInput.current.value = "";
+                    setDraft((current) => ({ ...current, thumbnailUrl: "" }));
+                  }}
+                >
+                  Remove artwork
+                </button>
+                <button
+                  className={primaryAction}
+                  type="submit"
+                  disabled={savingEvent}
+                >
                   <Save size={17} />
-                  {savingEvent ? 'Saving event…' : 'Save event'}
+                  {savingEvent ? "Saving event…" : "Save event"}
                 </button>
               </form>
               {editState && (
@@ -763,11 +955,42 @@ export function EventDetail({ event, management = false }: { event: Event; manag
             </section>
           )}
 
-          {ownedBySession && session && <SalesOverview key={`sales:${displayEvent.id}:${session.user.id}`} eventId={displayEvent.id} token={session.token} />}
-          {ownedBySession && session && <EventAttendees key={`${displayEvent.id}:${session.user.id}`} eventId={displayEvent.id} token={session.token} />}
-          {ownedBySession && session && <EventScanMetrics key={`${displayEvent.id}:${session.user.id}`} eventId={displayEvent.id} token={session.token} />}
-          {session && ownerId(displayEvent) === session.user.id && <EventDuplicate eventId={displayEvent.id} token={session.token} />}
-          {ownedBySession && session && !cancelled && <TicketTypeManager event={displayEvent} token={session.token} onSaved={async () => setDisplayEvent(await api.getEvent(event.id, session.token))} />}
+          {ownedBySession && session && (
+            <SalesOverview
+              initialData={initialReports?.sales}
+              key={`sales:${displayEvent.id}:${session.user.id}`}
+              eventId={displayEvent.id}
+              token={session.token}
+            />
+          )}
+          {ownedBySession && session && (
+            <EventAttendees
+              initialData={initialReports?.attendees}
+              key={`${displayEvent.id}:${session.user.id}`}
+              eventId={displayEvent.id}
+              token={session.token}
+            />
+          )}
+          {ownedBySession && session && (
+            <EventScanMetrics
+              initialData={initialReports?.scans}
+              key={`${displayEvent.id}:${session.user.id}`}
+              eventId={displayEvent.id}
+              token={session.token}
+            />
+          )}
+          {session && ownerId(displayEvent) === session.user.id && (
+            <EventDuplicate eventId={displayEvent.id} token={session.token} />
+          )}
+          {ownedBySession && session && !cancelled && (
+            <TicketTypeManager
+              event={displayEvent}
+              token={session.token}
+              onSaved={async () =>
+                setDisplayEvent(await api.getEvent(event.id, session.token))
+              }
+            />
+          )}
           <section className={panelPadded}>
             <div className="flex items-center gap-2.5 text-text [&_svg]:text-accent">
               <QrCode size={22} />
@@ -796,7 +1019,8 @@ export function EventDetail({ event, management = false }: { event: Event; manag
                         {ticket.buyerName}
                       </h3>
                       <p className="mb-2 text-text-muted">
-                        {ticket.ticketTypeName ?? 'General admission'} · {ticket.status.replace('_', ' ')}
+                        {ticket.ticketTypeName ?? "General admission"} ·{" "}
+                        {ticket.status.replace("_", " ")}
                       </p>
                       <code className="rounded-md bg-surface-elevated px-2 py-1 text-[0.78rem] text-accent">
                         {ticket.code}
@@ -813,12 +1037,12 @@ export function EventDetail({ event, management = false }: { event: Event; manag
           <section className={panelPadded}>
             <div>
               <p className={kicker}>
-                {session ? 'Signed in checkout' : 'Guest checkout'}
+                {session ? "Signed in checkout" : "Guest checkout"}
               </p>
               <h2 className="mb-0 text-[1.55rem]">
                 {session
                   ? `Buying as ${session.user.name}`
-                  : 'Reserve your spot'}
+                  : "Reserve your spot"}
               </h2>
             </div>
             {!session && (
@@ -826,7 +1050,7 @@ export function EventDetail({ event, management = false }: { event: Event; manag
                 <button
                   type="button"
                   className={secondaryAction}
-                  onClick={() => openAuth('login')}
+                  onClick={() => openAuth("login")}
                 >
                   <LogIn size={17} />
                   Sign in
@@ -834,7 +1058,7 @@ export function EventDetail({ event, management = false }: { event: Event; manag
                 <button
                   type="button"
                   className={primaryAction}
-                  onClick={() => openAuth('register')}
+                  onClick={() => openAuth("register")}
                 >
                   <UserPlus size={17} />
                   Register
@@ -845,11 +1069,13 @@ export function EventDetail({ event, management = false }: { event: Event; manag
 
           <section className={panelPadded}>
             <p role="status">
-              {cancelled ? 'Event cancelled' : checkoutEvent.soldOut
-                ? 'Sold out'
-                : checkoutEvent.remainingCapacity != null
-                  ? `${checkoutEvent.remainingCapacity} tickets remaining`
-                  : 'Tickets available'}
+              {cancelled
+                ? "Event cancelled"
+                : checkoutEvent.soldOut
+                  ? "Sold out"
+                  : checkoutEvent.remainingCapacity != null
+                    ? `${checkoutEvent.remainingCapacity} tickets remaining`
+                    : "Tickets available"}
             </p>
             <div className="select-ticket-heading">
               <span className="select-ticket-heading__icon">
@@ -862,14 +1088,57 @@ export function EventDetail({ event, management = false }: { event: Event; manag
                 </h2>
               </div>
             </div>
-            {Boolean(displayEvent.ticketTypes?.length) && <label className="grid gap-2">Ticket category<select className="rounded-lg border border-border bg-surface-muted p-3 text-text" value={selectedTicketTypeId} onChange={e => { setSelectedTicketTypeId(e.target.value); setQuantity(1); }}>
-              <option value="">Choose a category</option>
-              {displayEvent.ticketTypes?.map(type => { const state = ticketSalesState(displayEvent, type, salesNow); return <option key={type.id} value={type.id} disabled={state !== 'available'}>{type.name} — {money.format(type.priceCents / 100)}{state === 'available' ? '' : ` (${salesStateLabels[state]})`}</option>; })}
-            </select></label>}
-            {selectedType && <p role="status" className="m-0 text-text-muted">{salesStateLabels[selectedSalesState]}{selectedType.salesStart ? ` · Opens ${dateTime.format(new Date(selectedType.salesStart))}` : ''}{selectedType.salesEnd ? ` · Ends ${dateTime.format(new Date(selectedType.salesEnd))}` : ''} (your local time)</p>}
+            {Boolean(displayEvent.ticketTypes?.length) && (
+              <label className="grid gap-2">
+                Ticket category
+                <select
+                  className="rounded-lg border border-border bg-surface-muted p-3 text-text"
+                  value={selectedTicketTypeId}
+                  onChange={(e) => {
+                    setSelectedTicketTypeId(e.target.value);
+                    setQuantity(1);
+                  }}
+                >
+                  <option value="">Choose a category</option>
+                  {displayEvent.ticketTypes?.map((type) => {
+                    const state = ticketSalesState(
+                      displayEvent,
+                      type,
+                      salesNow,
+                    );
+                    return (
+                      <option
+                        key={type.id}
+                        value={type.id}
+                        disabled={state !== "available"}
+                      >
+                        {type.name} — {money.format(type.priceCents / 100)}
+                        {state === "available"
+                          ? ""
+                          : ` (${salesStateLabels[state]})`}
+                      </option>
+                    );
+                  })}
+                </select>
+              </label>
+            )}
+            {selectedType && (
+              <p role="status" className="m-0 text-text-muted">
+                {salesStateLabels[selectedSalesState]}
+                {selectedType.salesStart
+                  ? ` · Opens ${dateTime.format(new Date(selectedType.salesStart))}`
+                  : ""}
+                {selectedType.salesEnd
+                  ? ` · Ends ${dateTime.format(new Date(selectedType.salesEnd))}`
+                  : ""}{" "}
+                (your local time)
+              </p>
+            )}
             <div className="grid gap-3 rounded-lg border border-border bg-surface-muted p-3">
               <div className="flex items-start justify-between gap-3">
-                <strong className="text-text">{selectedType?.name ?? 'General admission'}</strong>
+                <strong className="text-text">
+                  {selectedType?.name ?? "General admission"}
+                </strong>
                 <strong className="text-price">
                   {money.format(unitPrice / 100)}
                 </strong>
@@ -887,15 +1156,21 @@ export function EventDetail({ event, management = false }: { event: Event; manag
             <button
               className={primaryAction}
               type="button"
-              disabled={salesClosed || checkoutEvent.soldOut || categoryUnavailable}
+              disabled={
+                salesClosed || checkoutEvent.soldOut || categoryUnavailable
+              }
               onClick={() => setCheckoutOpen(true)}
             >
               <CircleDollarSign size={18} />
-              {isDraft ? 'Draft — ticket sales closed' : cancelled ? 'Event cancelled' : checkoutEvent.soldOut
-                ? 'Sold out'
-                : unitPrice === 0
-                  ? 'Get ticket'
-                  : 'Pay now'}
+              {isDraft
+                ? "Draft — ticket sales closed"
+                : cancelled
+                  ? "Event cancelled"
+                  : checkoutEvent.soldOut
+                    ? "Sold out"
+                    : unitPrice === 0
+                      ? "Get ticket"
+                      : "Pay now"}
             </button>
             {purchaseState && (
               <p className="mb-0 rounded-lg bg-accent-soft p-3 text-[0.92rem] font-(--weight-medium) text-accent">
@@ -921,9 +1196,7 @@ export function EventDetail({ event, management = false }: { event: Event; manag
                   className="mb-0 text-[clamp(1.6rem,3vw,2.35rem)] leading-tight text-text"
                   id="checkout-dialog-title"
                 >
-                  {unitPrice === 0
-                    ? 'Get your ticket'
-                    : 'Complete payment'}
+                  {unitPrice === 0 ? "Get your ticket" : "Complete payment"}
                 </h2>
               </div>
               <button
@@ -937,16 +1210,23 @@ export function EventDetail({ event, management = false }: { event: Event; manag
             </div>
 
             <div className="checkout-dialog__body">
-              {categoryUnavailable && <p role="status" className="text-text">{salesStateLabels[selectedSalesState]}. Choose an available category to continue.</p>}
+              {categoryUnavailable && (
+                <p role="status" className="text-text">
+                  {salesStateLabels[selectedSalesState]}. Choose an available
+                  category to continue.
+                </p>
+              )}
               <div className="grid gap-3 rounded-lg border border-border bg-surface-muted p-3">
                 <div className="flex items-start justify-between gap-3">
-                  <strong className="text-text">{selectedType?.name ?? 'General admission'}</strong>
+                  <strong className="text-text">
+                    {selectedType?.name ?? "General admission"}
+                  </strong>
                   <strong className="text-price">
                     {money.format(ticketTotalCents / 100)}
                   </strong>
                 </div>
                 <span className="text-[0.9rem] text-text-muted">
-                  {quantity.toLocaleString('en-UG')} x{' '}
+                  {quantity.toLocaleString("en-UG")} x{" "}
                   {money.format(unitPrice / 100)}
                 </span>
                 <span className="text-[0.9rem] text-text-muted">
@@ -965,8 +1245,8 @@ export function EventDetail({ event, management = false }: { event: Event; manag
                     aria-invalid={Boolean(checkoutBuyerNameError) || undefined}
                     value={buyerName}
                     onChange={(input) => setBuyerName(input.target.value)}
-                    placeholder={session?.user.name ?? 'Anonymous buyer name'}
-                    {...requiredField('Buyer name')}
+                    placeholder={session?.user.name ?? "Anonymous buyer name"}
+                    {...requiredField("Buyer name")}
                   />
                   <FieldMessage
                     error={checkoutBuyerNameError}
@@ -982,9 +1262,9 @@ export function EventDetail({ event, management = false }: { event: Event; manag
                     value={buyerEmail}
                     onChange={(input) => setBuyerEmail(input.target.value)}
                     placeholder={
-                      session?.user.email ?? 'Email for ticket delivery'
+                      session?.user.email ?? "Email for ticket delivery"
                     }
-                    {...requiredField('Buyer email')}
+                    {...requiredField("Buyer email")}
                   />
                   <FieldMessage
                     error={checkoutBuyerEmailError}
@@ -1013,7 +1293,7 @@ export function EventDetail({ event, management = false }: { event: Event; manag
                         updateQuantityFromText(input.target.value)
                       }
                       onKeyDown={(event) => {
-                        if (['e', 'E', '+', '-', '.'].includes(event.key)) {
+                        if (["e", "E", "+", "-", "."].includes(event.key)) {
                           event.preventDefault();
                         }
                       }}
@@ -1025,7 +1305,7 @@ export function EventDetail({ event, management = false }: { event: Event; manag
                         event.preventDefault();
                         stepQuantity(event.deltaY > 0 ? 1 : -1);
                       }}
-                      {...requiredField('Quantity')}
+                      {...requiredField("Quantity")}
                     />
                     <button
                       type="button"
@@ -1040,7 +1320,10 @@ export function EventDetail({ event, management = false }: { event: Event; manag
                     error={checkoutQuantityError}
                     id="detail-quantity-error"
                   />
-                  <span id="detail-quantity-limit">Maximum {selectedType?.maxPerOrder ?? 10} tickets per order. Availability may reduce this quantity.</span>
+                  <span id="detail-quantity-limit">
+                    Maximum {selectedType?.maxPerOrder ?? 10} tickets per order.
+                    Availability may reduce this quantity.
+                  </span>
                 </label>
 
                 {unitPrice > 0 && (
@@ -1050,14 +1333,14 @@ export function EventDetail({ event, management = false }: { event: Event; manag
                       <div className="grid grid-cols-2 gap-2 max-[520px]:grid-cols-1">
                         {[
                           {
-                            value: 'mtn',
-                            label: 'MTN MoMo',
-                            logo: '/payment/mtn-momo.svg',
+                            value: "mtn",
+                            label: "MTN MoMo",
+                            logo: "/payment/mtn-momo.svg",
                           },
                           {
-                            value: 'airtel',
-                            label: 'Airtel Money',
-                            logo: '/payment/airtel-money.svg',
+                            value: "airtel",
+                            label: "Airtel Money",
+                            logo: "/payment/airtel-money.svg",
                           },
                         ].map((option) => (
                           <button
@@ -1068,7 +1351,7 @@ export function EventDetail({ event, management = false }: { event: Event; manag
                             type="button"
                             onClick={() =>
                               setPaymentProvider(
-                                option.value as 'airtel' | 'mtn',
+                                option.value as "airtel" | "mtn",
                               )
                             }
                           >
@@ -1098,12 +1381,18 @@ export function EventDetail({ event, management = false }: { event: Event; manag
                   </>
                 )}
 
-                <button className={primaryAction} type="submit" disabled={salesClosed || checkoutEvent.soldOut || categoryUnavailable}>
+                <button
+                  className={primaryAction}
+                  type="submit"
+                  disabled={
+                    salesClosed || checkoutEvent.soldOut || categoryUnavailable
+                  }
+                >
                   <CircleDollarSign size={18} />
                   {unitPrice === 0
-                    ? 'Get ticket'
+                    ? "Get ticket"
                     : `Pay with ${
-                        paymentProvider === 'mtn' ? 'MTN MoMo' : 'Airtel Money'
+                        paymentProvider === "mtn" ? "MTN MoMo" : "Airtel Money"
                       }`}
                 </button>
               </form>

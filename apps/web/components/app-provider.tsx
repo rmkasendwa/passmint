@@ -108,6 +108,7 @@ type AppContextValue = {
   submitForgotPassword: (event: FormEvent<HTMLFormElement>) => void;
   submitResetPassword: (event: FormEvent<HTMLFormElement>) => void;
   ticketHistory: Ticket[];
+  ticketHistoryLoaded: boolean;
   tickets: Ticket[];
   updateHostEvent: (
     key: keyof HostEvent,
@@ -209,6 +210,7 @@ export function AppProvider({
   } | null>(null);
   const [hostState, setHostState] = useState("");
   const [ticketHistory, setTicketHistory] = useState<Ticket[]>([]);
+  const [ticketHistoryLoaded, setTicketHistoryLoaded] = useState(false);
   const [hostedEvents, setHostedEvents] = useState<Event[]>([]);
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsRef = useRef<IScannerControls | null>(null);
@@ -458,6 +460,7 @@ export function AppProvider({
   async function loadHistory(token: string) {
     try {
       setTicketHistory(await api.myTickets(token));
+      setTicketHistoryLoaded(true);
     } catch {
       setTicketHistory([]);
     }
@@ -873,6 +876,7 @@ export function AppProvider({
     submitForgotPassword,
     submitResetPassword,
     ticketHistory,
+    ticketHistoryLoaded,
     tickets,
     updateHostEvent,
     videoRef,

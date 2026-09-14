@@ -1,15 +1,20 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
-export function useSalesClock() {
-  const [now, setNow] = useState<number | null>(null);
+export function useSalesClock(initialNow?: number) {
+  const [now, setNow] = useState<number | null>(initialNow ?? null);
   useEffect(() => {
-    const update = () => { if (!document.hidden) setNow(Date.now()); };
+    const update = () => {
+      if (!document.hidden) setNow(Date.now());
+    };
     update();
     const timer = window.setInterval(update, 1000);
-    document.addEventListener('visibilitychange', update);
-    return () => { window.clearInterval(timer); document.removeEventListener('visibilitychange', update); };
+    document.addEventListener("visibilitychange", update);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", update);
+    };
   }, []);
   return now;
 }
