@@ -69,8 +69,10 @@ type AppContextValue = {
   nextEvent?: Event;
   openAuth: (mode: "login" | "register") => void;
   purchaseState: string;
-  publishEvent: (event: FormEvent<HTMLFormElement>) => Promise<void>;
-  saveDraft: () => Promise<void>;
+  publishEvent: (
+    event: FormEvent<HTMLFormElement>,
+  ) => Promise<Event | undefined>;
+  saveDraft: () => Promise<Event | undefined>;
   buyTickets: (event: FormEvent<HTMLFormElement>) => Promise<void>;
   query: string;
   quantity: number;
@@ -80,7 +82,7 @@ type AppContextValue = {
   resetState: string;
   scan: (code?: string) => Promise<void>;
   scanState: string;
-  selectThumbnail: (file: File | null) => void;
+  selectThumbnail: (file: File | null) => Promise<void>;
   selectedEvent?: Event;
   selectedEventId: string;
   selectedTicketTypeId: string;
@@ -608,7 +610,7 @@ export function AppProvider({
     setDatePickerOpen(false);
   }
 
-  function selectThumbnail(file: File | null) {
+  async function selectThumbnail(file: File | null) {
     if (!file) {
       setHostThumbnailName("");
       setHostThumbnailFile(null);
@@ -626,16 +628,21 @@ export function AppProvider({
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      updateHostEvent("thumbnailUrl", String(reader.result ?? ""));
-      setHostThumbnailName(file.name);
-      setHostThumbnailFile({ fileName: file.name, contentType: file.type });
-      setHostState("");
-    };
-    reader.onerror = () =>
-      setHostState("Thumbnail upload failed. Try a smaller image.");
-    reader.readAsDataURL(file);
+    await new Promise<void>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        updateHostEvent("thumbnailUrl", String(reader.result ?? ""));
+        setHostThumbnailName(file.name);
+        setHostThumbnailFile({ fileName: file.name, contentType: file.type });
+        setHostState("");
+        resolve();
+      };
+      reader.onerror = reader.onabort = () => {
+        setHostState("Thumbnail upload failed. Try a smaller image.");
+        resolve();
+      };
+      reader.readAsDataURL(file);
+    });
   }
 
   async function publishEvent(event: FormEvent<HTMLFormElement>) {
@@ -685,6 +692,7 @@ export function AppProvider({
       setHostThumbnailName("");
       setHostThumbnailFile(null);
       setHostState("Event published. You can validate tickets for this event.");
+      return created;
     } catch (error) {
       const fallback = error as { message?: string };
       setHostState(fallback.message ?? "Event could not be published.");
@@ -721,6 +729,7 @@ export function AppProvider({
       setHostState(
         "Draft saved. Open it from Your events to continue editing.",
       );
+      return created;
     } catch (error) {
       setHostState(
         (error as { message?: string }).message ?? "Unable to save draft.",

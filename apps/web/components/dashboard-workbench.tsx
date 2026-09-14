@@ -1,4 +1,5 @@
 "use client";
+import { CreateEventForm } from "./create-event-form";
 import { PageSkeleton } from "./page-skeleton";
 import { useState } from "react";
 import type { Event, SalesSummary } from "../api";
@@ -9,12 +10,10 @@ import {
   ArrowRight,
   CalendarDays,
   CheckCircle2,
-  ImagePlus,
   MapPin,
   ScanLine,
   ShieldCheck,
   Ticket as TicketIcon,
-  Upload,
   XCircle,
 } from "lucide-react";
 import { dateTime } from "../formatters";
@@ -29,13 +28,6 @@ import {
 } from "../hosted-event-filters";
 import { useHostedEvents } from "./use-hosted-events";
 import { SalesOverview } from "./sales-overview";
-import {
-  FieldMessage,
-  RequiredLabel,
-  requiredField,
-  requiredTextareaField,
-  useInlineFormValidation,
-} from "./form-validation";
 
 const sectionKicker =
   "mb-2 text-[0.78rem] font-(--weight-semibold) uppercase tracking-[0.08em] text-accent";
@@ -46,8 +38,6 @@ const primaryAction =
   "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-(--button-bg) px-4 font-(--weight-bold) text-(--button-text) hover:bg-accent";
 const secondaryAction =
   "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border bg-surface-muted px-4 font-(--weight-bold) text-text";
-const formGrid =
-  "grid gap-3 [&_label]:grid [&_label]:gap-1.75 [&_label]:text-[0.82rem] [&_label]:font-(--weight-semibold) [&_label]:text-text-muted [&_input]:min-h-11 [&_input]:w-full [&_input]:min-w-0 [&_input]:rounded-lg [&_input]:border [&_input]:border-border [&_input]:bg-surface-elevated [&_input]:px-3 [&_input]:text-text [&_input]:focus:border-accent [&_input]:focus:outline-[3px_solid_rgb(22_125_119/18%)] [&_textarea]:min-h-23 [&_textarea]:w-full [&_textarea]:min-w-0 [&_textarea]:resize-y [&_textarea]:rounded-lg [&_textarea]:border [&_textarea]:border-border [&_textarea]:bg-surface-elevated [&_textarea]:px-3 [&_textarea]:py-2.75 [&_textarea]:text-text [&_textarea]:focus:border-accent [&_textarea]:focus:outline-[3px_solid_rgb(22_125_119/18%)]";
 const helperLine = "mb-0 text-[0.88rem] leading-normal text-text-soft";
 const stateLine =
   "mb-0 rounded-lg bg-accent-soft p-3 text-[0.92rem] font-(--weight-medium) text-accent";
@@ -67,24 +57,15 @@ export function DashboardWorkbench({
 }) {
   const {
     cameraEnabled,
-    canPublishEvents,
     canVerifyTickets,
     dashboardEvents: cachedHostedEvents,
     gateCode,
     gateResult,
-    hostEvent,
-    hostPreviewEvent,
-    hostState,
-    hostThumbnailName,
-    publishEvent,
-    saveDraft,
     scan,
     scanState,
-    selectThumbnail,
     session,
     setCameraEnabled,
     setGateCode,
-    updateHostEvent,
     videoRef,
   } = useAppContext();
   const hosted = useHostedEvents(
@@ -102,39 +83,6 @@ export function DashboardWorkbench({
   const invalidDateRange = Boolean(
     eventFilters.from && eventFilters.to && eventFilters.from > eventFilters.to,
   );
-  const validation = useInlineFormValidation();
-  const eventNameError = validation.fieldError({
-    label: "Event name",
-    required: true,
-    value: hostEvent.name,
-  });
-  const descriptionError = validation.fieldError({
-    label: "Description",
-    required: true,
-    value: hostEvent.description,
-  });
-  const venueError = validation.fieldError({
-    label: "Venue",
-    required: true,
-    value: hostEvent.venue,
-  });
-  const startsError = validation.fieldError({
-    label: "Starts",
-    required: true,
-    value: hostEvent.startsAt,
-  });
-  const capacityError = validation.fieldError({
-    label: "Capacity",
-    min: 1,
-    required: false,
-    value: hostEvent.capacity ?? "",
-  });
-  const priceError = validation.fieldError({
-    label: "Price in UGX",
-    min: 0,
-    required: true,
-    value: hostEvent.priceCents / 100,
-  });
 
   if (!session) return <PageSkeleton view={view} />;
 
@@ -210,183 +158,7 @@ export function DashboardWorkbench({
         />
       )}
       <div className="grid gap-5">
-        {view === "create" && (
-          <section
-            className={`${panel} mx-auto grid w-full max-w-190 gap-3.5 p-6`}
-          >
-            <div className={panelHeading}>
-              <ImagePlus size={22} />
-              <h2>Create event</h2>
-            </div>
-            <div className="overflow-hidden rounded-lg bg-[#101010]">
-              <EventThumbnail
-                event={hostPreviewEvent}
-                tone="tone-2"
-                variant="preview"
-              />
-            </div>
-            <form className={formGrid} {...validation.formProps(publishEvent)}>
-              <label>
-                <RequiredLabel>Event name</RequiredLabel>
-                <input
-                  aria-describedby="host-event-name-error"
-                  aria-invalid={Boolean(eventNameError) || undefined}
-                  value={hostEvent.name}
-                  onChange={(event) =>
-                    updateHostEvent("name", event.target.value)
-                  }
-                  placeholder="Kampala rooftop sessions"
-                  {...requiredField("Event name")}
-                />
-                <FieldMessage
-                  error={eventNameError}
-                  id="host-event-name-error"
-                />
-              </label>
-              <label>
-                <RequiredLabel>Description</RequiredLabel>
-                <textarea
-                  aria-describedby="host-description-error"
-                  aria-invalid={Boolean(descriptionError) || undefined}
-                  value={hostEvent.description}
-                  onChange={(event) =>
-                    updateHostEvent("description", event.target.value)
-                  }
-                  placeholder="Short public summary"
-                  {...requiredTextareaField("Description")}
-                />
-                <FieldMessage
-                  error={descriptionError}
-                  id="host-description-error"
-                />
-              </label>
-              <label>
-                <RequiredLabel>Venue</RequiredLabel>
-                <input
-                  aria-describedby="host-venue-error"
-                  aria-invalid={Boolean(venueError) || undefined}
-                  value={hostEvent.venue}
-                  onChange={(event) =>
-                    updateHostEvent("venue", event.target.value)
-                  }
-                  placeholder="Venue, city"
-                  {...requiredField("Venue")}
-                />
-                <FieldMessage error={venueError} id="host-venue-error" />
-              </label>
-              <label>
-                Map location
-                <input
-                  value={hostEvent.mapLocation}
-                  onChange={(event) =>
-                    updateHostEvent("mapLocation", event.target.value)
-                  }
-                  placeholder="Optional address, map place, or coordinates"
-                />
-              </label>
-              <div className="grid grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)] gap-2.5 max-[820px]:grid-cols-1">
-                <label>
-                  <RequiredLabel>Starts</RequiredLabel>
-                  <input
-                    aria-describedby="host-starts-error"
-                    aria-invalid={Boolean(startsError) || undefined}
-                    type="datetime-local"
-                    value={hostEvent.startsAt}
-                    onChange={(event) =>
-                      updateHostEvent("startsAt", event.target.value)
-                    }
-                    {...requiredField("Starts")}
-                  />
-                  <FieldMessage error={startsError} id="host-starts-error" />
-                </label>
-                <label>
-                  Capacity (leave blank for unlimited)
-                  <input
-                    aria-describedby="host-capacity-error"
-                    aria-invalid={Boolean(capacityError) || undefined}
-                    min={1}
-                    type="number"
-                    value={hostEvent.capacity ?? ""}
-                    onChange={(event) =>
-                      updateHostEvent(
-                        "capacity",
-                        event.target.value === ""
-                          ? null
-                          : Number(event.target.value),
-                      )
-                    }
-                  />
-                  <FieldMessage
-                    error={capacityError}
-                    id="host-capacity-error"
-                  />
-                </label>
-              </div>
-              <label>
-                <RequiredLabel>Price in UGX</RequiredLabel>
-                <input
-                  aria-describedby="host-price-error"
-                  aria-invalid={Boolean(priceError) || undefined}
-                  min={0}
-                  type="number"
-                  value={hostEvent.priceCents / 100}
-                  onChange={(event) =>
-                    updateHostEvent(
-                      "priceCents",
-                      Number(event.target.value) * 100,
-                    )
-                  }
-                  {...requiredField("Price in UGX")}
-                />
-                <FieldMessage error={priceError} id="host-price-error" />
-              </label>
-              <label className="relative grid gap-1.75">
-                <span>Event artwork photo</span>
-                <input
-                  className="absolute inset-0 cursor-pointer opacity-0"
-                  type="file"
-                  accept="image/*"
-                  onChange={(event) =>
-                    selectThumbnail(event.target.files?.[0] ?? null)
-                  }
-                />
-                <span className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-dashed border-border-strong bg-surface-muted px-3 font-(--weight-semibold) text-accent">
-                  <Upload size={17} />
-                  {hostThumbnailName || "Optional image upload"}
-                </span>
-              </label>
-              {hostEvent.thumbnailUrl && (
-                <button
-                  className={secondaryAction}
-                  type="button"
-                  onClick={() => selectThumbnail(null)}
-                >
-                  Remove photo
-                </button>
-              )}
-              <button
-                className={primaryAction}
-                type="submit"
-                disabled={!canPublishEvents}
-              >
-                <ImagePlus size={18} />
-                Create event
-              </button>
-              <button
-                className={secondaryAction}
-                type="button"
-                onClick={() => void saveDraft()}
-              >
-                Save draft
-              </button>
-            </form>
-            <p className={helperLine}>
-              Photos are optional. Without one, Passmint creates a branded event
-              artwork automatically.
-            </p>
-            {hostState && <p className={stateLine}>{hostState}</p>}
-          </section>
-        )}
+        {view === "create" && <CreateEventForm />}
 
         <div className="grid min-w-0 gap-4.5">
           {view === "events" && (

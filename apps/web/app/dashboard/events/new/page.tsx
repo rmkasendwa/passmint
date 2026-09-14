@@ -5,9 +5,13 @@ export const metadata: Metadata = {
   title: "Create an event",
   robots: { index: false, follow: false },
 };
-import { DashboardWorkbench } from "../../../../components/dashboard-workbench";
+import { CreateEventForm } from "../../../../components/create-event-form";
 
 export default async function Page() {
   await requireServerSession("/dashboard/events/new");
-  return <DashboardWorkbench view="create" />;
+  return (
+    <div className="site-container event-create-page">
+      <CreateEventForm />
+    </div>
+  );
 }
