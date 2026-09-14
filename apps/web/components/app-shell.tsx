@@ -11,6 +11,7 @@ import {
   Ticket as TicketIcon,
 } from "lucide-react";
 import Link from "next/link";
+import { AccountPopover } from "./account-popover";
 import { SiteFooter } from "./site-footer";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
@@ -109,18 +110,21 @@ export function AppShell({
               >
                 {menuOpen ? <X size={21} /> : <Menu size={21} />}
               </button>
-              <details className="relative">
-                <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-lg px-2 text-text hover:bg-surface-muted [&::-webkit-details-marker]:hidden">
-                  <span className="grid size-8 place-items-center rounded-full bg-accent-soft text-xs font-semibold text-accent">
-                    {initials(session.user.name)}
-                  </span>
-                  <span className="max-w-40 truncate text-sm font-medium max-[600px]:hidden">
-                    {session.user.name}
-                  </span>
-                  <ChevronDown size={14} />
-                  <span className="sr-only">Account menu</span>
-                </summary>
-                <div className="absolute right-0 top-full z-40 mt-2 w-64 rounded-xl border border-border bg-surface-raised p-4 shadow-xl">
+              <AccountPopover
+                trigger={
+                  <>
+                    <span className="grid size-8 place-items-center rounded-full bg-accent-soft text-xs font-semibold text-accent">
+                      {initials(session.user.name)}
+                    </span>
+                    <span className="max-w-40 truncate text-sm font-medium max-[600px]:hidden">
+                      {session.user.name}
+                    </span>
+                    <ChevronDown size={14} />
+                    <span className="sr-only">Account menu</span>
+                  </>
+                }
+              >
+                <div>
                   <p className="mb-1 truncate text-sm font-semibold text-text">
                     {session.user.name}
                   </p>
@@ -143,13 +147,14 @@ export function AppShell({
                   <button
                     type="button"
                     className="inline-flex min-h-10 w-full items-center gap-2 text-sm text-text-muted hover:text-text"
+                    data-close-popover
                     onClick={logout}
                   >
                     <LogOut size={16} />
                     Sign out
                   </button>
                 </div>
-              </details>
+              </AccountPopover>
             </div>
           ) : (
             <div className="col-start-3 inline-flex items-center justify-self-end gap-2">
