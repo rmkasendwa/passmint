@@ -2,6 +2,7 @@
 
 import {
   Menu,
+  Plus,
   X,
   ChevronDown,
   LogOut,
@@ -48,7 +49,6 @@ export function AppShell({
     { href: "/events", label: "Events" },
     { href: "/reports", label: "Reports" },
     { href: "/check-in", label: "Check-in" },
-    { href: "/events/new", label: "Create event" },
   ];
   const active = (href: string) =>
     href === "/events"
@@ -73,6 +73,17 @@ export function AppShell({
       </Link>
     ),
   );
+  const createEventAction = session && (
+    <Link
+      href="/events/new"
+      aria-current={pathname === "/events/new" ? "page" : undefined}
+      onClick={() => setMenuOpen(false)}
+      className="inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-(--button-bg) px-4 text-sm font-semibold text-(--button-text) shadow-sm transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent min-[900px]:ml-3"
+    >
+      <Plus size={18} strokeWidth={2.5} aria-hidden="true" />
+      Create event
+    </Link>
+  );
 
   return (
     <div className={`app-shell theme-${resolvedTheme}`}>
@@ -94,6 +105,7 @@ export function AppShell({
             aria-label="Main navigation"
           >
             {navigationLinks}
+            {createEventAction}
           </nav>
 
           {session ? (
@@ -194,6 +206,7 @@ export function AppShell({
             className="grid gap-1 border-t border-border px-4 py-3 min-[900px]:hidden"
           >
             {navigationLinks}
+            {createEventAction}
             {!session && (
               <div className="flex items-center justify-between px-3 py-2 text-sm text-text-muted">
                 <span>Appearance</span>
