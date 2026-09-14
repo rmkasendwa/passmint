@@ -145,7 +145,7 @@ export function TicketsCheckout() {
         </div>
       </section>
 
-      <aside className="sticky top-22 grid gap-4.5 max-[1120px]:static">
+      <aside className="sticky top-[calc(var(--site-header-height)+1.125rem)] grid gap-4.5 max-[1120px]:static">
         <section
           className={`${panelPadded} ${session ? 'signed-in' : 'anonymous'}`}
         >

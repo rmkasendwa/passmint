@@ -809,7 +809,7 @@ export function EventDetail({ event, management = false }: { event: Event; manag
           </section>
         </div>
 
-        <aside className="sticky top-22 grid gap-5 max-[1120px]:static">
+        <aside className="sticky top-[calc(var(--site-header-height)+1.25rem)] grid gap-5 max-[1120px]:static">
           <section className={panelPadded}>
             <div>
               <p className={kicker}>

@@ -2069,6 +2069,7 @@ svg {
 }
 .app-shell {
   --content-max: 1240px;
+  --site-header-height: 79px;
   --content-gutter: 32px;
 }
 .brand {
@@ -2098,7 +2099,7 @@ svg {
   box-shadow: 0 2px 18px #00000005;
 }
 .site-header > div {
-  min-height: 78px;
+  min-height: calc(var(--site-header-height) - 1px);
 }
 .skip-link {
   position: fixed;
@@ -2847,10 +2848,11 @@ svg {
   }
   .app-shell {
     --content-gutter: 16px;
+    --site-header-height: 69px;
   }
   .site-header > div {
     gap: 10px;
-    min-height: 68px;
+    min-height: calc(var(--site-header-height) - 1px);
   }
   .header-theme {
     display: none;
