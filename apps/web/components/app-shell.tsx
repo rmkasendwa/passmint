@@ -211,14 +211,6 @@ export function AppShell({
         )}
       </header>
       <main id="main-content" tabIndex={-1} className="min-w-0 flex-1">
-        {session && pathname.startsWith("/dashboard") && (
-          <div className="workspace-bar">
-            <div className="site-container">
-              <span>ORGANIZER WORKSPACE</span>
-              <Link href="/help#organizers">Organizer guide ↗</Link>
-            </div>
-          </div>
-        )}
         {children}
       </main>
       <SiteFooter />

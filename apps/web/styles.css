@@ -2704,21 +2704,6 @@ svg {
   align-items: center;
   gap: 5px;
 }
-.workspace-bar {
-  background: var(--accent-soft);
-  border-bottom: 1px solid var(--border);
-}
-.workspace-bar > div {
-  display: flex;
-  justify-content: space-between;
-  padding-block: 13px;
-  font-size: 10px;
-  letter-spacing: 0.1em;
-}
-.workspace-bar a {
-  letter-spacing: 0;
-  color: var(--accent);
-}
 .resource-hero {
   padding-block: 70px 40px;
   max-width: 850px;
@@ -3365,7 +3350,7 @@ svg {
 }
 
 .event-create-page {
-  padding-block: 44px;
+  padding-block: 24px;
   max-width: 1080px;
 }
 .event-create {
@@ -3622,7 +3607,7 @@ svg {
 }
 @media (max-width: 700px) {
   .event-create-page {
-    padding-block: 24px;
+    padding-block: 16px;
   }
   .event-create-body {
     grid-template-columns: 1fr;
@@ -3679,4 +3664,8 @@ svg {
 }
 .event-create .button-secondary:hover {
   border-color: var(--accent);
+}
+
+.app-shell:has(.event-create-page) > .site-footer {
+  margin-top: 0;
 }
