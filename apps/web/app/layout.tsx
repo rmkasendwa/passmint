@@ -5,8 +5,12 @@ import { getInitialThemePreference } from "../server-theme";
 import "../styles.css";
 
 export const metadata: Metadata = {
-  title: "Passmint",
-  description: "QR ticketing for events and gate verification.",
+  title: {
+    default: "Passmint — Good plans start here",
+    template: "%s | Passmint",
+  },
+  description:
+    "Discover live experiences, book tickets and bring people together with Passmint.",
   icons: {
     icon: "/icon.svg",
     shortcut: "/icon.svg",

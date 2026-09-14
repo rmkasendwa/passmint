@@ -95,7 +95,7 @@ function normalizeQuantity(value: number, maximum = 10) {
   return Math.min(maximum, Math.max(1, Math.trunc(value)));
 }
 
-export function EventDetail({ event }: { event: Event }) {
+export function EventDetail({ event, management = false }: { event: Event; management?: boolean }) {
   const {
     buyerEmail,
     buyerName,
@@ -118,6 +118,9 @@ export function EventDetail({ event }: { event: Event }) {
     visibleEvents,
   } = useAppContext();
   const [displayEvent, setDisplayEvent] = useState(event);
+  useEffect(() => {
+    document.title = `${management ? 'Manage ' : ''}${displayEvent.name} | Passmint`;
+  }, [displayEvent.name, management]);
   const salesNow = useSalesClock();
   const [isEditing, setIsEditing] = useState(false);
   const [editState, setEditState] = useState('');

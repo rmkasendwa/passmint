@@ -1,3 +1,8 @@
+import type { Metadata } from "next";
+export const metadata: Metadata = {
+  title: "Create your account",
+  robots: { index: false, follow: false },
+};
 import { AuthFrame } from "../../components/auth-frame";
 import { RegisterForm } from "../../components/auth-forms";
 

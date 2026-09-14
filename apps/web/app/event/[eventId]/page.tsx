@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { EventDetail } from "../../../components/event-detail";
 import { getEventForPage } from "../../../server-events";
@@ -15,4 +16,25 @@ export default async function EventPage({
   if (!event) notFound();
 
   return <EventDetail event={event} />;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ eventId: string }>;
+}): Promise<Metadata> {
+  const event = await getEventForPage((await params).eventId);
+  if (!event) return { title: "Event not found" };
+  return {
+    title: event.name,
+    description: event.description.slice(0, 160),
+    openGraph: {
+      title: event.name + " | Passmint",
+      description: event.description.slice(0, 160),
+      type: "website",
+      ...(event.thumbnailUrl
+        ? { images: [{ url: event.thumbnailUrl, alt: event.name }] }
+        : {}),
+    },
+  };
 }
