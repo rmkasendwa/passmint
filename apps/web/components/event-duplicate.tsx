@@ -1,7 +1,7 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'nextjs-toploader/app';
 import { api } from '../api';
 
 export function EventDuplicate({ eventId, token }: { eventId: string; token: string }) {

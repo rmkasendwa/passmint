@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import NextTopLoader from "nextjs-toploader";
 import { AppProvider } from "../components/app-provider";
 import { listEventsForPage } from "../server-events";
 import { getInitialThemePreference } from "../server-theme";
@@ -34,6 +35,13 @@ export default async function RootLayout({
   return (
     <html lang="en" data-theme={initialResolvedTheme}>
       <body>
+        <NextTopLoader
+          color="var(--accent)"
+          height={3}
+          showSpinner={false}
+          shadow={false}
+          showForHashAnchor={false}
+        />
         <AppProvider
           initialEvents={initialEvents}
           initialThemePreference={initialThemePreference}
