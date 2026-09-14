@@ -371,7 +371,7 @@ export function EventDateTimeField({
                         {column.label}
                       </p>
                       <div
-                        className="relative grid max-h-60 gap-1 overflow-y-auto"
+                        className="time-picker-column relative grid max-h-60 gap-1 overflow-y-auto overscroll-contain"
                         role="group"
                         aria-label={column.label}
                       >

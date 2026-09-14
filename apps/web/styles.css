@@ -1683,6 +1683,14 @@ html[data-theme="light"] .event-list-card__frame {
   white-space: nowrap;
 }
 
+.time-picker-column {
+  scrollbar-width: none;
+}
+
+.time-picker-column::-webkit-scrollbar {
+  display: none;
+}
+
 .quantity-stepper {
   display: grid;
   grid-template-columns: 48px minmax(0, 1fr) 48px;
