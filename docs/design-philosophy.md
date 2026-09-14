@@ -22,6 +22,7 @@ The visual identity uses forest and mint, warm neutral surfaces, strong sans-ser
 4. Consistent interaction. Mint identifies primary actions and selected states. Borders separate quiet surfaces. Keyboard focus is visible; mobile navigation includes appearance controls; reduced-motion preferences are respected.
 5. Context follows navigation. Every substantive page has its own metadata. Public event titles include the event name; organizer pages use contextual titles; authenticated pages are marked noindex. Search titles reflect the query.
 6. Organizer screens favor practical hierarchy over promotional decoration. The shared workspace strip, mint actions and neutral panels distinguish working in the product from browsing events.
+7. Authentication is a focused, centered task. Use a card capped at 480px, consistent field spacing and a subtle branded backdrop. Keep help and return navigation close to the form. Avoid full-height split-screen photography that overwhelms account access on wide monitors.
 
 ## Current product boundaries
 
