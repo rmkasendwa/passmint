@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "nextjs-toploader/app";
 import { Upload, ArrowUpRight, X, Ticket, Check } from "lucide-react";
 import { useAppContext } from "./app-provider";
+import { EventDateTimeField, NumericField } from "./event-form-controls";
 import { EventImage } from "./event-image";
 import { emptyHostEvent } from "../event-utils";
 import {
@@ -218,20 +219,11 @@ export function CreateEventForm({
                 />
               </label>
               <div className="grid gap-3">
-                <label>
+                <div className="grid gap-2">
                   <RequiredLabel>Starts</RequiredLabel>
-                  <input
-                    aria-describedby="host-starts-error"
-                    aria-invalid={Boolean(startsError) || undefined}
-                    type="datetime-local"
-                    value={hostEvent.startsAt}
-                    onChange={(event) =>
-                      updateHostEvent("startsAt", event.target.value)
-                    }
-                    {...requiredField("Starts")}
-                  />
+                  <EventDateTimeField value={hostEvent.startsAt} onChange={(value) => updateHostEvent("startsAt", value)} disabled={busy} invalid={Boolean(startsError)} />
                   <FieldMessage error={startsError} id="host-starts-error" />
-                </label>
+                </div>
               </div>
             </fieldset>
             <fieldset disabled={busy}>
@@ -244,18 +236,18 @@ export function CreateEventForm({
               </p>
               <label>
                 Capacity (leave blank for unlimited)
-                <input
+                <NumericField
+                  aria-label="Capacity"
                   aria-describedby="host-capacity-error"
                   aria-invalid={Boolean(capacityError) || undefined}
                   min={1}
-                  type="number"
                   value={hostEvent.capacity ?? ""}
-                  onChange={(event) =>
+                  onValueChange={(value) =>
                     updateHostEvent(
                       "capacity",
-                      event.target.value === ""
+                      value === ""
                         ? null
-                        : Number(event.target.value),
+                        : Number(value),
                     )
                   }
                 />
@@ -263,16 +255,16 @@ export function CreateEventForm({
               </label>
               <label>
                 <RequiredLabel>Price in UGX</RequiredLabel>
-                <input
+                <NumericField
+                  aria-label="Price in UGX"
                   aria-describedby="host-price-error"
                   aria-invalid={Boolean(priceError) || undefined}
                   min={0}
-                  type="number"
                   value={hostEvent.priceCents / 100}
-                  onChange={(event) =>
+                  onValueChange={(value) =>
                     updateHostEvent(
                       "priceCents",
-                      Number(event.target.value) * 100,
+                      Number(value) * 100,
                     )
                   }
                   {...requiredField("Price in UGX")}
