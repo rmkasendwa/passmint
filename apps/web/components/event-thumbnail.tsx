@@ -1,7 +1,7 @@
 "use client";
 
 import { Music2, Ticket as TicketIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEventImage } from "./use-event-image";
 import type { Event } from "../api";
 import { eventCategory, initials } from "../event-utils";
 
@@ -45,7 +45,7 @@ export function EventThumbnail({
   mood?: "green" | "gold";
   showBadge?: boolean;
 }) {
-  const [imageFailed, setImageFailed] = useState(false);
+  const { ready: hasImage, ...imageProps } = useEventImage(event.thumbnailUrl);
   const date = new Date(event.startsAt);
   const day = new Intl.DateTimeFormat("en-UG", {
     timeZone: "Africa/Kampala",
@@ -55,7 +55,7 @@ export function EventThumbnail({
     timeZone: "Africa/Kampala",
     month: "short",
   }).format(date);
-  const hasImage = Boolean(event.thumbnailUrl) && !imageFailed;
+
   const category = eventCategory(event);
   const BadgeIcon = category === "Music" ? Music2 : TicketIcon;
   const imageOverlay =
@@ -75,10 +75,6 @@ export function EventThumbnail({
       ? "border-[rgb(246_181_61/32%)] bg-[rgb(31_20_11/58%)] text-[#f6c866]"
       : "border-[rgb(94_226_204/26%)] bg-[rgb(0_77_67/56%)] text-[#dffcf7]";
 
-  useEffect(() => {
-    setImageFailed(false);
-  }, [event.thumbnailUrl]);
-
   return (
     <span
       className={`event-thumbnail-${variant} ${baseThumbnail} ${variantClass[variant]} ${
@@ -87,12 +83,13 @@ export function EventThumbnail({
           : `${fallbackDecor} ${toneGradient[tone] ?? toneGradient["tone-1"]}`
       }`}
     >
-      {hasImage && (
+      {event.thumbnailUrl && (
         <img
           src={event.thumbnailUrl ?? ""}
           alt=""
           aria-hidden="true"
-          onError={() => setImageFailed(true)}
+          {...imageProps}
+          style={{ display: hasImage ? undefined : "none" }}
         />
       )}
       <span className={`absolute inset-0 z-1 ${imageOverlay}`} />

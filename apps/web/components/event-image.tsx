@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEventImage } from "./use-event-image";
 import { initials } from "../event-utils";
 
 export function EventImage({
@@ -12,16 +12,22 @@ export function EventImage({
   name: string;
   fallbackClassName: string;
 }) {
-  const [imageFailed, setImageFailed] = useState(false);
-  const hasImage = Boolean(src) && !imageFailed;
-
-  useEffect(() => {
-    setImageFailed(false);
-  }, [src]);
-
-  if (hasImage) {
-    return <img src={src ?? ""} alt="" onError={() => setImageFailed(true)} />;
-  }
-
-  return <span className={fallbackClassName}>{initials(name)}</span>;
+  const { ready, ...imageProps } = useEventImage(src);
+  return (
+    <>
+      {!ready && (
+        <span className={fallbackClassName} aria-hidden="true">
+          {initials(name)}
+        </span>
+      )}
+      {src && (
+        <img
+          {...imageProps}
+          src={src}
+          alt=""
+          style={{ display: ready ? undefined : "none" }}
+        />
+      )}
+    </>
+  );
 }
