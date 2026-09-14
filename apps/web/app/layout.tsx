@@ -23,8 +23,10 @@ export const dynamic = "force-dynamic";
 
 export default async function RootLayout({
   children,
+  modal,
 }: {
   children: React.ReactNode;
+  modal: React.ReactNode;
 }) {
   const [initialSession, initialThemePreference] = await Promise.all([
     getServerSession(),
@@ -50,6 +52,7 @@ export default async function RootLayout({
           initialThemePreference={initialThemePreference}
         >
           {children}
+          {modal}
         </AppProvider>
       </body>
     </html>

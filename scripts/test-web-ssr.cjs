@@ -133,6 +133,37 @@ const api = createServer((req, res) => {
       );
       console.log("SSR HTML passed:", route);
     }
+    const intercepted = await fetch(
+      "http://localhost:3062/dashboard/events/new",
+      {
+        headers: {
+          cookie: "passmint-server-session=fixture-token",
+          RSC: "1",
+          "Next-Url": "/dashboard/events",
+          "Next-Router-State-Tree": encodeURIComponent(
+            JSON.stringify([
+              "",
+              {
+                children: [
+                  "dashboard",
+                  { children: ["events", { children: ["__PAGE__", {}] }] },
+                ],
+                modal: ["__DEFAULT__", {}],
+              },
+              null,
+              null,
+              true,
+            ]),
+          ),
+        },
+      },
+    );
+    const modalPayload = await intercepted.text();
+    assert.ok(
+      modalPayload.includes("CreateEventModal"),
+      "Client navigation must intercept creation into the modal",
+    );
+    console.log("Create-event modal interception passed");
     const guest = await fetch("http://localhost:3062/dashboard/reports", {
       redirect: "manual",
     });
