@@ -118,38 +118,48 @@ export default async function HomePage({ searchParams }: SearchProps) {
         </div>
       </section>
       <section
-        className="site-container experience-notes"
-        aria-label="From finding your plan to being there"
+        className="experience-notes"
+        aria-labelledby="experience-heading"
       >
-        <ul>
-          <li>
-            <span className="experience-note-icon" aria-hidden="true">
-              <Ticket size={21} />
-            </span>
-            <div>
-              <h2>A ticket to your kind of thing</h2>
-              <p>Big nights. New interests. Something for you.</p>
-            </div>
-          </li>
-          <li>
-            <span className="experience-note-icon" aria-hidden="true">
-              <CalendarDays size={21} />
-            </span>
-            <div>
-              <h2>Make a plan, then make it happen</h2>
-              <p>The place, the time, the details. All in one spot.</p>
-            </div>
-          </li>
-          <li>
-            <span className="experience-note-icon" aria-hidden="true">
-              <ScanLine size={21} />
-            </span>
-            <div>
-              <h2>You're one scan away</h2>
-              <p>Your QR ticket, ready when you arrive.</p>
-            </div>
-          </li>
-        </ul>
+        <div className="site-container">
+          <div className="experience-intro">
+            <p className="eyebrow">FROM FINDING YOUR PLAN TO BEING THERE</p>
+            <h2 id="experience-heading">Good plans. Great memories.</h2>
+            <p>
+              Find something that feels like you. Get the details, grab your
+              ticket, and look forward to being there.
+            </p>
+          </div>
+          <ul>
+            <li>
+              <span className="experience-note-icon" aria-hidden="true">
+                <Ticket size={21} />
+              </span>
+              <div>
+                <h3>A ticket to your kind of thing</h3>
+                <p>Big nights. New interests. Something for you.</p>
+              </div>
+            </li>
+            <li>
+              <span className="experience-note-icon" aria-hidden="true">
+                <CalendarDays size={21} />
+              </span>
+              <div>
+                <h3>Make a plan, then make it happen</h3>
+                <p>The place, the time, the details. All in one spot.</p>
+              </div>
+            </li>
+            <li>
+              <span className="experience-note-icon" aria-hidden="true">
+                <ScanLine size={21} />
+              </span>
+              <div>
+                <h3>You're one scan away</h3>
+                <p>Your QR ticket, ready when you arrive.</p>
+              </div>
+            </li>
+          </ul>
+        </div>
       </section>
       <section id="events" className="site-container discovery-section">
         <div className="section-heading">
