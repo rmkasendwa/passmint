@@ -117,19 +117,40 @@ export default async function HomePage({ searchParams }: SearchProps) {
           )}
         </div>
       </section>
-      <div className="experience-strip">
-        <div className="site-container">
-          <span>
-            <Ticket size={18} /> A ticket to your kind of thing
-          </span>
-          <span>
-            <CalendarDays size={18} /> Details before you book
-          </span>
-          <span>
-            <ScanLine size={18} /> QR tickets for event entry
-          </span>
-        </div>
-      </div>
+      <section
+        className="site-container experience-notes"
+        aria-label="From finding your plan to being there"
+      >
+        <ul>
+          <li>
+            <span className="experience-note-icon" aria-hidden="true">
+              <Ticket size={21} />
+            </span>
+            <div>
+              <h2>A ticket to your kind of thing</h2>
+              <p>Big nights. New interests. Something for you.</p>
+            </div>
+          </li>
+          <li>
+            <span className="experience-note-icon" aria-hidden="true">
+              <CalendarDays size={21} />
+            </span>
+            <div>
+              <h2>Make a plan, then make it happen</h2>
+              <p>The place, the time, the details. All in one spot.</p>
+            </div>
+          </li>
+          <li>
+            <span className="experience-note-icon" aria-hidden="true">
+              <ScanLine size={21} />
+            </span>
+            <div>
+              <h2>You're one scan away</h2>
+              <p>Your QR ticket, ready when you arrive.</p>
+            </div>
+          </li>
+        </ul>
+      </section>
       <section id="events" className="site-container discovery-section">
         <div className="section-heading">
           <div>
