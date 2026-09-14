@@ -108,11 +108,11 @@ const api = createServer((req, res) => {
     });
     for (const [route, expected] of [
       ["/", "Server Rendered Festival"],
-      ["/dashboard/events", "Server Rendered Festival"],
-      ["/dashboard/reports", "Tickets issued"],
-      ["/dashboard/events/new", "Event name"],
-      ["/dashboard/check-in", "Check-in"],
-      ["/dashboard/events/ssr-fixture", "SSR Attendee"],
+      ["/events", "Server Rendered Festival"],
+      ["/reports", "Tickets issued"],
+      ["/events/new", "Event name"],
+      ["/check-in", "Check-in"],
+      ["/events/ssr-fixture", "SSR Attendee"],
       ["/event/ssr-fixture", "SSR Attendee"],
     ]) {
       const response = await fetch("http://localhost:3062" + route, {
@@ -133,38 +133,46 @@ const api = createServer((req, res) => {
       );
       console.log("SSR HTML passed:", route);
     }
-    const intercepted = await fetch(
-      "http://localhost:3062/dashboard/events/new",
-      {
-        headers: {
-          cookie: "passmint-server-session=fixture-token",
-          RSC: "1",
-          "Next-Url": "/dashboard/events",
-          "Next-Router-State-Tree": encodeURIComponent(
-            JSON.stringify([
-              "",
-              {
-                children: [
-                  "dashboard",
-                  { children: ["events", { children: ["__PAGE__", {}] }] },
-                ],
-                modal: ["__DEFAULT__", {}],
-              },
-              null,
-              null,
-              true,
-            ]),
-          ),
-        },
+    const intercepted = await fetch("http://localhost:3062/events/new", {
+      headers: {
+        cookie: "passmint-server-session=fixture-token",
+        RSC: "1",
+        "Next-Url": "/events",
+        "Next-Router-State-Tree": encodeURIComponent(
+          JSON.stringify([
+            "",
+            {
+              children: ["events", { children: ["__PAGE__", {}] }],
+              modal: ["__DEFAULT__", {}],
+            },
+            null,
+            null,
+            true,
+          ]),
+        ),
       },
-    );
+    });
     const modalPayload = await intercepted.text();
     assert.ok(
       modalPayload.includes("CreateEventModal"),
       "Client navigation must intercept creation into the modal",
     );
     console.log("Create-event modal interception passed");
-    const guest = await fetch("http://localhost:3062/dashboard/reports", {
+    for (const [oldPath, newPath] of [
+      ["/dashboard", "/events"],
+      ["/dashboard/events", "/events"],
+      ["/dashboard/events/new", "/events/new"],
+      ["/dashboard/reports", "/reports"],
+      ["/dashboard/check-in", "/check-in"],
+    ]) {
+      const redirect = await fetch("http://localhost:3062" + oldPath, {
+        redirect: "manual",
+      });
+      assert.equal(redirect.status, 308);
+      assert.equal(redirect.headers.get("location"), newPath);
+    }
+    console.log("Legacy organizer redirects passed");
+    const guest = await fetch("http://localhost:3062/reports", {
       redirect: "manual",
     });
     const body = await guest.text();

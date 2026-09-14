@@ -76,8 +76,8 @@ test("missing and expired sessions redirect before protected page data renders",
     const { session } = setup(...setupArgs);
     assert.equal(await session.getServerSession(), null);
     await assert.rejects(
-      session.requireServerSession("/dashboard/events"),
-      /redirect:\/login\?next=%2Fdashboard%2Fevents/,
+      session.requireServerSession("/events"),
+      /redirect:\/login\?next=%2Fevents/,
     );
   }
 });
@@ -112,4 +112,20 @@ test("event timestamps use the same timezone on server and client", () => {
   assert.equal(dateTime.resolvedOptions().timeZone, "Africa/Kampala");
   assert.equal(shortDate.resolvedOptions().timeZone, "Africa/Kampala");
   assert.match(dateTime.format(new Date("2030-09-14T22:00:00Z")), /15/);
+});
+
+test("post-login destinations use canonical organizer routes and reject external URLs", () => {
+  const { organizerReturnPath } = load("organizer-routes.ts", {}, { URL });
+  for (const [input, expected] of [
+    ["/events/new", "/events/new"],
+    ["/reports", "/reports"],
+    ["/check-in", "/check-in"],
+    ["/dashboard/events/example", "/events/example"],
+    ["/dashboard", "/events"],
+    ["https://evil.test/events", "/events"],
+    ["//evil.test/events", "/events"],
+    ["/login", "/events"],
+    [undefined, "/events"],
+  ])
+    assert.equal(organizerReturnPath(input), expected);
 });
