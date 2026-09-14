@@ -153,17 +153,6 @@ export function EventDateTimeField({
     panel.current
       .querySelector<HTMLElement>('button[aria-pressed="true"], button')
       ?.focus({ preventScroll: true });
-    if (mode === "time") {
-      panel.current
-        .querySelectorAll<HTMLElement>('[role="group"]')
-        .forEach((column) => {
-          const selected = column.querySelector<HTMLElement>(
-            '[aria-pressed="true"]',
-          );
-          if (selected)
-            column.scrollTop = selected.offsetTop - column.offsetTop;
-        });
-    }
     const observer = new ResizeObserver(update);
     observer.observe(panel.current);
     window.addEventListener("resize", update);
@@ -370,34 +359,23 @@ export function EventDateTimeField({
                       <p className="mb-2 text-center text-xs text-text-muted">
                         {column.label}
                       </p>
-                      <div
-                        className="time-picker-column relative grid max-h-60 gap-1 overflow-y-auto overscroll-contain"
-                        role="group"
-                        aria-label={column.label}
-                      >
-                        {column.items.map((item) => (
-                          <button
-                            key={item}
-                            type="button"
-                            aria-pressed={column.selected === item}
-                            className={`min-h-11 rounded-lg text-sm ${column.selected === item ? "bg-(--button-bg) text-(--button-text)" : "hover:bg-accent-soft"}`}
-                            onClick={() => {
-                              const hour = Number(time.slice(0, 2));
-                              const nextHour =
-                                column.label === "Hour"
-                                  ? (Number(item) % 12) + (hour >= 12 ? 12 : 0)
-                                  : column.label === "Period"
-                                    ? (hour % 12) + (item === "PM" ? 12 : 0)
-                                    : hour;
-                              const next = `${String(nextHour).padStart(2, "0")}:${column.label === "Minute" ? item : time.slice(3)}`;
-                              setTime(next);
-                              if (date) onChange(`${date}T${next}`);
-                            }}
-                          >
-                            {item}
-                          </button>
-                        ))}
-                      </div>
+                      <TimeColumn
+                        label={column.label}
+                        items={column.items}
+                        selected={column.selected}
+                        onSelect={(item) => {
+                          const hour = Number(time.slice(0, 2));
+                          const nextHour =
+                            column.label === "Hour"
+                              ? (Number(item) % 12) + (hour >= 12 ? 12 : 0)
+                              : column.label === "Period"
+                                ? (hour % 12) + (item === "PM" ? 12 : 0)
+                                : hour;
+                          const next = `${String(nextHour).padStart(2, "0")}:${column.label === "Minute" ? item : time.slice(3)}`;
+                          setTime(next);
+                          if (date) onChange(`${date}T${next}`);
+                        }}
+                      />
                     </div>
                   ))}
                 </div>
@@ -430,5 +408,83 @@ export function EventDateTimeField({
           trigger.current?.closest("dialog") ?? document.body,
         )}
     </>
+  );
+}
+
+function TimeColumn({
+  label,
+  items,
+  selected,
+  onSelect,
+}: {
+  label: string;
+  items: string[];
+  selected: string;
+  onSelect: (value: string) => void;
+}) {
+  const scroller = useRef<HTMLDivElement>(null);
+  const looping = items.length > 2;
+  const repeats = looping ? 5 : 1;
+  // Keep the viewport in the middle copy. Identical adjacent copies make
+  // recentering invisible and preserve the user's fractional scroll offset.
+  useLayoutEffect(() => {
+    const node = scroller.current;
+    if (!node || !looping) return;
+    const rows = node.querySelectorAll<HTMLElement>("button");
+    const index = Math.max(0, items.indexOf(selected));
+    node.scrollTop = rows[items.length * 2 + index].offsetTop - 96;
+  }, [looping, items.length]);
+  return (
+    <div
+      ref={scroller}
+      className="time-picker-column relative grid max-h-60 gap-1 overflow-y-auto overscroll-contain"
+      role="group"
+      aria-label={label}
+      onScroll={(event) => {
+        if (!looping) return;
+        const node = event.currentTarget;
+        const rows = node.querySelectorAll<HTMLElement>("button");
+        const cycle = rows[items.length].offsetTop - rows[0].offsetTop;
+        if (node.scrollTop < cycle) node.scrollTop += cycle * 2;
+        else if (node.scrollTop >= cycle * 3) node.scrollTop -= cycle * 2;
+      }}
+    >
+      {Array.from({ length: repeats }, (_, copy) =>
+        items.map((item, index) => (
+          <button
+            key={`${copy}-${item}`}
+            type="button"
+            aria-pressed={selected === item}
+            tabIndex={!looping || (copy === 2 && selected === item) ? 0 : -1}
+            className={`h-11 shrink-0 rounded-lg text-sm ${selected === item ? "bg-(--button-bg) text-(--button-text)" : "hover:bg-accent-soft"}`}
+            onClick={() => onSelect(item)}
+            onKeyDown={(event) => {
+              if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key))
+                return;
+              event.preventDefault();
+              const next =
+                event.key === "Home"
+                  ? 0
+                  : event.key === "End"
+                    ? items.length - 1
+                    : (index +
+                        (event.key === "ArrowDown" ? 1 : -1) +
+                        items.length) %
+                      items.length;
+              onSelect(items[next]);
+              const node = scroller.current;
+              const row =
+                node?.querySelectorAll<HTMLButtonElement>("button")[
+                  (looping ? items.length * 2 : 0) + next
+                ];
+              row?.focus({ preventScroll: true });
+              if (node && row && looping) node.scrollTop = row.offsetTop - 96;
+            }}
+          >
+            {item}
+          </button>
+        )),
+      )}
+    </div>
   );
 }
