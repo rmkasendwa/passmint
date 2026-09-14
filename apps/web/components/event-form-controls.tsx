@@ -2,6 +2,7 @@
 
 import {
   CalendarDays,
+  Clock,
   ChevronLeft,
   ChevronRight,
   Minus,
@@ -91,7 +92,10 @@ export function EventDateTimeField({
   invalid?: boolean;
 }) {
   const trigger = useRef<HTMLInputElement>(null);
+  const group = useRef<HTMLDivElement>(null);
+  const timeTrigger = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
+  const [mode, setMode] = useState<"date" | "time">("date");
   const id = useId();
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState(
@@ -102,12 +106,16 @@ export function EventDateTimeField({
   const [position, setPosition] = useState({ top: 0, left: 0 });
   function close(restoreFocus = false) {
     setOpen(false);
-    if (restoreFocus) trigger.current?.focus({ preventScroll: true });
+    if (restoreFocus)
+      (mode === "date" ? trigger.current : timeTrigger.current)?.focus({
+        preventScroll: true,
+      });
   }
-  function show() {
+  function show(nextMode: "date" | "time" = "date") {
+    setMode(nextMode);
     if (disabled) return;
     setDate(value.slice(0, 10));
-    setTime(value.slice(11, 16) || "12:00");
+    if (value) setTime(value.slice(11, 16));
     setMonth(parseDateKey(value.slice(0, 10)) ?? new Date());
     setOpen(true);
   }
@@ -120,7 +128,9 @@ export function EventDateTimeField({
     panel.current.showPopover();
     const update = () => {
       if (!trigger.current || !panel.current) return;
-      const anchor = trigger.current.getBoundingClientRect();
+      const anchor = (
+        mode === "date" ? trigger.current : timeTrigger.current
+      )!.getBoundingClientRect();
       const bounds = panel.current.getBoundingClientRect();
       const below = anchor.bottom + 8;
       setPosition({
@@ -143,6 +153,17 @@ export function EventDateTimeField({
     panel.current
       .querySelector<HTMLElement>('button[aria-pressed="true"], button')
       ?.focus({ preventScroll: true });
+    if (mode === "time") {
+      panel.current
+        .querySelectorAll<HTMLElement>('[role="group"]')
+        .forEach((column) => {
+          const selected = column.querySelector<HTMLElement>(
+            '[aria-pressed="true"]',
+          );
+          if (selected)
+            column.scrollTop = selected.offsetTop - column.offsetTop;
+        });
+    }
     const observer = new ResizeObserver(update);
     observer.observe(panel.current);
     window.addEventListener("resize", update);
@@ -152,13 +173,13 @@ export function EventDateTimeField({
       window.removeEventListener("resize", update);
       window.removeEventListener("scroll", update, true);
     };
-  }, [open]);
+  }, [open, mode]);
   useEffect(() => {
     if (!open) return;
     const outside = (event: Event) => {
       if (
         event.target instanceof Node &&
-        !trigger.current?.contains(event.target) &&
+        !group.current?.contains(event.target) &&
         !panel.current?.contains(event.target)
       )
         close();
@@ -177,43 +198,68 @@ export function EventDateTimeField({
       document.removeEventListener("focusin", outside);
       document.removeEventListener("keydown", escape, true);
     };
-  }, [open]);
+  }, [open, mode]);
   const selectedDate = parseDateKey(value.slice(0, 10));
   const display = selectedDate
-    ? `${selectedDate.toLocaleDateString("en-UG", { day: "numeric", month: "short", year: "numeric" })} at ${value.slice(11, 16)}`
+    ? `${selectedDate.toLocaleDateString("en-UG", { day: "numeric", month: "short", year: "numeric" })}`
     : "";
   const validTime = /^([01]\d|2[0-3]):[0-5]\d$/.test(time);
   return (
     <>
-      <div className="relative">
-        <input
-          ref={trigger}
-          aria-label="Start date and time"
-          aria-haspopup="dialog"
-          aria-expanded={open}
-          aria-controls={open ? id : undefined}
-          aria-describedby="host-starts-error"
-          aria-invalid={invalid || undefined}
-          value={display}
-          placeholder="Choose date and time"
-          required
-          data-validation-label="Starts"
-          inputMode="none"
-          onChange={() => {}}
-          onClick={() => (open ? close() : show())}
-          onKeyDown={(event) => {
-            if (["Enter", " ", "ArrowDown"].includes(event.key)) {
-              event.preventDefault();
-              show();
-            }
-          }}
-          disabled={disabled}
-          className="cursor-pointer pr-10"
-        />
-        <CalendarDays
-          className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-accent"
-          size={18}
-        />
+      <div
+        ref={group}
+        className="rounded-xl border border-border p-3 focus-within:border-accent"
+        aria-label="Start date and time"
+      >
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+          <div className="relative min-w-0">
+            <CalendarDays
+              className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-accent"
+              size={18}
+            />
+            <input
+              ref={trigger}
+              aria-label="Start date"
+              aria-haspopup="dialog"
+              aria-expanded={open && mode === "date"}
+              aria-controls={open ? id : undefined}
+              aria-describedby="host-starts-error"
+              aria-invalid={invalid || undefined}
+              value={display}
+              placeholder="Choose date"
+              required
+              data-validation-label="Starts"
+              inputMode="none"
+              onChange={() => {}}
+              onClick={() => (open && mode === "date" ? close() : show("date"))}
+              onKeyDown={(event) => {
+                if (["Enter", " ", "ArrowDown"].includes(event.key)) {
+                  event.preventDefault();
+                  show("date");
+                }
+              }}
+              disabled={disabled}
+              style={{ paddingLeft: 40 }}
+              className="cursor-pointer"
+            />
+          </div>
+          <button
+            ref={timeTrigger}
+            type="button"
+            aria-label="Start time"
+            aria-haspopup="dialog"
+            aria-expanded={open && mode === "time"}
+            aria-controls={open ? id : undefined}
+            disabled={disabled}
+            onClick={() => (open && mode === "time" ? close() : show("time"))}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-surface-muted px-3 text-sm text-text"
+          >
+            <Clock size={18} className="text-text-muted" />
+            {String(Number(time.slice(0, 2)) % 12 || 12).padStart(2, "0")}:
+            {time.slice(3)} {Number(time.slice(0, 2)) >= 12 ? "PM" : "AM"}
+          </button>
+        </div>
+        <p className="mb-0 mt-2 text-xs text-text-muted">Your local timezone</p>
       </div>
       {open &&
         createPortal(
@@ -226,81 +272,136 @@ export function EventDateTimeField({
             style={{ ...position, margin: 0 }}
             className="fixed inset-auto z-50 max-h-[calc(100dvh-16px)] w-85 max-w-[calc(100vw-16px)] overflow-y-auto rounded-2xl border border-border bg-surface-raised p-4 text-text shadow-xl"
           >
-            <div className="flex items-center justify-between">
-              <button
-                type="button"
-                aria-label="Previous month"
-                className="grid size-10 place-items-center rounded-lg hover:bg-surface-muted"
-                onClick={() =>
-                  setMonth(
-                    new Date(month.getFullYear(), month.getMonth() - 1, 1),
-                  )
-                }
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <strong aria-live="polite">
-                {month.toLocaleDateString("en-UG", {
-                  month: "long",
-                  year: "numeric",
-                })}
-              </strong>
-              <button
-                type="button"
-                aria-label="Next month"
-                className="grid size-10 place-items-center rounded-lg hover:bg-surface-muted"
-                onClick={() =>
-                  setMonth(
-                    new Date(month.getFullYear(), month.getMonth() + 1, 1),
-                  )
-                }
-              >
-                <ChevronRight size={18} />
-              </button>
-            </div>
-            <div className="my-2 grid grid-cols-7 gap-1 text-center text-xs text-text-muted">
-              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                <span key={day}>{day}</span>
-              ))}
-            </div>
-            <div className="grid grid-cols-7 gap-1">
-              {calendarDays(month).map((day) => {
-                const key = toDateKey(day);
-                return (
+            {mode === "date" ? (
+              <>
+                <div className="flex items-center justify-between">
                   <button
                     type="button"
-                    key={key}
-                    aria-label={day.toLocaleDateString("en-UG", {
-                      day: "numeric",
+                    aria-label="Previous month"
+                    className="grid size-10 place-items-center rounded-lg hover:bg-surface-muted"
+                    onClick={() =>
+                      setMonth(
+                        new Date(month.getFullYear(), month.getMonth() - 1, 1),
+                      )
+                    }
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
+                  <strong aria-live="polite">
+                    {month.toLocaleDateString("en-UG", {
                       month: "long",
                       year: "numeric",
                     })}
-                    aria-pressed={date === key}
-                    className={`min-h-10 rounded-lg text-sm ${date === key ? "bg-(--button-bg) text-(--button-text)" : "hover:bg-accent-soft"} ${day.getMonth() !== month.getMonth() ? "opacity-45" : ""}`}
-                    onClick={() => setDate(key)}
+                  </strong>
+                  <button
+                    type="button"
+                    aria-label="Next month"
+                    className="grid size-10 place-items-center rounded-lg hover:bg-surface-muted"
+                    onClick={() =>
+                      setMonth(
+                        new Date(month.getFullYear(), month.getMonth() + 1, 1),
+                      )
+                    }
                   >
-                    {day.getDate()}
+                    <ChevronRight size={18} />
                   </button>
-                );
-              })}
-            </div>
-            <label className="mt-3 flex items-center justify-between gap-3 border-t border-border pt-3 text-sm">
-              Time (24-hour)
-              <input
-                className="min-h-11 w-28 rounded-lg border border-border bg-surface-muted px-3 text-text"
-                aria-label="Time (24-hour)"
-                inputMode="numeric"
-                placeholder="HH:MM"
-                maxLength={5}
-                value={time}
-                aria-invalid={!validTime || undefined}
-                onChange={(event) => setTime(event.target.value)}
-              />
-            </label>
-            {!validTime && (
-              <p className="mt-2 text-xs text-red-500">
-                Enter a time from 00:00 to 23:59.
-              </p>
+                </div>
+                <div className="my-2 grid grid-cols-7 gap-1 text-center text-xs text-text-muted">
+                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+                    (day) => (
+                      <span key={day}>{day}</span>
+                    ),
+                  )}
+                </div>
+                <div className="grid grid-cols-7 gap-1">
+                  {calendarDays(month).map((day) => {
+                    const key = toDateKey(day);
+                    return (
+                      <button
+                        type="button"
+                        key={key}
+                        aria-label={day.toLocaleDateString("en-UG", {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        })}
+                        aria-pressed={date === key}
+                        className={`min-h-10 rounded-lg text-sm ${date === key ? "bg-(--button-bg) text-(--button-text)" : "hover:bg-accent-soft"} ${day.getMonth() !== month.getMonth() ? "opacity-45" : ""}`}
+                        onClick={() => {
+                          setDate(key);
+                          onChange(`${key}T${time}`);
+                          close(true);
+                        }}
+                      >
+                        {day.getDate()}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 className="mb-3 text-sm font-semibold">Choose time</h3>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    {
+                      label: "Hour",
+                      items: Array.from({ length: 12 }, (_, i) =>
+                        String(i + 1).padStart(2, "0"),
+                      ),
+                      selected: String(
+                        Number(time.slice(0, 2)) % 12 || 12,
+                      ).padStart(2, "0"),
+                    },
+                    {
+                      label: "Minute",
+                      items: Array.from({ length: 60 }, (_, i) =>
+                        String(i).padStart(2, "0"),
+                      ),
+                      selected: time.slice(3),
+                    },
+                    {
+                      label: "Period",
+                      items: ["AM", "PM"],
+                      selected: Number(time.slice(0, 2)) >= 12 ? "PM" : "AM",
+                    },
+                  ].map((column) => (
+                    <div key={column.label}>
+                      <p className="mb-2 text-center text-xs text-text-muted">
+                        {column.label}
+                      </p>
+                      <div
+                        className="relative grid max-h-60 gap-1 overflow-y-auto"
+                        role="group"
+                        aria-label={column.label}
+                      >
+                        {column.items.map((item) => (
+                          <button
+                            key={item}
+                            type="button"
+                            aria-pressed={column.selected === item}
+                            className={`min-h-11 rounded-lg text-sm ${column.selected === item ? "bg-(--button-bg) text-(--button-text)" : "hover:bg-accent-soft"}`}
+                            onClick={() => {
+                              const hour = Number(time.slice(0, 2));
+                              const nextHour =
+                                column.label === "Hour"
+                                  ? (Number(item) % 12) + (hour >= 12 ? 12 : 0)
+                                  : column.label === "Period"
+                                    ? (hour % 12) + (item === "PM" ? 12 : 0)
+                                    : hour;
+                              const next = `${String(nextHour).padStart(2, "0")}:${column.label === "Minute" ? item : time.slice(3)}`;
+                              setTime(next);
+                              if (date) onChange(`${date}T${next}`);
+                            }}
+                          >
+                            {item}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
             <div className="mt-4 flex justify-between gap-2">
               <button
@@ -316,13 +417,13 @@ export function EventDateTimeField({
               <button
                 type="button"
                 className="button-primary"
-                disabled={!date || !validTime}
+                disabled={!validTime}
                 onClick={() => {
-                  onChange(`${date}T${time}`);
+                  if (date) onChange(`${date}T${time}`);
                   close(true);
                 }}
               >
-                Apply
+                Done
               </button>
             </div>
           </div>,
