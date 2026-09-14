@@ -3218,7 +3218,7 @@ svg {
 /* Full-width editorial sections keep discovery varied without adding dividers. */
 .upcoming-section {
   padding-block: 72px;
-  background: color-mix(in srgb, #ccb880 8%, var(--page-solid));
+  background: color-mix(in srgb, var(--accent) 5%, var(--page-solid));
 }
 .upcoming-layout {
   display: grid;
