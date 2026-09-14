@@ -393,10 +393,10 @@ export function EventDetail({ event }: { event: Event }) {
             </span>
           </div>
           <div>
-            <h1 className="mb-4 text-[clamp(2.7rem,6vw,6.4rem)] font-(--weight-bold) leading-[0.94] text-white">
+            <h1 className="mb-4 text-[clamp(2.2rem,4vw,4.2rem)] font-(--weight-bold) leading-[1.06] text-text">
               {displayEvent.name}
             </h1>
-            <p className="mb-0 max-w-180 text-[1.08rem] leading-[1.6] text-white/76">
+            <p className="mb-0 max-w-180 text-[1.08rem] leading-[1.6] text-text-muted">
               {displayEvent.description}
             </p>
           </div>

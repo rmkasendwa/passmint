@@ -1,7 +1,7 @@
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 
 const sectionKicker =
-  'mb-2 text-[0.78rem] font-(--weight-semibold) uppercase tracking-[0.08em] text-accent';
+  "mb-2 text-[0.78rem] font-(--weight-semibold) uppercase tracking-[0.08em] text-accent";
 
 export function AuthFrame({
   children,
@@ -34,10 +34,11 @@ export function AuthFrame({
             Passmint
           </span>
           <strong className="text-[clamp(1.75rem,4vw,3.4rem)] font-(--weight-bold) leading-[0.98] max-[820px]:text-[1.1rem]">
-            One account for tickets, events, and the door.
+            Your next great moment starts here.
           </strong>
           <small className="max-w-102.5 text-[0.98rem] leading-[1.55] text-white/72 max-[820px]:hidden">
-            Checkout, hosting, and gate verification in one place.
+            Discover your next experience. Bring your own event to life. Be part
+            of something good.
           </small>
         </div>
       </div>
