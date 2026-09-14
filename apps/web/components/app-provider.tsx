@@ -22,6 +22,10 @@ import { api, AuthSession, Event, GateResult, Ticket } from "../api";
 import { ResolvedTheme, THEME_KEY, ThemePreference } from "../theme";
 import { AppShell } from "./app-shell";
 import {
+  establishServerSession,
+  clearServerSession,
+} from "../app/session-actions";
+import {
   calendarDays,
   demoEvents,
   emptyHostEvent,
@@ -149,10 +153,12 @@ export function useAppContext() {
 export function AppProvider({
   children,
   initialEvents = [],
+  initialSession = null,
   initialThemePreference = "dark",
 }: {
   children: ReactNode;
   initialEvents?: Event[];
+  initialSession?: AuthSession | null;
   initialThemePreference?: ThemePreference;
 }) {
   const pathname = usePathname();
@@ -166,7 +172,7 @@ export function AppProvider({
   const [mobileMoneyNumber, setMobileMoneyNumber] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [selectedTicketTypeId, setSelectedTicketTypeId] = useState('');
+  const [selectedTicketTypeId, setSelectedTicketTypeId] = useState("");
   const [gateCode, setGateCode] = useState("");
   const [gateResult, setGateResult] = useState<GateResult | null>(null);
   const [loading, setLoading] = useState(initialEvents.length === 0);
@@ -182,10 +188,10 @@ export function AppProvider({
     initialThemePreference,
   );
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() =>
-    resolveThemePreference(initialThemePreference),
+    initialThemePreference === "light" ? "light" : "dark",
   );
-  const [session, setSession] = useState<AuthSession | null>(null);
-  const [sessionLoaded, setSessionLoaded] = useState(false);
+  const [session, setSession] = useState<AuthSession | null>(initialSession);
+  const [sessionLoaded, setSessionLoaded] = useState(Boolean(initialSession));
   const [authName, setAuthName] = useState("");
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
@@ -208,7 +214,7 @@ export function AppProvider({
   const controlsRef = useRef<IScannerControls | null>(null);
 
   useEffect(() => {
-    if (initialEvents.length > 0) return;
+    if (initialEvents.length > 0 || pathname !== "/tickets") return;
 
     api
       .listEvents()
@@ -217,22 +223,46 @@ export function AppProvider({
         setSelectedEventId(data[0]?.id ?? "");
       })
       .catch(() => {
-        const fallback = process.env.NODE_ENV === 'production' ? [] : demoEvents;
+        const fallback =
+          process.env.NODE_ENV === "production" ? [] : demoEvents;
         setEvents(fallback);
         setSelectedEventId(fallback[0]?.id ?? "");
         setPurchaseState(
-          process.env.NODE_ENV === 'production'
+          process.env.NODE_ENV === "production"
             ? "Events are temporarily unavailable. Please try again."
             : "Demo events loaded. Start the API to issue real tickets.",
         );
       })
       .finally(() => setLoading(false));
-  }, [initialEvents.length]);
+  }, [initialEvents.length, pathname]);
 
   useEffect(() => {
-    setSession(readSavedSession());
-    setSessionLoaded(true);
-  }, []);
+    if (initialSession) {
+      setSessionLoaded(true);
+      return;
+    }
+    let active = true;
+    const saved = readSavedSession();
+    if (!saved) {
+      setSessionLoaded(true);
+      return;
+    }
+    void establishServerSession(saved.token)
+      .then((value) => {
+        if (!active) return;
+        setSession(value);
+        setSessionLoaded(true);
+        router.refresh();
+      })
+      .catch(() => {
+        if (!active) return;
+        window.localStorage.removeItem(SESSION_KEY);
+        setSessionLoaded(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [initialSession, router]);
 
   useEffect(() => {
     if (typeof window === "undefined" || !sessionLoaded) return;
@@ -318,11 +348,6 @@ export function AppProvider({
     setResetState("");
   }, [pathname]);
 
-  useEffect(() => {
-    if (!sessionLoaded || !(pathname === "/dashboard" || pathname.startsWith("/dashboard/")) || session) return;
-    router.replace("/login");
-  }, [pathname, router, session, sessionLoaded]);
-
   const filteredEvents = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     const activeStart = dateStart;
@@ -362,7 +387,7 @@ export function AppProvider({
     [events, selectedEventId],
   );
   useEffect(() => {
-    if (pathname !== '/tickets' || !selectedEventId) return;
+    if (pathname !== "/tickets" || !selectedEventId) return;
     let active = true;
     let pending = false;
     const refresh = async () => {
@@ -370,14 +395,24 @@ export function AppProvider({
       pending = true;
       try {
         const latest = await api.getEvent(selectedEventId, session?.token);
-        if (active) setEvents(current => current.map(event => event.id === latest.id ? latest : event));
-      } catch { /* Purchase validation remains authoritative if refresh fails. */ }
-      finally { pending = false; }
+        if (active)
+          setEvents((current) =>
+            current.map((event) => (event.id === latest.id ? latest : event)),
+          );
+      } catch {
+        /* Purchase validation remains authoritative if refresh fails. */
+      } finally {
+        pending = false;
+      }
     };
     void refresh();
     const timer = window.setInterval(() => void refresh(), 30000);
-    document.addEventListener('visibilitychange', refresh);
-    return () => { active = false; window.clearInterval(timer); document.removeEventListener('visibilitychange', refresh); };
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", refresh);
+    };
   }, [pathname, selectedEventId, session?.token]);
   const featuredEvent = filteredEvents[0] ?? events[0];
   const visibleEvents = filteredEvents.length > 0 ? filteredEvents : events;
@@ -452,8 +487,13 @@ export function AppProvider({
       session?.token,
     );
     setTickets(created);
-    const latest = await api.getEvent(selectedEventId, session?.token).catch(() => null);
-    if (latest) setEvents(current => current.map(event => event.id === latest.id ? latest : event));
+    const latest = await api
+      .getEvent(selectedEventId, session?.token)
+      .catch(() => null);
+    if (latest)
+      setEvents((current) =>
+        current.map((event) => (event.id === latest.id ? latest : event)),
+      );
     if (session) await loadHistory(session.token);
     setPurchaseState(
       session
@@ -531,7 +571,10 @@ export function AppProvider({
   }
 
   function chooseEvent(eventId: string) {
-    if (eventId !== selectedEventId) { setSelectedTicketTypeId(''); setQuantity(1); }
+    if (eventId !== selectedEventId) {
+      setSelectedTicketTypeId("");
+      setQuantity(1);
+    }
     setSelectedEventId(eventId);
     setPurchaseState("");
   }
@@ -570,7 +613,12 @@ export function AppProvider({
       return;
     }
 
-    if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+    if (
+      !["image/jpeg", "image/png", "image/webp", "image/gif"].includes(
+        file.type,
+      ) ||
+      file.size > 5 * 1024 * 1024
+    ) {
       setHostState("Choose a JPEG, PNG, WebP or GIF image up to 5 MB.");
       return;
     }
@@ -646,19 +694,34 @@ export function AppProvider({
     try {
       let thumbnailUrl = hostEvent.thumbnailUrl;
       if (thumbnailUrl.startsWith("data:") && hostThumbnailFile) {
-        thumbnailUrl = (await api.uploadEventImage({ ...hostThumbnailFile, dataUrl: thumbnailUrl }, session.token)).url;
+        thumbnailUrl = (
+          await api.uploadEventImage(
+            { ...hostThumbnailFile, dataUrl: thumbnailUrl },
+            session.token,
+          )
+        ).url;
       }
-      const created = await api.createDraft({
-        ...hostEvent, thumbnailUrl,
-        startsAt: hostEvent.startsAt ? new Date(hostEvent.startsAt).toISOString() : undefined,
-      }, session.token);
-      setHostedEvents(current => [...current, created]);
+      const created = await api.createDraft(
+        {
+          ...hostEvent,
+          thumbnailUrl,
+          startsAt: hostEvent.startsAt
+            ? new Date(hostEvent.startsAt).toISOString()
+            : undefined,
+        },
+        session.token,
+      );
+      setHostedEvents((current) => [...current, created]);
       setHostEvent(emptyHostEvent);
       setHostThumbnailFile(null);
       setHostThumbnailName("");
-      setHostState("Draft saved. Open it from Your events to continue editing.");
+      setHostState(
+        "Draft saved. Open it from Your events to continue editing.",
+      );
     } catch (error) {
-      setHostState((error as { message?: string }).message ?? "Unable to save draft.");
+      setHostState(
+        (error as { message?: string }).message ?? "Unable to save draft.",
+      );
     }
   }
 
@@ -687,13 +750,16 @@ export function AppProvider({
               email: authEmail,
               password: authPassword,
             });
+      await establishServerSession(nextSession.token);
       setSession(nextSession);
       setBuyerName(nextSession.user.name);
       setBuyerEmail(nextSession.user.email);
       setAuthPassword("");
       setAuthConfirmPassword("");
       setAuthState(`Logged in as ${nextSession.user.role}.`);
-      router.push("/dashboard");
+      const next = new URLSearchParams(window.location.search).get("next");
+      router.push(next?.startsWith("/dashboard/") ? next : "/dashboard");
+      router.refresh();
     } catch (error) {
       const fallback = error as { message?: string };
       setAuthState(fallback.message ?? "Authentication failed.");
@@ -720,9 +786,17 @@ export function AppProvider({
     );
   }
 
-  function logout() {
-    setSession(null);
-    setAuthState("Logged out.");
+  async function logout() {
+    window.localStorage.removeItem(SESSION_KEY);
+    try {
+      await clearServerSession();
+      setSession(null);
+      setAuthState("Logged out.");
+      router.replace("/");
+      router.refresh();
+    } catch {
+      setAuthState("Unable to sign out. Please try again.");
+    }
   }
 
   const contextValue: AppContextValue = {

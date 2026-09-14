@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import NextTopLoader from "nextjs-toploader";
 import { AppProvider } from "../components/app-provider";
-import { listEventsForPage } from "../server-events";
+import { getServerSession } from "../server-session";
 import { getInitialThemePreference } from "../server-theme";
 import "../styles.css";
 
@@ -26,8 +26,10 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const initialEvents = await listEventsForPage();
-  const initialThemePreference = await getInitialThemePreference();
+  const [initialSession, initialThemePreference] = await Promise.all([
+    getServerSession(),
+    getInitialThemePreference(),
+  ]);
 
   const initialResolvedTheme =
     initialThemePreference === "light" ? "light" : "dark";
@@ -43,7 +45,8 @@ export default async function RootLayout({
           showForHashAnchor={false}
         />
         <AppProvider
-          initialEvents={initialEvents}
+          key={initialSession?.token ?? "guest"}
+          initialSession={initialSession}
           initialThemePreference={initialThemePreference}
         >
           {children}

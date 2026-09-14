@@ -1,3 +1,5 @@
+import { getServerSession } from "../../server-session";
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Sign in",
@@ -6,7 +8,15 @@ export const metadata: Metadata = {
 import { AuthFrame } from "../../components/auth-frame";
 import { LoginForm } from "../../components/auth-forms";
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  if (await getServerSession()) {
+    const next = (await searchParams).next;
+    redirect(next?.startsWith("/dashboard/") ? next : "/dashboard");
+  }
   return (
     <AuthFrame
       pageClass="login"
