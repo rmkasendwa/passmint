@@ -3,12 +3,12 @@ export const metadata: Metadata = {
   title: "Manage event",
   robots: { index: false, follow: false },
 };
-import { ServerEventDetail } from "../../../../components/server-event-detail";
+import { ServerEventDetail } from "../../../components/server-event-detail";
 import {
   requireServerSession,
   serverPrivateData,
-} from "../../../../server-session";
-import type { Event } from "../../../../api";
+} from "../../../server-session";
+import type { Event } from "../../../api";
 
 export default async function ManagedEventPage({
   params,
@@ -17,7 +17,7 @@ export default async function ManagedEventPage({
 }) {
   const { eventId } = await params;
   const session = await requireServerSession(
-    `/dashboard/events/${encodeURIComponent(eventId)}`,
+    `/events/${encodeURIComponent(eventId)}`,
   );
   const event = await serverPrivateData<Event>(
     `/events/${encodeURIComponent(eventId)}`,

@@ -1,4 +1,5 @@
 "use client";
+import { organizerReturnPath } from "../organizer-routes";
 
 import type { IScannerControls } from "@zxing/browser";
 import { usePathname } from "next/navigation";
@@ -166,6 +167,9 @@ export function AppProvider({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const routerRef = useRef(router);
+  routerRef.current = router;
+  const sessionRestore = useRef<Promise<AuthSession> | null>(null);
   const [events, setEvents] = useState<Event[]>(() => initialEvents);
   const [selectedEventId, setSelectedEventId] = useState(
     () => initialEvents[0]?.id ?? "",
@@ -251,12 +255,13 @@ export function AppProvider({
       setSessionLoaded(true);
       return;
     }
-    void establishServerSession(saved.token)
+    sessionRestore.current ??= establishServerSession(saved.token);
+    void sessionRestore.current
       .then((value) => {
         if (!active) return;
         setSession(value);
         setSessionLoaded(true);
-        router.refresh();
+        routerRef.current.refresh();
       })
       .catch(() => {
         if (!active) return;
@@ -266,7 +271,7 @@ export function AppProvider({
     return () => {
       active = false;
     };
-  }, [initialSession, router]);
+  }, [initialSession]);
 
   useEffect(() => {
     if (typeof window === "undefined" || !sessionLoaded) return;
@@ -343,7 +348,7 @@ export function AppProvider({
   }, [cameraEnabled]);
 
   useEffect(() => {
-    if (pathname === "/dashboard/check-in") return;
+    if (pathname === "/check-in") return;
     setCameraEnabled(false);
   }, [pathname]);
 
@@ -770,7 +775,7 @@ export function AppProvider({
       setAuthConfirmPassword("");
       setAuthState(`Logged in as ${nextSession.user.role}.`);
       const next = new URLSearchParams(window.location.search).get("next");
-      router.push(next?.startsWith("/dashboard/") ? next : "/dashboard");
+      router.push(organizerReturnPath(next));
       router.refresh();
     } catch (error) {
       const fallback = error as { message?: string };

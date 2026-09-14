@@ -45,16 +45,15 @@ export function AppShell({
   }, [pathname]);
   const links = [
     { href: "/", label: "Discover" },
-    { href: "/dashboard/events", label: "Events" },
-    { href: "/dashboard/reports", label: "Reports" },
-    { href: "/dashboard/check-in", label: "Check-in" },
-    { href: "/dashboard/events/new", label: "Create event" },
+    { href: "/events", label: "Events" },
+    { href: "/reports", label: "Reports" },
+    { href: "/check-in", label: "Check-in" },
+    { href: "/events/new", label: "Create event" },
   ];
   const active = (href: string) =>
-    href === "/dashboard/events"
+    href === "/events"
       ? pathname === href ||
-        (pathname.startsWith(href + "/") &&
-          pathname !== "/dashboard/events/new")
+        (pathname.startsWith(href + "/") && pathname !== "/events/new")
       : pathname === href;
   const publicLinks = [
     { href: "/", label: "Discover events" },
@@ -131,10 +130,7 @@ export function AppShell({
                   <p className="mb-4 truncate text-xs text-text-muted">
                     {session.user.email}
                   </p>
-                  <Link
-                    href="/dashboard/events"
-                    className="mb-3 block text-sm text-text"
-                  >
+                  <Link href="/events" className="mb-3 block text-sm text-text">
                     Your events
                   </Link>
                   <div className="mb-3 flex items-center justify-between border-y border-border py-3">

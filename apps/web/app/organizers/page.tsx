@@ -26,7 +26,7 @@ export default function OrganizersPage() {
           options, attendee list and check-in together in one place.
         </p>
         <div className="action-row mt-7">
-          <Link href="/dashboard/events/new" className="button-primary">
+          <Link href="/events/new" className="button-primary">
             Create your event <ArrowRight size={18} />
           </Link>
           <Link href="/help#organizers" className="text-link">
@@ -40,21 +40,21 @@ export default function OrganizersPage() {
             icon: CalendarPlus,
             title: "A page that feels like your event",
             copy: "Set the scene with your artwork and description. Add the venue, date and ticket types, then save a draft until you're ready to publish.",
-            link: "/dashboard/events/new",
+            link: "/events/new",
             label: "Start creating",
           },
           {
             icon: ChartNoAxesCombined,
             title: "Know how your event is doing",
             copy: "Keep your events organized, review ticket activity and see sales reports from your workspace. Open an event to manage its ticket options and attendees.",
-            link: "/dashboard/reports",
+            link: "/reports",
             label: "Explore your reports",
           },
           {
             icon: ScanLine,
             title: "A warmer welcome at the door",
             copy: "Scan a guest's QR ticket or enter its code to check admission. See the verification result before admitting your guest.",
-            link: "/dashboard/check-in",
+            link: "/check-in",
             label: "Open check-in",
           },
         ].map(({ icon: Icon, title, copy, link, label }) => (

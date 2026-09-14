@@ -53,7 +53,7 @@ export function CreateEventForm({
     try {
       const created = event ? await publishEvent(event) : await saveDraft();
       if (created) {
-        router.replace(`/dashboard/events/${created.id}`);
+        router.replace(`/events/${created.id}`);
         router.refresh();
       }
     } finally {

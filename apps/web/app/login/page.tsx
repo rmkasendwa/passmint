@@ -1,3 +1,4 @@
+import { organizerReturnPath } from "../../organizer-routes";
 import { getServerSession } from "../../server-session";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
@@ -15,7 +16,7 @@ export default async function LoginPage({
 }) {
   if (await getServerSession()) {
     const next = (await searchParams).next;
-    redirect(next?.startsWith("/dashboard/") ? next : "/dashboard");
+    redirect(organizerReturnPath(next));
   }
   return (
     <AuthFrame

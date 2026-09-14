@@ -111,7 +111,7 @@ export function DashboardWorkbench({
           </p>
         </div>
         {view !== "create" && (
-          <Link className={primaryAction} href="/dashboard/events/new">
+          <Link className={primaryAction} href="/events/new">
             <Plus size={18} /> Create event
           </Link>
         )}
@@ -322,7 +322,7 @@ export function DashboardWorkbench({
                       get ready to welcome your guests.
                     </p>
                   </div>
-                  <Link className={primaryAction} href="/dashboard/events/new">
+                  <Link className={primaryAction} href="/events/new">
                     Create your first event <ArrowRight size={17} />
                   </Link>
                   <span className="text-xs text-text-soft">
@@ -389,7 +389,7 @@ export function DashboardWorkbench({
                         </p>
                         <a
                           className={secondaryAction}
-                          href={`/dashboard/events/${event.id}`}
+                          href={`/events/${event.id}`}
                         >
                           Manage event
                         </a>
