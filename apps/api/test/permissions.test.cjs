@@ -142,7 +142,7 @@ test('HTTP attendee lists are scoped, searchable and omit ticket credentials', a
     assert.equal(result.status, 200);
     assert.equal(result.body.attendees.length, 3);
     assert.equal(result.body.hasMore, false);
-    for (const row of result.body.attendees) assert.deepEqual(Object.keys(row).sort(), ['id', 'buyerName', 'buyerEmail', 'ticketTypeName', 'status', 'createdAt', 'checkedInAt'].sort());
+    for (const row of result.body.attendees) assert.deepEqual(Object.keys(row).sort(), ['id', 'buyerName', 'buyerEmail', 'seatLabel', 'ticketTypeName', 'status', 'createdAt', 'checkedInAt'].sort());
     assert.ok(!JSON.stringify(result.body).includes('foreign@example.com'));
     assert.deepEqual(result.body.attendees.map(row => row.status).sort(), ['cancelled', 'checked_in', 'issued']);
   }

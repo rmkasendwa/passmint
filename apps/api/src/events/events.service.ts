@@ -1,3 +1,4 @@
+import { bookingSamples } from "./booking-samples";
 import { validateBooking, seatLabels, Booking } from "../common/booking";
 import {
   Injectable,
@@ -182,6 +183,15 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
     this.publicationTimer = setInterval(() => { void this.publishDue().catch(() => this.logger.error("Scheduled publication failed; retrying on the next tick.")); }, 30_000);
     this.publicationTimer.unref();
     if (process.env.NODE_ENV === 'production' && process.env.SEED_DEMO_DATA !== 'true') return;
+    for (const sample of bookingSamples) {
+      const exists = await this.prisma.event.findUnique({where:{id:sample.id}});
+      if (exists) continue;
+      const {types, occupied, booking, ...details} = sample;
+      await this.prisma.event.create({data:{...details,booking:booking as unknown as Prisma.InputJsonValue,
+        ticketTypes:{create:types.map((type,index)=>({...type,id:`${sample.id}_type_${index}`,maxPerOrder:10}))},
+        tickets:{create:occupied.map((seat,index)=>({id:`${sample.id}_ticket_${index}`,code:`${sample.id}_code_${index}`,buyerName:'Sample guest',buyerEmail:'sample@example.test',seatLabel:seat,ticketTypeName:types[0].name,unitPriceCents:types[0].priceCents,ticketType:{connect:{id:`${sample.id}_type_0`}}}))},
+      }});
+    }
     const seededNames = seedEvents.map((event) => event.name);
     const existingEvents = await this.prisma.event.findMany({
       select: { id: true, name: true, thumbnailUrl: true, mapLocation: true },
@@ -389,7 +399,7 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
         { buyerName: { contains: search, mode: "insensitive" as const } },
         { buyerEmail: { contains: search, mode: "insensitive" as const } },
       ] } : {}) },
-      select: { id: true, buyerName: true, buyerEmail: true, ticketTypeName: true, status: true, createdAt: true, checkedInAt: true },
+      select: { id: true, buyerName: true, buyerEmail: true, seatLabel: true, ticketTypeName: true, status: true, createdAt: true, checkedInAt: true },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       skip: (page - 1) * pageSize,
       take: pageSize + 1,

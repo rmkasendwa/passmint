@@ -15,6 +15,7 @@ const groups = [
     title: "Make it happen",
     links: [
       ["For organizers", "/organizers"],
+      ["Booking samples", "/samples"],
       ["Create an event", "/events/new"],
       ["Manage events", "/events"],
       ["Event reports", "/reports"],
