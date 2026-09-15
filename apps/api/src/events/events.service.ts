@@ -1,3 +1,4 @@
+import { validateBooking, seatLabels, Booking } from "../common/booking";
 import {
   Injectable,
   ForbiddenException,
@@ -274,7 +275,8 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
     });
     if (!event) throw new NotFoundException("Event not found");
     if (event.status === "draft" && event.ownerId !== authUser?.id) throw new NotFoundException("Event not found");
-    return this.toEventResponse(event);
+    const occupied = await this.prisma.ticket.findMany({where:{eventId:id,status:{not:"cancelled"},seatLabel:{not:null}},select:{seatLabel:true}});
+    return {...this.toEventResponse(event), occupiedSeats: occupied.map(ticket => ticket.seatLabel)};
   }
 
   async findOneWithOwner(id: string) {
@@ -395,11 +397,25 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
     return { attendees: attendees.slice(0, pageSize), page, pageSize, hasMore: attendees.length > pageSize };
   }
 
+  private creationOptions(dto: CreateEventDto | UpdateEventDto) {
+    const booking = validateBooking(dto.booking);
+    const types = dto.ticketTypes ?? [];
+    if (new Set(types.map(t => t.name.trim().toLowerCase())).size !== types.length) throw new BadRequestException("Ticket category names must be unique.");
+    for (const type of types) if (type.salesStart && type.salesEnd && type.salesStart >= type.salesEnd) throw new BadRequestException("Ticket sales must end after they start.");
+    return {
+      booking: booking ? booking as unknown as Prisma.InputJsonValue : Prisma.DbNull,
+      ...(booking?.seating ? {capacity: seatLabels(booking).length} : {}),
+      ...(types.length ? {priceCents: Math.min(...types.map(t => t.priceCents)), ticketTypes: {create: types.map(type => ({...type, id: prefixedId("typ")}))}} : {}),
+    };
+  }
+
   async create(dto: CreateEventDto, authUser: AuthUser) {
     const event = await this.prisma.event.create({
       data: {
         id: prefixedId("evt"),
         ...dto,
+        ticketTypes: undefined,
+        ...this.creationOptions(dto),
         ownerId: authUser.id,
       },
       include: { owner: true },
@@ -413,6 +429,7 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
       id: prefixedId("evt"), name: dto.name ?? "", description: dto.description ?? "", venue: dto.venue ?? "",
       startsAt: dto.startsAt ?? new Date(0), priceCents: dto.priceCents ?? 0,
       capacity: dto.capacity ?? null, thumbnailUrl: dto.thumbnailUrl, mapLocation: dto.mapLocation,
+      ...this.creationOptions(dto),
       ownerId: authUser.id, status: "draft",
     } });
     return this.toEventResponse(draft);
@@ -433,6 +450,7 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
         id: prefixedId("evt"), ownerId: user.id, status: "draft",
         name: source.name, description: source.description, venue: source.venue,
         mapLocation: source.mapLocation, startsAt, capacity: source.capacity,
+        booking: source.booking ?? Prisma.DbNull,
         priceCents: source.priceCents, thumbnailUrl: source.thumbnailUrl,
         ticketTypes: { create: source.ticketTypes.map(type => ({
           id: prefixedId("typ"), name: type.name, priceCents: type.priceCents,
@@ -489,9 +507,16 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
             "Capacity cannot be lower than the number of active tickets.",
           );
       }
+      if (dto.ticketTypes) throw new BadRequestException("Use the ticket category editor for existing events.");
+      const booking = validateBooking(dto.booking === undefined ? current.booking : dto.booking);
+      if (dto.booking !== undefined && JSON.stringify(booking) !== JSON.stringify(current.booking)) {
+        const issued = await tx.ticket.count({where:{eventId:id}});
+        if (issued) throw new BadRequestException("Format and seating cannot change after tickets have been issued. Duplicate the event to use a new layout.");
+      }
+      const { ticketTypes, booking: rawBooking, ...fields } = dto;
       return tx.event.update({
         where: { id },
-        data: { ...dto, ...(dto.status === "published" ? { publishAt: null } : {}) },
+        data: { ...fields, ...(rawBooking !== undefined ? {booking: booking ? booking as unknown as Prisma.InputJsonValue : Prisma.DbNull} : {}), ...(booking?.seating ? {capacity: seatLabels(booking).length} : {}), ...(dto.status === "published" ? { publishAt: null } : {}) },
         include: {
           owner: true,
           _count: {

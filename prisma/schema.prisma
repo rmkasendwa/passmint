@@ -37,6 +37,7 @@ model User {
 }
 
 model Event {
+  booking Json?
   ticketTypes  TicketType[]
   status       String   @default("published") @db.VarChar
   cancelledAt  DateTime? @db.Timestamptz(6)
@@ -60,6 +61,7 @@ model Event {
 }
 
 model Ticket {
+  seatLabel String? @db.VarChar
   activities TicketActivity[]
   ticketTypeId String? @db.VarChar
   ticketType   TicketType? @relation(fields: [ticketTypeId], references: [id])

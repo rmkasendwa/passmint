@@ -10,6 +10,7 @@ function toPublicEvent(ticket: TicketWithEvent) {
   }
 
   return {
+    booking: ticket.event.booking,
     id: ticket.event.id,
     status: ticket.event.status,
     name: ticket.event.name,
@@ -31,6 +32,7 @@ export async function toTicketResponse(ticket: TicketWithEvent) {
   });
 
   return {
+    seatLabel: ticket.seatLabel,
     id: ticket.id,
     ticketTypeId: ticket.ticketTypeId,
     ticketTypeName: ticket.ticketTypeName,

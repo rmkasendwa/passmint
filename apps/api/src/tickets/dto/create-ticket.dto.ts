@@ -1,3 +1,4 @@
+import { IsArray, ArrayMaxSize, ArrayUnique } from "class-validator";
 import { Type } from "class-transformer";
 import {
   IsBoolean,
@@ -11,6 +12,13 @@ import {
 } from "class-validator";
 
 export class CreateTicketDto {
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(100)
+  @ArrayUnique()
+  @IsString({ each: true })
+  seatLabels?: string[];
+
   @IsOptional()
   @IsString()
   ticketTypeId?: string;

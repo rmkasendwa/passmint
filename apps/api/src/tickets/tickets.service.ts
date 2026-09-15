@@ -1,3 +1,4 @@
+import { validateBooking, validateSeatSelection } from "../common/booking";
 import {
   BadRequestException,
   ConflictException,
@@ -38,6 +39,9 @@ export class TicketsService {
       if (!event) throw new NotFoundException("Event not found");
       if (event.status === "draft") throw new NotFoundException("Event not found");
       if (event.status === "cancelled") throw new BadRequestException("This event has been cancelled. Ticket sales are closed.");
+      const booking = validateBooking(event.booking);
+      const occupied = booking?.seating ? await tx.ticket.findMany({where:{eventId:event.id,status:{not:TicketStatus.Cancelled},seatLabel:{not:null}},select:{seatLabel:true}}) : [];
+      validateSeatSelection(booking, dto.seatLabels, quantity, occupied.map(ticket => ticket.seatLabel!));
       const types = await tx.ticketType.findMany({ where: { eventId: event.id } });
       const type = dto.ticketTypeId ? types.find(type => type.id === dto.ticketTypeId) : undefined;
       if ((types.length > 0 && !type) || (dto.ticketTypeId && !type)) throw new BadRequestException("Choose a valid ticket category for this event.");
@@ -77,11 +81,12 @@ export class TicketsService {
       }
 
       return Promise.all(
-        Array.from({ length: quantity }, () =>
+        Array.from({ length: quantity }, (_, index) =>
           tx.ticket.create({
             data: {
               id: prefixedId("tkt"),
               eventId: event.id,
+              seatLabel: dto.seatLabels?.[index],
               ticketTypeId: type?.id,
               ticketTypeName: type?.name ?? "General admission",
               unitPriceCents: type?.priceCents ?? event.priceCents,

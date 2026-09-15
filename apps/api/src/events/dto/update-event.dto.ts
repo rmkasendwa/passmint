@@ -1,3 +1,5 @@
+import { IsObject, IsArray, ArrayMaxSize, ValidateNested } from "class-validator";
+import { TicketTypeDto } from "./ticket-type.dto";
 import { Type } from "class-transformer";
 import {
   IsDate,
@@ -11,6 +13,17 @@ import {
 } from "class-validator";
 
 export class UpdateEventDto {
+  @IsOptional()
+  @IsObject()
+  booking?: Record<string, any> | null;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(20)
+  @ValidateNested({ each: true })
+  @Type(() => TicketTypeDto)
+  ticketTypes?: TicketTypeDto[];
+
   @IsOptional()
   @Type(() => Date)
   @IsDate()
