@@ -12,6 +12,7 @@ import {
   Ticket as TicketIcon,
 } from "lucide-react";
 import Link from "next/link";
+import { MobileNavigationDrawer } from "./mobile-navigation-drawer";
 import { AccountPopover } from "./account-popover";
 import { SiteFooter } from "./site-footer";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -39,6 +40,12 @@ export function AppShell({
   themePreference: ThemePreference;
 }) {
   const pathname = usePathname();
+  const isAuthPage = [
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/reset-password",
+  ].includes(pathname);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
   useEffect(() => {
@@ -173,7 +180,7 @@ export function AppShell({
                 aria-expanded={menuOpen}
                 aria-controls="mobile-navigation"
                 onClick={() => setMenuOpen((value) => !value)}
-                className="mobile-menu-button"
+                className="grid size-11 place-items-center rounded-lg text-text hover:bg-surface-muted min-[900px]:hidden"
               >
                 {menuOpen ? <X size={21} /> : <Menu size={21} />}
               </button>
@@ -183,28 +190,20 @@ export function AppShell({
                   onChange={setThemePreference}
                 />
               </span>
-              <button
-                type="button"
-                className="inline-flex min-h-9.5 items-center justify-center gap-2 whitespace-nowrap border-0 bg-transparent px-2 text-[0.9rem] font-(--weight-semibold) text-text-muted hover:text-text max-[820px]:flex-1"
-                onClick={() => openAuth("login")}
-              >
-                Sign in
-              </button>
+              {!isAuthPage && (
+                <button
+                  type="button"
+                  className="inline-flex min-h-9.5 items-center justify-center gap-2 whitespace-nowrap border-0 bg-transparent px-2 text-[0.9rem] font-(--weight-semibold) text-text-muted hover:text-text max-[820px]:flex-1"
+                  onClick={() => openAuth("login")}
+                >
+                  Sign in
+                </button>
+              )}
             </div>
           )}
         </div>
         {menuOpen && (
-          <nav
-            id="mobile-navigation"
-            aria-label="Mobile navigation"
-            onKeyDown={(event) => {
-              if (event.key === "Escape") {
-                setMenuOpen(false);
-                menuButton.current?.focus();
-              }
-            }}
-            className="grid gap-1 border-t border-border px-4 py-3 min-[900px]:hidden"
-          >
+          <MobileNavigationDrawer onClose={() => setMenuOpen(false)}>
             {navigationLinks}
             {createEventAction}
             {!session && (
@@ -216,7 +215,7 @@ export function AppShell({
                 />
               </div>
             )}
-          </nav>
+          </MobileNavigationDrawer>
         )}
       </header>
       <main id="main-content" tabIndex={-1} className="min-w-0 flex-1">

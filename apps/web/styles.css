@@ -3679,3 +3679,33 @@ svg {
 .app-shell:has(.event-create-page) > .site-footer {
   margin-top: 0;
 }
+
+.mobile-navigation-drawer {
+  position: fixed;
+  inset: 0 0 0 auto;
+  margin: 0;
+  width: min(360px, 90vw);
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  padding: 20px;
+  border: 0;
+  border-left: 1px solid var(--border);
+  background: var(--surface-raised);
+  color: var(--text);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  box-shadow: -16px 0 48px rgb(0 0 0 / 20%);
+}
+.mobile-navigation-drawer::backdrop {
+  background: rgb(0 0 0 / 55%);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .mobile-navigation-drawer[open] {
+    animation: navigation-drawer-in 180ms ease-out;
+  }
+  @keyframes navigation-drawer-in {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+}
