@@ -103,6 +103,8 @@ html[data-theme="light"] {
 }
 
 html {
+  /* Keep the page width unchanged when a modal locks body scrolling. */
+  scrollbar-gutter: stable;
   scroll-behavior: smooth;
 }
 
