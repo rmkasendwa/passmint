@@ -26,7 +26,7 @@ ENV NEXT_PUBLIC_API_URL=/api
 ENV WEB_PORT=8088
 ENV LOCAL_UPLOAD_DIR=/app/uploads
 # Keep the locked toolchain/Prisma CLI for an explicit, operator-run schema setup.
-# Schema setup at startup requires explicit opt-in and an empty database schema.
+# Startup initializes empty schemas by default; existing tables are never synchronized.
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=build /app/apps/web/node_modules ./apps/web/node_modules

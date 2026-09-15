@@ -44,7 +44,7 @@ async function startApp() {
   docker(['run', '-d', '--init', '--name', app, '--network', network,
     '-p', '127.0.0.1::8088', '-v', `${volume}:/app/uploads`,
     '-e', `DATABASE_URL=${databaseUrl}`, '-e', `AUTH_SECRET=${authSecret}`,
-    ...(initializeAtStartup ? ['-e', 'INITIALIZE_DATABASE=true'] : []), image]);
+    ...(initializeAtStartup ? [] : ['-e', 'INITIALIZE_DATABASE=false']), image]);
   resources.app = true;
   await waitFor(() => {
     const ports = JSON.parse(docker(['inspect', '--format', '{{json .NetworkSettings.Ports}}', app]));

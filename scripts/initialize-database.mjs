@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { spawn } from 'node:child_process';
 import { resolve } from 'node:path';
 
-// Opt-in first deployment only. Never apply schema changes to retained tables.
+// Automatically initialize an empty schema on first deployment. Never apply schema changes to retained tables.
 export async function initializeEmptyDatabase() {
   const prisma = new PrismaClient();
   try {

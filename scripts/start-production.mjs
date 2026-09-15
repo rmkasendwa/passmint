@@ -13,7 +13,7 @@ const webPort = process.env.PORT ?? process.env.WEB_PORT ?? '8088';
 if (!/^\d+$/.test(webPort) || Number(webPort) < 1 || Number(webPort) > 65535 || Number(webPort) === 3000) {
   throw new Error('Web PORT must be 1–65535 and different from the internal API port 3000');
 }
-if (process.env.INITIALIZE_DATABASE === 'true') {
+if (process.env.INITIALIZE_DATABASE !== 'false') {
   const { initializeEmptyDatabase } = await import('./initialize-database.mjs');
   await initializeEmptyDatabase();
 }

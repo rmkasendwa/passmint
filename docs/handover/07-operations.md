@@ -20,7 +20,7 @@ Never place real values in this document. [`.env.example`](../../.env.example) c
 | `NEXT_PUBLIC_API_URL`, `API_INTERNAL_URL` | Browser API address (image builds `/api`) and internal server fetch address (loopback in image) |
 | `CORS_ORIGIN` | Allowed browser origin; default local web origin; Compose app currently sets localhost explicitly |
 | `AUTH_SECRET` | HMAC token signing secret; must replace development fallback |
-| `INITIALIZE_DATABASE` | Explicit first-deploy opt-in; initializes only an empty schema, skips existing tables; turn off after initial deployment |
+| `INITIALIZE_DATABASE` | Initializes an empty schema automatically, skips existing tables; set false to manage schema setup separately |
 | `SEED_DEMO_DATA` | Production seeding is disabled unless explicitly set to `true` |
 | `ADMIN_EMAILS` | Comma-separated email list assigning platform-admin role at registration; privileged configuration |
 | `MINIO_API_PORT`, `MINIO_CONSOLE_PORT`, `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD` | Local storage service and administrative credentials |
