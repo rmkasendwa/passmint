@@ -275,7 +275,10 @@ export function EventDetail({
   const isDraft = displayEvent.status === "draft";
   const cancelled = displayEvent.status === "cancelled";
   const salesClosed = cancelled || isDraft;
-  const ticketTotalCents = unitPrice * quantity;
+  const checkoutQuantity = displayEvent.booking?.seating
+    ? selectedSeats.length
+    : quantity;
+  const ticketTotalCents = unitPrice * checkoutQuantity;
   const startsAt = new Date(displayEvent.startsAt);
   const mapQuery = displayEvent.mapLocation || displayEvent.venue;
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`;
@@ -1061,7 +1064,11 @@ export function EventDetail({
               <h2 className="mb-0 text-[1.55rem]">
                 {session
                   ? `Buying as ${session.user.name}`
-                  : displayEvent.booking?.kind === "bus" ? "Book your journey" : displayEvent.booking?.kind === "cinema" ? "Book your screening" : "Reserve your spot"}
+                  : displayEvent.booking?.kind === "bus"
+                    ? "Book your journey"
+                    : displayEvent.booking?.kind === "cinema"
+                      ? "Book your screening"
+                      : "Reserve your spot"}
               </h2>
             </div>
             {!session && (
@@ -1126,39 +1133,43 @@ export function EventDetail({
               </div>
             </div>
             {Boolean(displayEvent.ticketTypes?.length) && (
-              <label className="grid gap-2">
-                Ticket category
-                <select
-                  className="rounded-lg border border-border bg-surface-muted p-3 text-text"
-                  value={selectedTicketTypeId}
-                  onChange={(e) => {
-                    setSelectedTicketTypeId(e.target.value);
-                    setQuantity(1);
-                    setSelectedSeats([]);
-                  }}
-                >
-                  <option value="">Choose a category</option>
-                  {displayEvent.ticketTypes?.map((type) => {
-                    const state = ticketSalesState(
-                      displayEvent,
-                      type,
-                      salesNow,
-                    );
-                    return (
-                      <option
-                        key={type.id}
-                        value={type.id}
-                        disabled={state !== "available"}
-                      >
-                        {type.name} — {money.format(type.priceCents / 100)}
+              <div
+                className="grid gap-2"
+                role="group"
+                aria-label="Ticket category"
+              >
+                {displayEvent.ticketTypes?.map((type) => {
+                  const state = ticketSalesState(displayEvent, type, salesNow);
+                  return (
+                    <button
+                      key={type.id}
+                      type="button"
+                      aria-pressed={selectedTicketTypeId === type.id}
+                      disabled={state !== "available"}
+                      onClick={() => {
+                        setSelectedTicketTypeId(type.id);
+                        setQuantity(1);
+                        setSelectedSeats([]);
+                      }}
+                      className={`grid gap-1 rounded-xl border p-4 text-left disabled:opacity-50 ${selectedTicketTypeId === type.id ? "border-accent bg-accent-soft" : "border-border bg-surface-muted hover:border-border-strong"}`}
+                    >
+                      <span className="flex justify-between gap-3">
+                        <strong>{type.name}</strong>
+                        <strong className="text-accent">
+                          {money.format(type.priceCents / 100)}
+                        </strong>
+                      </span>
+                      <span className="text-xs text-text-muted">
                         {state === "available"
-                          ? ""
-                          : ` (${salesStateLabels[state]})`}
-                      </option>
-                    );
-                  })}
-                </select>
-              </label>
+                          ? type.remainingCapacity == null
+                            ? "Available"
+                            : `${type.remainingCapacity} remaining`
+                          : salesStateLabels[state]}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             )}
             {selectedType && (
               <p role="status" className="m-0 text-text-muted">
@@ -1266,7 +1277,7 @@ export function EventDetail({
                   </strong>
                 </div>
                 <span className="text-[0.9rem] text-text-muted">
-                  {quantity.toLocaleString("en-UG")} x{" "}
+                  {checkoutQuantity.toLocaleString("en-UG")} x{" "}
                   {money.format(unitPrice / 100)}
                 </span>
                 <span className="text-[0.9rem] text-text-muted">
