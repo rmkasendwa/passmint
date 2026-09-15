@@ -1,20 +1,37 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 export function MobileNavigationDrawer({
   children,
+  open,
   onClose,
 }: {
   children: ReactNode;
+  open: boolean;
   onClose: () => void;
 }) {
+  const [present, setPresent] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
   const close = useRef(onClose);
   close.current = onClose;
   useEffect(() => {
+    if (open) {
+      setPresent(true);
+      return;
+    }
+    if (!present) return;
+    const duration = window.matchMedia("(prefers-reduced-motion: reduce)")
+      .matches
+      ? 0
+      : 220;
+    const timeout = window.setTimeout(() => setPresent(false), duration);
+    return () => window.clearTimeout(timeout);
+  }, [open, present]);
+  useEffect(() => {
+    if (!present) return;
     const previous = document.activeElement as HTMLElement | null;
     const overflow = document.body.style.overflow;
     const desktop = window.matchMedia("(min-width: 900px)");
@@ -30,13 +47,15 @@ export function MobileNavigationDrawer({
       document.body.style.overflow = overflow;
       if (previous?.isConnected) previous.focus({ preventScroll: true });
     };
-  }, []);
+  }, [present]);
+  if (!present) return null;
   return createPortal(
     <dialog
       ref={dialog}
       id="mobile-navigation"
       aria-labelledby="mobile-navigation-title"
       className="mobile-navigation-drawer"
+      data-closing={!open || undefined}
       onCancel={(event) => {
         event.preventDefault();
         onClose();

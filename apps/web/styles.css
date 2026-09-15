@@ -3682,7 +3682,8 @@ svg {
 
 .mobile-navigation-drawer {
   position: fixed;
-  inset: 0 0 0 auto;
+  /* Viewport units include the reserved root scrollbar gutter. */
+  inset: 0 auto 0 calc(100vw - min(360px, 90vw));
   margin: 0;
   width: min(360px, 90vw);
   height: 100dvh;
@@ -3705,7 +3706,47 @@ svg {
     animation: navigation-drawer-in 180ms ease-out;
   }
   @keyframes navigation-drawer-in {
-    from { transform: translateX(100%); }
-    to { transform: translateX(0); }
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .mobile-navigation-drawer[open]::backdrop {
+    animation: navigation-backdrop-in 180ms ease-out;
+  }
+  .mobile-navigation-drawer[open][data-closing] {
+    animation: navigation-drawer-out 220ms ease-in forwards;
+  }
+  .mobile-navigation-drawer[open][data-closing]::backdrop {
+    animation: navigation-backdrop-out 220ms ease-in forwards;
+  }
+  @keyframes navigation-drawer-out {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes navigation-backdrop-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes navigation-backdrop-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
   }
 }

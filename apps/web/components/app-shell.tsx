@@ -202,21 +202,22 @@ export function AppShell({
             </div>
           )}
         </div>
-        {menuOpen && (
-          <MobileNavigationDrawer onClose={() => setMenuOpen(false)}>
-            {navigationLinks}
-            {createEventAction}
-            {!session && (
-              <div className="flex items-center justify-between px-3 py-2 text-sm text-text-muted">
-                <span>Appearance</span>
-                <ThemeToggle
-                  preference={themePreference}
-                  onChange={setThemePreference}
-                />
-              </div>
-            )}
-          </MobileNavigationDrawer>
-        )}
+        <MobileNavigationDrawer
+          open={menuOpen}
+          onClose={() => setMenuOpen(false)}
+        >
+          {navigationLinks}
+          {createEventAction}
+          {!session && (
+            <div className="flex items-center justify-between px-3 py-2 text-sm text-text-muted">
+              <span>Appearance</span>
+              <ThemeToggle
+                preference={themePreference}
+                onChange={setThemePreference}
+              />
+            </div>
+          )}
+        </MobileNavigationDrawer>
       </header>
       <main id="main-content" tabIndex={-1} className="min-w-0 flex-1">
         {children}
