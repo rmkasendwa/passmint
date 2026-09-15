@@ -26,7 +26,12 @@ export function EventAttendees({
   const [loading, setLoading] = useState(!initialData);
   useEffect(() => {
     let active = true;
-    if (query.refresh || query.page !== data?.page || query.search || !initialData) {
+    if (
+      query.refresh ||
+      query.page !== data?.page ||
+      query.search ||
+      !initialData
+    ) {
       setLoading(true);
       setData(null);
     }
@@ -161,6 +166,9 @@ export function EventAttendees({
                       </td>
                       <td className="border-b border-border p-3">
                         {attendee.ticketTypeName}
+                        {attendee.seatLabel
+                          ? ` · Seat ${attendee.seatLabel}`
+                          : ""}
                       </td>
                       <td className="border-b border-border p-3">
                         {labels[attendee.status]}

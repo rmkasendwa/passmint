@@ -472,6 +472,8 @@ export function DashboardWorkbench({
                     </strong>
                     <span className="wrap-break-word">
                       {gateResult.ticket?.buyerName ?? gateResult.message}
+                      {gateResult.ticket?.seatLabel &&
+                        ` · Seat ${gateResult.ticket.seatLabel}`}
                       {gateResult.ticket?.ticketTypeName &&
                         ` · ${gateResult.ticket.ticketTypeName}`}
                     </span>

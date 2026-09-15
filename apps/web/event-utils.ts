@@ -1,5 +1,8 @@
+import type { Booking } from "./booking";
+import type { InitialTicketType } from "./api";
 import {
   Clapperboard,
+  Bus,
   Compass,
   Drama,
   Dumbbell,
@@ -19,12 +22,15 @@ export const categories = [
   { label: "Sports", query: "sports", icon: Trophy },
   { label: "Theatre", query: "theatre", icon: Drama },
   { label: "Conferences", query: "conference", icon: Mic2 },
+  { label: "Bus journeys", query: "bus", icon: Bus },
   { label: "Cinema", query: "cinema", icon: Clapperboard },
   { label: "Wellness", query: "wellness", icon: Dumbbell },
   { label: "Community", query: "community", icon: Users },
 ];
 
 export const emptyHostEvent = {
+  booking: { kind: "event" } as Booking,
+  ticketTypes: [] as InitialTicketType[],
   name: "",
   description: "",
   venue: "",

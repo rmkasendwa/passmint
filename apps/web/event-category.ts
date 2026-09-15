@@ -19,7 +19,11 @@ const rules: [string, RegExp][] = [
   ["Music", /\b(music|concert|band|jazz|gig|festival)\b/i],
 ];
 
-export function eventCategory(event: Pick<Event, "name" | "description">) {
+export function eventCategory(
+  event: Pick<Event, "name" | "description" | "booking">,
+) {
+  if (event.booking?.kind === "bus") return "Bus";
+  if (event.booking?.kind === "cinema") return "Cinema";
   return (
     rules.find(([, pattern]) => pattern.test(event.name))?.[0] ??
     rules.find(([, pattern]) => pattern.test(event.description))?.[0] ??

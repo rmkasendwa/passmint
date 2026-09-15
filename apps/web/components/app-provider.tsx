@@ -76,6 +76,8 @@ type AppContextValue = {
   saveDraft: () => Promise<Event | undefined>;
   buyTickets: (event: FormEvent<HTMLFormElement>) => Promise<void>;
   query: string;
+  selectedSeats: string[];
+  setSelectedSeats: Dispatch<SetStateAction<string[]>>;
   quantity: number;
   resetConfirmPassword: string;
   resetEmail: string;
@@ -113,9 +115,9 @@ type AppContextValue = {
   ticketHistory: Ticket[];
   ticketHistoryLoaded: boolean;
   tickets: Ticket[];
-  updateHostEvent: (
-    key: keyof HostEvent,
-    value: string | number | null,
+  updateHostEvent: <K extends keyof HostEvent>(
+    key: K,
+    value: HostEvent[K],
   ) => void;
   videoRef: RefObject<HTMLVideoElement>;
   visibleCalendarDays: Date[];
@@ -177,6 +179,7 @@ export function AppProvider({
   const [buyerName, setBuyerName] = useState("");
   const [buyerEmail, setBuyerEmail] = useState("");
   const [mobileMoneyNumber, setMobileMoneyNumber] = useState("");
+  const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [quantity, setQuantity] = useState(1);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [selectedTicketTypeId, setSelectedTicketTypeId] = useState("");
@@ -491,12 +494,14 @@ export function AppProvider({
         buyerName,
         buyerEmail,
         quantity,
+        ...(selectedSeats.length ? { seatLabels: selectedSeats } : {}),
         ...(mobileMoneyNumber ? { mobileMoneyNumber } : {}),
         ...(confirmAdditional ? { confirmAdditional: true } : {}),
       },
       session?.token,
     );
     setTickets(created);
+    setSelectedSeats([]);
     const latest = await api
       .getEvent(selectedEventId, session?.token)
       .catch(() => null);
@@ -584,14 +589,15 @@ export function AppProvider({
     if (eventId !== selectedEventId) {
       setSelectedTicketTypeId("");
       setQuantity(1);
+      setSelectedSeats([]);
     }
     setSelectedEventId(eventId);
     setPurchaseState("");
   }
 
-  function updateHostEvent(
-    key: keyof HostEvent,
-    value: string | number | null,
+  function updateHostEvent<K extends keyof HostEvent>(
+    key: K,
+    value: HostEvent[K],
   ) {
     setHostEvent((current) => ({ ...current, [key]: value }));
   }
@@ -674,6 +680,8 @@ export function AppProvider({
 
       const created = await api.createEvent(
         {
+          booking: hostEvent.booking,
+          ticketTypes: hostEvent.ticketTypes,
           name: hostEvent.name,
           description: hostEvent.description,
           venue: hostEvent.venue,
@@ -855,6 +863,8 @@ export function AppProvider({
     saveDraft,
     buyTickets,
     query,
+    selectedSeats,
+    setSelectedSeats,
     quantity,
     resetConfirmPassword,
     resetEmail,

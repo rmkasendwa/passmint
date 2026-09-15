@@ -11,7 +11,7 @@ export function filterEvents(
 
   return events.filter((event) => {
     const haystack =
-      `${event.name} ${event.description} ${event.venue}`.toLowerCase();
+      `${event.name} ${event.description} ${event.venue} ${event.booking?.destination ?? ""} ${event.booking?.service ?? ""}`.toLowerCase();
     const matchesQuery = normalizedQuery
       ? haystack.includes(normalizedQuery) ||
         eventCategory(event).toLowerCase() === normalizedQuery

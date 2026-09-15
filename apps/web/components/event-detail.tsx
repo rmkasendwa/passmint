@@ -33,6 +33,9 @@ import {
   useInlineFormValidation,
 } from "./form-validation";
 import { PhoneNumberInput } from "./phone-number-input";
+import { SeatMap } from "./seat-map";
+import { BookingManager } from "./booking-manager";
+import { formatLabels } from "../booking";
 import { TicketTypeManager } from "./ticket-type-manager";
 import { EventAttendees } from "./event-attendees";
 import { EventScanMetrics } from "./scan-metrics";
@@ -124,6 +127,8 @@ export function EventDetail({
     mobileMoneyNumber,
     openAuth,
     purchaseState,
+    selectedSeats,
+    setSelectedSeats,
     quantity,
     session,
     selectedTicketTypeId,
@@ -170,6 +175,7 @@ export function EventDetail({
 
   useEffect(() => {
     chooseEvent(event.id);
+    setSelectedSeats([]);
   }, [event.id]);
 
   useEffect(() => {
@@ -547,7 +553,7 @@ export function EventDetail({
               <Users size={16} />
               {displayEvent.capacity?.toLocaleString("en-UG") ??
                 "Unlimited"}{" "}
-              total spots
+              {displayEvent.booking?.seating ? "total seats" : "total spots"}
             </span>
           </div>
         </div>
@@ -708,7 +714,7 @@ export function EventDetail({
                 ],
                 [
                   "Arrive on time",
-                  `Doors are based around the ${eventTime.format(startsAt)} start time.`,
+                  `{displayEvent.booking?.kind === "bus" ? "Departure is at" : displayEvent.booking?.kind === "cinema" ? "The screening starts at" : "Doors are based around the"} ${eventTime.format(startsAt)} start time.`,
                 ],
                 [
                   "Check the venue",
@@ -986,13 +992,20 @@ export function EventDetail({
             <EventDuplicate eventId={displayEvent.id} token={session.token} />
           )}
           {ownedBySession && session && !cancelled && (
-            <TicketTypeManager
-              event={displayEvent}
-              token={session.token}
-              onSaved={async () =>
-                setDisplayEvent(await api.getEvent(event.id, session.token))
-              }
-            />
+            <>
+              <BookingManager
+                event={displayEvent}
+                token={session.token}
+                onSaved={setDisplayEvent}
+              />
+              <TicketTypeManager
+                event={displayEvent}
+                token={session.token}
+                onSaved={async () =>
+                  setDisplayEvent(await api.getEvent(event.id, session.token))
+                }
+              />
+            </>
           )}
           <section className={panelPadded}>
             <div className="flex items-center gap-2.5 text-text [&_svg]:text-accent">
@@ -1022,8 +1035,11 @@ export function EventDetail({
                         {ticket.buyerName}
                       </h3>
                       <p className="mb-2 text-text-muted">
-                        {ticket.ticketTypeName ?? "General admission"} ·{" "}
-                        {ticket.status.replace("_", " ")}
+                        {ticket.ticketTypeName ?? "General admission"}
+                        {ticket.seatLabel
+                          ? ` · Seat ${ticket.seatLabel}`
+                          : ""}{" "}
+                        · {ticket.status.replace("_", " ")}
                       </p>
                       <code className="rounded-md bg-surface-elevated px-2 py-1 text-[0.78rem] text-accent">
                         {ticket.code}
@@ -1045,7 +1061,7 @@ export function EventDetail({
               <h2 className="mb-0 text-[1.55rem]">
                 {session
                   ? `Buying as ${session.user.name}`
-                  : "Reserve your spot"}
+                  : displayEvent.booking?.kind === "bus" ? "Book your journey" : displayEvent.booking?.kind === "cinema" ? "Book your screening" : "Reserve your spot"}
               </h2>
             </div>
             {!session && (
@@ -1071,6 +1087,24 @@ export function EventDetail({
           </section>
 
           <section className={panelPadded}>
+            {displayEvent.booking && (
+              <div className="mb-4 grid gap-1 text-sm text-text-muted">
+                <strong className="text-accent">
+                  {formatLabels[displayEvent.booking.kind]}
+                </strong>
+                {displayEvent.booking.destination && (
+                  <span>
+                    {displayEvent.venue} → {displayEvent.booking.destination}
+                  </span>
+                )}
+                {displayEvent.booking.service && (
+                  <span>{displayEvent.booking.service}</span>
+                )}
+                {displayEvent.booking.durationMinutes && (
+                  <span>{displayEvent.booking.durationMinutes} minutes</span>
+                )}
+              </div>
+            )}
             <p role="status">
               {cancelled
                 ? "Event cancelled"
@@ -1100,6 +1134,7 @@ export function EventDetail({
                   onChange={(e) => {
                     setSelectedTicketTypeId(e.target.value);
                     setQuantity(1);
+                    setSelectedSeats([]);
                   }}
                 >
                   <option value="">Choose a category</option>
@@ -1171,9 +1206,11 @@ export function EventDetail({
                   ? "Event cancelled"
                   : checkoutEvent.soldOut
                     ? "Sold out"
-                    : unitPrice === 0
-                      ? "Get ticket"
-                      : "Pay now"}
+                    : displayEvent.booking?.seating
+                      ? "Choose seats"
+                      : unitPrice === 0
+                        ? "Get ticket"
+                        : "Pay now"}
             </button>
             {purchaseState && (
               <p className="mb-0 rounded-lg bg-accent-soft p-3 text-[0.92rem] font-(--weight-medium) text-accent">
@@ -1274,60 +1311,105 @@ export function EventDetail({
                     id="detail-buyer-email-error"
                   />
                 </label>
-                <label>
-                  <RequiredLabel>Quantity</RequiredLabel>
-                  <span className="quantity-stepper">
-                    <button
-                      type="button"
-                      aria-label="Decrease quantity"
-                      onClick={() => stepQuantity(-1)}
-                      disabled={quantity <= 1}
-                    >
-                      <Minus size={16} />
-                    </button>
-                    <input
-                      aria-describedby="detail-quantity-limit detail-quantity-error"
-                      aria-invalid={Boolean(checkoutQuantityError) || undefined}
-                      inputMode="numeric"
-                      pattern="[0-9,]*"
-                      title="Please enter a whole number."
-                      value={formattedQuantity}
-                      onChange={(input) =>
-                        updateQuantityFromText(input.target.value)
-                      }
-                      onKeyDown={(event) => {
-                        if (["e", "E", "+", "-", "."].includes(event.key)) {
-                          event.preventDefault();
-                        }
+                {displayEvent.booking?.seating ? (
+                  <div className="grid gap-3">
+                    <strong>
+                      Choose your seats · {selectedSeats.length} selected
+                    </strong>
+                    <SeatMap
+                      booking={displayEvent.booking}
+                      selected={selectedSeats}
+                      occupied={displayEvent.occupiedSeats}
+                      onSelect={(seat) => {
+                        const next = selectedSeats.includes(seat)
+                          ? selectedSeats.filter((s) => s !== seat)
+                          : selectedSeats.length < maximumQuantity
+                            ? [...selectedSeats, seat]
+                            : selectedSeats;
+                        setSelectedSeats(next);
+                        setQuantity(Math.max(1, next.length));
                       }}
-                      onWheel={(event) => {
-                        if (document.activeElement !== event.currentTarget) {
-                          return;
-                        }
-
-                        event.preventDefault();
-                        stepQuantity(event.deltaY > 0 ? 1 : -1);
-                      }}
-                      {...requiredField("Quantity")}
                     />
+                    <p className="text-sm text-text-muted">
+                      Choose up to {maximumQuantity} seats. Selected:{" "}
+                      {selectedSeats.join(", ") || "None"}
+                    </p>
                     <button
                       type="button"
-                      aria-label="Increase quantity"
-                      onClick={() => stepQuantity(1)}
-                      disabled={quantity >= maximumQuantity}
+                      className="button-secondary"
+                      onClick={async () => {
+                        setDisplayEvent(
+                          await api.getEvent(event.id, session?.token),
+                        );
+                        setSelectedSeats([]);
+                        setQuantity(1);
+                      }}
                     >
-                      <Plus size={16} />
+                      Refresh availability
                     </button>
-                  </span>
-                  <FieldMessage
-                    error={checkoutQuantityError}
-                    id="detail-quantity-error"
-                  />
-                  <span id="detail-quantity-limit">
-                    Maximum {selectedType?.maxPerOrder ?? 10} tickets per order.
-                    Availability may reduce this quantity.
-                  </span>
-                </label>
+                  </div>
+                ) : (
+                  <>
+                    <label>
+                      <RequiredLabel>Quantity</RequiredLabel>
+                      <span className="quantity-stepper">
+                        <button
+                          type="button"
+                          aria-label="Decrease quantity"
+                          onClick={() => stepQuantity(-1)}
+                          disabled={quantity <= 1}
+                        >
+                          <Minus size={16} />
+                        </button>
+                        <input
+                          aria-describedby="detail-quantity-limit detail-quantity-error"
+                          aria-invalid={
+                            Boolean(checkoutQuantityError) || undefined
+                          }
+                          inputMode="numeric"
+                          pattern="[0-9,]*"
+                          title="Please enter a whole number."
+                          value={formattedQuantity}
+                          onChange={(input) =>
+                            updateQuantityFromText(input.target.value)
+                          }
+                          onKeyDown={(event) => {
+                            if (["e", "E", "+", "-", "."].includes(event.key)) {
+                              event.preventDefault();
+                            }
+                          }}
+                          onWheel={(event) => {
+                            if (
+                              document.activeElement !== event.currentTarget
+                            ) {
+                              return;
+                            }
+
+                            event.preventDefault();
+                            stepQuantity(event.deltaY > 0 ? 1 : -1);
+                          }}
+                          {...requiredField("Quantity")}
+                        />
+                        <button
+                          type="button"
+                          aria-label="Increase quantity"
+                          onClick={() => stepQuantity(1)}
+                          disabled={quantity >= maximumQuantity}
+                        >
+                          <Plus size={16} />
+                        </button>
+                      </span>
+                      <FieldMessage
+                        error={checkoutQuantityError}
+                        id="detail-quantity-error"
+                      />
+                      <span id="detail-quantity-limit">
+                        Maximum {selectedType?.maxPerOrder ?? 10} tickets per
+                        order. Availability may reduce this quantity.
+                      </span>
+                    </label>
+                  </>
+                )}
 
                 {unitPrice > 0 && (
                   <>
@@ -1388,7 +1470,11 @@ export function EventDetail({
                   className={primaryAction}
                   type="submit"
                   disabled={
-                    salesClosed || checkoutEvent.soldOut || categoryUnavailable
+                    (Boolean(displayEvent.booking?.seating) &&
+                      selectedSeats.length !== quantity) ||
+                    salesClosed ||
+                    checkoutEvent.soldOut ||
+                    categoryUnavailable
                   }
                 >
                   <CircleDollarSign size={18} />

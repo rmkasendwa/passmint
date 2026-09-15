@@ -1,4 +1,6 @@
 "use client";
+import { BookingEditor } from "./booking-editor";
+import { layoutCapacity } from "../booking";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "nextjs-toploader/app";
 import { Upload, ArrowUpRight, X, Ticket, Check } from "lucide-react";
@@ -147,7 +149,24 @@ export function CreateEventForm({
           >
             <fieldset disabled={busy}>
               <legend>
-                <span>01</span> The essentials
+                <span>01</span> Format &amp; seating
+              </legend>
+              <p className="field-section-copy">
+                Set up a gathering, a journey, or a screening.
+              </p>
+              <BookingEditor
+                value={hostEvent.booking}
+                disabled={busy}
+                onChange={(booking) => {
+                  updateHostEvent("booking", booking);
+                  if (booking.seating)
+                    updateHostEvent("capacity", layoutCapacity(booking));
+                }}
+              />
+            </fieldset>
+            <fieldset disabled={busy}>
+              <legend>
+                <span>02</span> The essentials
               </legend>
               <p className="field-section-copy">
                 Give people a reason to be there.
@@ -189,13 +208,17 @@ export function CreateEventForm({
             </fieldset>
             <fieldset disabled={busy}>
               <legend>
-                <span>02</span> When &amp; where
+                <span>03</span> When &amp; where
               </legend>
               <p className="field-section-copy">
                 Help guests plan their visit. Times use your local timezone.
               </p>
               <label>
-                <RequiredLabel>Venue</RequiredLabel>
+                <RequiredLabel>
+                  {hostEvent.booking.kind === "bus"
+                    ? "Departure point"
+                    : "Venue"}
+                </RequiredLabel>
                 <input
                   aria-describedby="host-venue-error"
                   aria-invalid={Boolean(venueError) || undefined}
@@ -220,23 +243,35 @@ export function CreateEventForm({
               </label>
               <div className="grid gap-3">
                 <div className="grid gap-2">
-                  <RequiredLabel>Starts</RequiredLabel>
-                  <EventDateTimeField value={hostEvent.startsAt} onChange={(value) => updateHostEvent("startsAt", value)} disabled={busy} invalid={Boolean(startsError)} />
+                  <RequiredLabel>
+                    {hostEvent.booking.kind === "bus"
+                      ? "Departure"
+                      : hostEvent.booking.kind === "cinema"
+                        ? "Showtime"
+                        : "Starts"}
+                  </RequiredLabel>
+                  <EventDateTimeField
+                    value={hostEvent.startsAt}
+                    onChange={(value) => updateHostEvent("startsAt", value)}
+                    disabled={busy}
+                    invalid={Boolean(startsError)}
+                  />
                   <FieldMessage error={startsError} id="host-starts-error" />
                 </div>
               </div>
             </fieldset>
             <fieldset disabled={busy}>
               <legend>
-                <span>03</span> Tickets
+                <span>04</span> Tickets
               </legend>
               <p className="field-section-copy">
-                Start with general admission. Add more ticket categories after
-                creating your event.
+                Offer general admission or add categories with their own prices
+                and limits.
               </p>
               <label>
                 Capacity (leave blank for unlimited)
                 <NumericField
+                  disabled={Boolean(hostEvent.booking.seating)}
                   aria-label="Capacity"
                   aria-describedby="host-capacity-error"
                   aria-invalid={Boolean(capacityError) || undefined}
@@ -245,32 +280,130 @@ export function CreateEventForm({
                   onValueChange={(value) =>
                     updateHostEvent(
                       "capacity",
-                      value === ""
-                        ? null
-                        : Number(value),
+                      value === "" ? null : Number(value),
                     )
                   }
                 />
                 <FieldMessage error={capacityError} id="host-capacity-error" />
               </label>
-              <label>
-                <RequiredLabel>Price in UGX</RequiredLabel>
-                <NumericField
-                  aria-label="Price in UGX"
-                  aria-describedby="host-price-error"
-                  aria-invalid={Boolean(priceError) || undefined}
-                  min={0}
-                  value={hostEvent.priceCents / 100}
-                  onValueChange={(value) =>
-                    updateHostEvent(
-                      "priceCents",
-                      Number(value) * 100,
-                    )
+              {hostEvent.ticketTypes.length === 0 && (
+                <>
+                  <label>
+                    <RequiredLabel>Price in UGX</RequiredLabel>
+                    <NumericField
+                      aria-label="Price in UGX"
+                      aria-describedby="host-price-error"
+                      aria-invalid={Boolean(priceError) || undefined}
+                      min={0}
+                      value={hostEvent.priceCents / 100}
+                      onValueChange={(value) =>
+                        updateHostEvent("priceCents", Number(value) * 100)
+                      }
+                      {...requiredField("Price in UGX")}
+                    />
+                    <FieldMessage error={priceError} id="host-price-error" />
+                  </label>{" "}
+                </>
+              )}
+              <div className="grid gap-3">
+                {hostEvent.ticketTypes.map((type, index) => (
+                  <div
+                    key={index}
+                    className="grid gap-3 rounded-xl border border-border bg-surface-muted p-4"
+                  >
+                    <div className="flex items-center justify-between">
+                      <strong>Category {index + 1}</strong>
+                      <button
+                        type="button"
+                        className="text-sm text-text-muted"
+                        onClick={() =>
+                          updateHostEvent(
+                            "ticketTypes",
+                            hostEvent.ticketTypes.filter((_, i) => i !== index),
+                          )
+                        }
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    <label>
+                      Name
+                      <input
+                        required
+                        value={type.name}
+                        onChange={(e) =>
+                          updateHostEvent(
+                            "ticketTypes",
+                            hostEvent.ticketTypes.map((t, i) =>
+                              i === index ? { ...t, name: e.target.value } : t,
+                            ),
+                          )
+                        }
+                        placeholder="Standard, VIP, adult, child�"
+                      />
+                    </label>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label>
+                        Price in UGX
+                        <NumericField
+                          required
+                          aria-label={`Category ${index + 1} price`}
+                          min={0}
+                          value={type.priceCents / 100}
+                          onValueChange={(v) =>
+                            updateHostEvent(
+                              "ticketTypes",
+                              hostEvent.ticketTypes.map((t, i) =>
+                                i === index
+                                  ? { ...t, priceCents: Number(v) * 100 }
+                                  : t,
+                              ),
+                            )
+                          }
+                        />
+                      </label>
+                      <label>
+                        Category capacity (blank = shared)
+                        <NumericField
+                          aria-label={`Category ${index + 1} capacity`}
+                          min={1}
+                          value={type.capacity ?? ""}
+                          onValueChange={(v) =>
+                            updateHostEvent(
+                              "ticketTypes",
+                              hostEvent.ticketTypes.map((t, i) =>
+                                i === index
+                                  ? { ...t, capacity: v ? Number(v) : null }
+                                  : t,
+                              ),
+                            )
+                          }
+                        />
+                      </label>
+                    </div>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className="button-secondary"
+                  disabled={hostEvent.ticketTypes.length >= 20}
+                  onClick={() =>
+                    updateHostEvent("ticketTypes", [
+                      ...hostEvent.ticketTypes,
+                      {
+                        name: hostEvent.ticketTypes.length
+                          ? ""
+                          : "General admission",
+                        priceCents: hostEvent.priceCents,
+                        capacity: null,
+                        maxPerOrder: 10,
+                      },
+                    ])
                   }
-                  {...requiredField("Price in UGX")}
-                />
-                <FieldMessage error={priceError} id="host-price-error" />
-              </label>
+                >
+                  + Add ticket category
+                </button>
+              </div>
             </fieldset>{" "}
           </form>
         </div>

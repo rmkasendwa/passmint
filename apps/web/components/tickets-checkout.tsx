@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   CalendarDays,
@@ -9,42 +9,43 @@ import {
   QrCode,
   Ticket as TicketIcon,
   UserPlus,
-} from 'lucide-react';
-import { useAppContext } from './app-provider';
-import { EventThumbnail } from './event-thumbnail';
-import { eventTone } from '../event-utils';
-import { dateTime, money, shortDate } from '../formatters';
-import { PhoneNumberInput } from './phone-number-input';
-import { ticketSalesState, salesStateLabels } from '../ticket-sales';
-import { useSalesClock } from './use-sales-clock';
+} from "lucide-react";
+import { SeatMap } from "./seat-map";
+import { useAppContext } from "./app-provider";
+import { EventThumbnail } from "./event-thumbnail";
+import { eventTone } from "../event-utils";
+import { dateTime, money, shortDate } from "../formatters";
+import { PhoneNumberInput } from "./phone-number-input";
+import { ticketSalesState, salesStateLabels } from "../ticket-sales";
+import { useSalesClock } from "./use-sales-clock";
 import {
   FieldMessage,
   RequiredLabel,
   requiredField,
   useInlineFormValidation,
-} from './form-validation';
+} from "./form-validation";
 
 const sectionKicker =
-  'mb-2 text-[0.78rem] font-(--weight-semibold) uppercase tracking-[0.08em] text-accent';
+  "mb-2 text-[0.78rem] font-(--weight-semibold) uppercase tracking-[0.08em] text-accent";
 const panel =
-  'rounded-lg border border-border bg-surface-raised shadow-[0_18px_44px_rgb(18_24_31/6%)]';
+  "rounded-lg border border-border bg-surface-raised shadow-[0_18px_44px_rgb(18_24_31/6%)]";
 const panelPadded = `${panel} grid gap-3.5 p-4.5`;
 const panelHeading =
-  'mb-3 flex items-center gap-2.5 text-text [&_h2]:mb-0 [&_h2]:text-[1.55rem] [&_svg]:text-accent';
+  "mb-3 flex items-center gap-2.5 text-text [&_h2]:mb-0 [&_h2]:text-[1.55rem] [&_svg]:text-accent";
 const primaryAction =
-  'inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-(--button-bg) px-4 font-(--weight-bold) text-(--button-text) hover:bg-accent';
+  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-(--button-bg) px-4 font-(--weight-bold) text-(--button-text) hover:bg-accent";
 const secondaryAction =
-  'inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border bg-surface-muted px-4 font-(--weight-bold) text-text';
+  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border bg-surface-muted px-4 font-(--weight-bold) text-text";
 const formGrid =
-  'grid gap-3 [&_label]:grid [&_label]:gap-1.75 [&_label]:text-[0.82rem] [&_label]:font-(--weight-semibold) [&_label]:text-text-muted [&_input]:min-h-11 [&_input]:w-full [&_input]:min-w-0 [&_input]:rounded-lg [&_input]:border [&_input]:border-border [&_input]:bg-surface-elevated [&_input]:px-3 [&_input]:text-text [&_input]:focus:border-accent [&_input]:focus:outline-[3px_solid_rgb(22_125_119/18%)]';
+  "grid gap-3 [&_label]:grid [&_label]:gap-1.75 [&_label]:text-[0.82rem] [&_label]:font-(--weight-semibold) [&_label]:text-text-muted [&_input]:min-h-11 [&_input]:w-full [&_input]:min-w-0 [&_input]:rounded-lg [&_input]:border [&_input]:border-border [&_input]:bg-surface-elevated [&_input]:px-3 [&_input]:text-text [&_input]:focus:border-accent [&_input]:focus:outline-[3px_solid_rgb(22_125_119/18%)]";
 const eventCard =
-  'grid min-h-107.5 rounded-lg border border-border bg-surface-raised text-left text-text shadow-none hover:border-border-strong [&.selected]:border-border-strong max-[820px]:min-h-125 max-[600px]:min-h-0 max-[600px]:grid-rows-[220px_1fr] [&_.event-thumbnail-card]:max-[600px]:min-h-55';
+  "grid min-h-107.5 rounded-lg border border-border bg-surface-raised text-left text-text shadow-none hover:border-border-strong [&.selected]:border-border-strong max-[820px]:min-h-125 max-[600px]:min-h-0 max-[600px]:grid-rows-[220px_1fr] [&_.event-thumbnail-card]:max-[600px]:min-h-55";
 const eventCardCopy =
-  'grid grid-rows-[auto_auto_auto_1fr_auto] gap-4 p-6.5 max-[820px]:p-5.5';
-const mutedText = 'mb-0 text-text-muted';
-const helperLine = 'mb-0 text-[0.88rem] leading-normal text-text-soft';
+  "grid grid-rows-[auto_auto_auto_1fr_auto] gap-4 p-6.5 max-[820px]:p-5.5";
+const mutedText = "mb-0 text-text-muted";
+const helperLine = "mb-0 text-[0.88rem] leading-normal text-text-soft";
 const stateLine =
-  'mb-0 rounded-lg bg-accent-soft p-3 text-[0.92rem] font-(--weight-medium) text-accent';
+  "mb-0 rounded-lg bg-accent-soft p-3 text-[0.92rem] font-(--weight-medium) text-accent";
 
 export function TicketsCheckout() {
   const {
@@ -54,6 +55,8 @@ export function TicketsCheckout() {
     mobileMoneyNumber,
     openAuth,
     purchaseState,
+    selectedSeats,
+    setSelectedSeats,
     quantity,
     selectedEvent,
     selectedEventId,
@@ -70,26 +73,46 @@ export function TicketsCheckout() {
     visibleEvents,
     buyTickets,
   } = useAppContext();
-  const ticketType = selectedEvent?.ticketTypes?.find(type => type.id === selectedTicketTypeId);
+  const ticketType = selectedEvent?.ticketTypes?.find(
+    (type) => type.id === selectedTicketTypeId,
+  );
   const salesNow = useSalesClock();
-  const selectedSalesState = ticketSalesState(selectedEvent, ticketType, salesNow);
+  const selectedSalesState = ticketSalesState(
+    selectedEvent,
+    ticketType,
+    salesNow,
+  );
   const unitPrice = ticketType?.priceCents ?? selectedEvent?.priceCents ?? 0;
-  const maximum = Math.max(1, Math.min(ticketType?.maxPerOrder ?? 10, ticketType?.remainingCapacity ?? 100, selectedEvent?.remainingCapacity ?? 100));
-  const unavailable = !selectedEventId || selectedEvent?.soldOut || selectedEvent?.status === 'cancelled' || selectedEvent?.status === 'draft' || Boolean(selectedEvent?.ticketTypes?.length && selectedSalesState !== 'available');
+  const maximum = Math.max(
+    1,
+    Math.min(
+      ticketType?.maxPerOrder ?? 10,
+      ticketType?.remainingCapacity ?? 100,
+      selectedEvent?.remainingCapacity ?? 100,
+    ),
+  );
+  const unavailable =
+    !selectedEventId ||
+    selectedEvent?.soldOut ||
+    selectedEvent?.status === "cancelled" ||
+    selectedEvent?.status === "draft" ||
+    Boolean(
+      selectedEvent?.ticketTypes?.length && selectedSalesState !== "available",
+    );
   const validation = useInlineFormValidation();
   const buyerNameError = validation.fieldError({
-    label: 'Buyer name',
+    label: "Buyer name",
     required: true,
     value: buyerName,
   });
   const buyerEmailError = validation.fieldError({
-    label: 'Buyer email',
+    label: "Buyer email",
     required: true,
-    type: 'email',
+    type: "email",
     value: buyerEmail,
   });
   const quantityError = validation.fieldError({
-    label: 'Quantity',
+    label: "Quantity",
     max: maximum,
     min: 1,
     required: true,
@@ -107,13 +130,13 @@ export function TicketsCheckout() {
             </h2>
           </div>
           <span className="text-base font-(--weight-semibold) text-text-muted">
-            {loading ? 'Loading...' : `${visibleEvents.length} live`}
+            {loading ? "Loading..." : `${visibleEvents.length} live`}
           </span>
         </div>
         <div className="grid grid-cols-2 gap-5.5 max-[820px]:grid-cols-1">
           {visibleEvents.map((event, index) => (
             <button
-              className={`${eventCard} ${event.id === selectedEventId ? 'selected' : ''}`}
+              className={`${eventCard} ${event.id === selectedEventId ? "selected" : ""}`}
               key={event.id}
               onClick={() => chooseEvent(event.id)}
               type="button"
@@ -147,21 +170,21 @@ export function TicketsCheckout() {
 
       <aside className="sticky top-[calc(var(--site-header-height)+1.125rem)] grid gap-4.5 max-[1120px]:static">
         <section
-          className={`${panelPadded} ${session ? 'signed-in' : 'anonymous'}`}
+          className={`${panelPadded} ${session ? "signed-in" : "anonymous"}`}
         >
           <div>
             <p className={sectionKicker}>
-              {session ? 'Signed in checkout' : 'Guest checkout'}
+              {session ? "Signed in checkout" : "Guest checkout"}
             </p>
             <h2>
               {session
                 ? `Buying as ${session.user.name}`
-                : 'Buy now, sign in when it matters.'}
+                : "Buy now, sign in when it matters."}
             </h2>
           </div>
           {session ? (
             <span
-              className={`inline-flex min-h-7.5 w-fit items-center rounded-full px-2.5 text-[0.78rem] font-(--weight-semibold) uppercase ${session.user.role === 'admin' ? 'bg-[#ffe6d8] text-[#b43d19]' : 'bg-accent-soft text-accent'}`}
+              className={`inline-flex min-h-7.5 w-fit items-center rounded-full px-2.5 text-[0.78rem] font-(--weight-semibold) uppercase ${session.user.role === "admin" ? "bg-[#ffe6d8] text-[#b43d19]" : "bg-accent-soft text-accent"}`}
             >
               {session.user.role}
             </span>
@@ -170,7 +193,7 @@ export function TicketsCheckout() {
               <button
                 type="button"
                 className={secondaryAction}
-                onClick={() => openAuth('login')}
+                onClick={() => openAuth("login")}
               >
                 <LogIn size={17} />
                 Sign in
@@ -178,7 +201,7 @@ export function TicketsCheckout() {
               <button
                 type="button"
                 className={primaryAction}
-                onClick={() => openAuth('register')}
+                onClick={() => openAuth("register")}
               >
                 <UserPlus size={17} />
                 Register
@@ -204,12 +227,59 @@ export function TicketsCheckout() {
             </div>
           )}
           <form className={formGrid} {...validation.formProps(buyTickets)}>
-            {selectedEvent && <p>{ticketType?.name ?? 'General admission'} · {money.format(unitPrice * quantity / 100)} total</p>}
-            {Boolean(selectedEvent?.ticketTypes?.length) && <label>Ticket category<select className="rounded-lg border border-border bg-surface-muted p-3 text-text" value={selectedTicketTypeId} onChange={e => { setSelectedTicketTypeId(e.target.value); setQuantity(1); }} required>
-              <option value="">Choose category</option>
-              {selectedEvent?.ticketTypes?.map(type => { const state = ticketSalesState(selectedEvent, type, salesNow); return <option key={type.id} value={type.id} disabled={state !== 'available'}>{type.name} — {money.format(type.priceCents / 100)}{state === 'available' ? '' : ` (${salesStateLabels[state]})`}</option>; })}
-            </select></label>}
-            {ticketType && <p role="status" className={helperLine}>{salesStateLabels[selectedSalesState]}{ticketType.salesStart ? ` · Opens ${dateTime.format(new Date(ticketType.salesStart))}` : ''}{ticketType.salesEnd ? ` · Ends ${dateTime.format(new Date(ticketType.salesEnd))}` : ''} (your local time)</p>}
+            {selectedEvent && (
+              <p>
+                {ticketType?.name ?? "General admission"} ·{" "}
+                {money.format((unitPrice * quantity) / 100)} total
+              </p>
+            )}
+            {Boolean(selectedEvent?.ticketTypes?.length) && (
+              <label>
+                Ticket category
+                <select
+                  className="rounded-lg border border-border bg-surface-muted p-3 text-text"
+                  value={selectedTicketTypeId}
+                  onChange={(e) => {
+                    setSelectedTicketTypeId(e.target.value);
+                    setQuantity(1);
+                  }}
+                  required
+                >
+                  <option value="">Choose category</option>
+                  {selectedEvent?.ticketTypes?.map((type) => {
+                    const state = ticketSalesState(
+                      selectedEvent,
+                      type,
+                      salesNow,
+                    );
+                    return (
+                      <option
+                        key={type.id}
+                        value={type.id}
+                        disabled={state !== "available"}
+                      >
+                        {type.name} — {money.format(type.priceCents / 100)}
+                        {state === "available"
+                          ? ""
+                          : ` (${salesStateLabels[state]})`}
+                      </option>
+                    );
+                  })}
+                </select>
+              </label>
+            )}
+            {ticketType && (
+              <p role="status" className={helperLine}>
+                {salesStateLabels[selectedSalesState]}
+                {ticketType.salesStart
+                  ? ` · Opens ${dateTime.format(new Date(ticketType.salesStart))}`
+                  : ""}
+                {ticketType.salesEnd
+                  ? ` · Ends ${dateTime.format(new Date(ticketType.salesEnd))}`
+                  : ""}{" "}
+                (your local time)
+              </p>
+            )}
             <label>
               <RequiredLabel>Buyer name</RequiredLabel>
               <input
@@ -217,8 +287,8 @@ export function TicketsCheckout() {
                 aria-invalid={Boolean(buyerNameError) || undefined}
                 value={buyerName}
                 onChange={(event) => setBuyerName(event.target.value)}
-                placeholder={session?.user.name ?? 'Anonymous buyer name'}
-                {...requiredField('Buyer name')}
+                placeholder={session?.user.name ?? "Anonymous buyer name"}
+                {...requiredField("Buyer name")}
               />
               <FieldMessage
                 error={buyerNameError}
@@ -233,30 +303,58 @@ export function TicketsCheckout() {
                 type="email"
                 value={buyerEmail}
                 onChange={(event) => setBuyerEmail(event.target.value)}
-                placeholder={session?.user.email ?? 'Email for ticket delivery'}
-                {...requiredField('Buyer email')}
+                placeholder={session?.user.email ?? "Email for ticket delivery"}
+                {...requiredField("Buyer email")}
               />
               <FieldMessage
                 error={buyerEmailError}
                 id="tickets-buyer-email-error"
               />
             </label>
-            <label>
-              <RequiredLabel>Quantity</RequiredLabel>
-              <input
-                aria-describedby="tickets-quantity-limit tickets-quantity-error"
-                aria-invalid={Boolean(quantityError) || undefined}
-                min={1}
-                max={maximum}
-                step={1}
-                type="number"
-                value={quantity}
-                onChange={(event) => setQuantity(Number(event.target.value))}
-                {...requiredField('Quantity')}
+            {selectedEvent?.booking?.seating ? (
+              <SeatMap
+                booking={selectedEvent.booking}
+                occupied={selectedEvent.occupiedSeats}
+                selected={selectedSeats}
+                onSelect={(seat) => {
+                  const next = selectedSeats.includes(seat)
+                    ? selectedSeats.filter((s) => s !== seat)
+                    : selectedSeats.length < maximum
+                      ? [...selectedSeats, seat]
+                      : selectedSeats;
+                  setSelectedSeats(next);
+                  setQuantity(Math.max(1, next.length));
+                }}
               />
-              <FieldMessage error={quantityError} id="tickets-quantity-error" />
-              <span id="tickets-quantity-limit">Maximum {ticketType?.maxPerOrder ?? 10} tickets per order. Availability may reduce this quantity.</span>
-            </label>
+            ) : (
+              <>
+                <label>
+                  <RequiredLabel>Quantity</RequiredLabel>
+                  <input
+                    aria-describedby="tickets-quantity-limit tickets-quantity-error"
+                    aria-invalid={Boolean(quantityError) || undefined}
+                    min={1}
+                    max={maximum}
+                    step={1}
+                    type="number"
+                    value={quantity}
+                    onChange={(event) =>
+                      setQuantity(Number(event.target.value))
+                    }
+                    {...requiredField("Quantity")}
+                  />
+                  <FieldMessage
+                    error={quantityError}
+                    id="tickets-quantity-error"
+                  />
+                  <span id="tickets-quantity-limit">
+                    Maximum {ticketType?.maxPerOrder ?? 10} tickets per order.
+                    Availability may reduce this quantity.
+                  </span>
+                </label>
+              </>
+            )}
+
             {selectedEvent && unitPrice > 0 && (
               <PhoneNumberInput
                 label="Mobile money number"
@@ -268,12 +366,14 @@ export function TicketsCheckout() {
             <button
               className={primaryAction}
               type="submit"
-              disabled={unavailable}
+              disabled={
+                unavailable ||
+                (Boolean(selectedEvent?.booking?.seating) &&
+                  selectedSeats.length !== quantity)
+              }
             >
               <CircleDollarSign size={18} />
-              {unitPrice === 0
-                ? 'Get ticket'
-                : 'Pay with mobile money'}
+              {unitPrice === 0 ? "Get ticket" : "Pay with mobile money"}
             </button>
           </form>
           <p className={helperLine}>
@@ -343,9 +443,12 @@ export function TicketsCheckout() {
                       </small>
                     </div>
                     <span
-                      className={`inline-flex min-h-7 items-center rounded-full px-2.5 text-xs font-(--weight-semibold) uppercase ${ticket.status === 'checked_in' ? 'bg-[#dff7e8] text-[#14532d]' : ticket.status === 'cancelled' ? 'bg-[#ffe8df] text-[#8d2718]' : 'bg-accent-soft text-accent'}`}
+                      className={`inline-flex min-h-7 items-center rounded-full px-2.5 text-xs font-(--weight-semibold) uppercase ${ticket.status === "checked_in" ? "bg-[#dff7e8] text-[#14532d]" : ticket.status === "cancelled" ? "bg-[#ffe8df] text-[#8d2718]" : "bg-accent-soft text-accent"}`}
                     >
-                      {ticket.ticketTypeName ?? 'General admission'} · {ticket.status.replace('_', ' ')}
+                      {ticket.ticketTypeName ?? "General admission"}
+                      {ticket.seatLabel
+                        ? ` · Seat ${ticket.seatLabel}`
+                        : ""} · {ticket.status.replace("_", " ")}
                     </span>
                   </article>
                 ))
