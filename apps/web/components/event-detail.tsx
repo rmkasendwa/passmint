@@ -717,7 +717,7 @@ export function EventDetail({
                 ],
                 [
                   "Arrive on time",
-                  `{displayEvent.booking?.kind === "bus" ? "Departure is at" : displayEvent.booking?.kind === "cinema" ? "The screening starts at" : "Doors are based around the"} ${eventTime.format(startsAt)} start time.`,
+                  `${displayEvent.booking?.kind === "bus" ? "Departure is at" : displayEvent.booking?.kind === "cinema" ? "The screening starts at" : "Doors are based around the"} ${eventTime.format(startsAt)} start time.`,
                 ],
                 [
                   "Check the venue",
