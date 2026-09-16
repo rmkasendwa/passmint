@@ -2067,6 +2067,18 @@ h3 {
   outline: 3px solid var(--accent);
   outline-offset: 4px;
 }
+:where(input, select, textarea):focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 1px;
+}
+.discovery-input-shell:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.discovery-input-shell:focus-visible,
+.discovery-input-shell input:focus-visible {
+  outline: none;
+}
 svg {
   flex-shrink: 0;
 }
