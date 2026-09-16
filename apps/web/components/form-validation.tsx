@@ -180,7 +180,9 @@ export function useInlineFormValidation() {
           markField(target);
         }
       },
-      onInputCapture: (event: FormEvent<HTMLFormElement>) => {
+      // Run after the field's onChange so validation cannot restore a stale
+      // controlled value before the field has captured the user's input.
+      onChange: (event: FormEvent<HTMLFormElement>) => {
         const target = event.target;
         if (
           target instanceof HTMLInputElement ||

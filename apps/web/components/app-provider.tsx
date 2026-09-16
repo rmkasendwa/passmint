@@ -358,6 +358,12 @@ export function AppProvider({
   useEffect(() => {
     setAuthState("");
     setResetState("");
+    // Clear credentials after navigation commits, when the auth form is gone.
+    // Clearing them on success makes the still-visible form show required errors.
+    if (pathname !== "/login" && pathname !== "/register") {
+      setAuthPassword("");
+      setAuthConfirmPassword("");
+    }
   }, [pathname]);
 
   const filteredEvents = useMemo(() => {
@@ -779,8 +785,6 @@ export function AppProvider({
       setSession(nextSession);
       setBuyerName(nextSession.user.name);
       setBuyerEmail(nextSession.user.email);
-      setAuthPassword("");
-      setAuthConfirmPassword("");
       setAuthState(`Logged in as ${nextSession.user.role}.`);
       const next = new URLSearchParams(window.location.search).get("next");
       router.push(organizerReturnPath(next));
