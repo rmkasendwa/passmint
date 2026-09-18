@@ -30,6 +30,7 @@ model User {
   role         UserRole @default(user)
   tickets      Ticket[]
   events       Event[]
+  eventImports EventImport[]
   createdAt    DateTime @default(now()) @db.Timestamp(6)
   updatedAt    DateTime @default(now()) @updatedAt @db.Timestamp(6)
 
@@ -37,6 +38,7 @@ model User {
 }
 
 model Event {
+  importRecord EventImport?
   booking Json?
   ticketTypes  TicketType[]
   status       String   @default("published") @db.VarChar
@@ -58,6 +60,20 @@ model Event {
   updatedAt    DateTime @default(now()) @updatedAt @db.Timestamp(6)
 
   @@map("events")
+}
+
+model EventImport {
+  archiveId         String @db.VarChar(71)
+  sourceEventId     String @db.VarChar
+  ownerId           String @db.VarChar
+  owner             User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  eventId           String @unique @db.VarChar
+  event             Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  ticketTypeMapping Json
+  createdAt         DateTime @default(now()) @db.Timestamptz(6)
+
+  @@id([archiveId, sourceEventId, ownerId])
+  @@map("event_imports")
 }
 
 model Ticket {
