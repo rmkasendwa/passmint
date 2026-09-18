@@ -1,7 +1,7 @@
 # Portable event archives
 
-The export/import endpoints and operator CLI implement issues #78, #79 and #81.
-Media transfer (#80) and post-import verification (#82) are separate follow-ups.
+The export/import endpoints, operator CLI and verification reports implement
+issues #78, #79, #81 and #82. Media transfer remains a separate follow-up (#80).
 These endpoints move event definitions, not issued tickets or customers.
 
 ## Operator CLI
@@ -36,9 +36,10 @@ are rejected, and redirects are not followed. Use the final HTTPS URL directly.
 
 The command prints counts, per-record failures/warnings, and generated event and
 category IDs. Exit code `0` means success, `1` means a command/network/API/file
-error, and `2` means the API reported one or more per-record failures (even though
-HTTP returned 200). Review the saved report on partial failures. The report is the
-import result, not a comparison against later target state; that remains #82.
+error, and `2` means the API reported per-record failures, verification mismatches,
+or unavailable target verification (even though HTTP returned 200). Review the
+saved report on partial failures. Reports include a target-state comparison at
+the time of the request; they do not guarantee that targets remain unchanged later.
 
 Archive input and API responses are bounded at 6 MiB. Files and responses are read
 in bounded chunks, then parsed in memory; expect several times the file size in
@@ -224,7 +225,7 @@ $report | ConvertTo-Json -Depth 20 | Set-Content './import-result.json'
 $report.summary
 ```
 
-HTTP 200 returns `{ archiveId, dryRun, counts, records, summary }`, **including when
+HTTP 200 returns `{ archiveId, dryRun, counts, records, verification, summary }`, **including when
 individual records fail**. Check `counts.failed` and each record; HTTP success
 alone does not mean the entire archive was imported. Counts include `total`,
 `valid` (dry run only), `imported`, `skipped`, and `failed`. Each record includes
@@ -248,7 +249,8 @@ source event and target owner, with a unique database key as a second safeguard.
 An unchanged archive retried for the same target owner skips completed records
 and returns their original mappings. `onDuplicate: "error"` reports those as failed
 instead. Dry runs also report existing duplicates. A skipped record's mapping is
-the original mapping, not a fresh verification of edited target data (#82).
+the original mapping; its verification uses a fresh target read to detect edits,
+missing categories or lifecycle changes.
 
 If a response is lost or a database problem occurs, retry the **same archive and
 owner mapping**. Changing archive content, environment label or ownership changes
@@ -264,5 +266,54 @@ There is no automatic bulk rollback. Save the report, inspect imported target
 records, and use your reviewed backup/restore process if rollback is necessary;
 do not erase events that have subsequently issued tickets. Deleting a target event
 also deletes its receipt, so reimporting can create a replacement. Do not delete
-receipts alone to force retries. Post-import comparison against target state is
-tracked separately in #82.
+receipts alone to force retries. Use the verification evidence below to assess
+target differences before deciding whether a retry or rollback is appropriate.
+
+## Verification evidence
+
+Each record includes `verification` with these fields:
+
+- `status`: `match`, `mismatch`, `not_imported`, `not_checked` or `unavailable`.
+- `expectedStatus` and `actualStatus`: lifecycle labels; drafts with a publication
+  time count as `scheduled`. Unavailable/unchecked values are null.
+- `checks`: comparisons for name, description, venue, map location, start time,
+  capacity, price, booking JSON, status, publication/cancellation time, thumbnail
+  URL and the **resolved target owner**. Values are true, false or null when not
+  checked. Owner remapping remains an explicit warning; a remapped record can match.
+- `categories`: expected/actual counts and `matches`. Each `ticketTypes` entry
+  links source/target IDs and says whether name, price, capacity, order limit and
+  sale-window values match. Missing or extra categories cause a mismatch.
+- `media`: `absent`, `reference_preserved`, `changed` or `not_checked`. This checks
+  the stored thumbnail reference only; no image is downloaded or storage verified.
+
+Real imports are read back **after the transaction commits**. Skipped retries,
+including dry runs, read their existing target records again. No target state is
+inferred from the request or receipt alone. Comparisons normalize dates to UTC
+ISO strings and compare booking JSON independent of object-key ordering. Target
+creation/update timestamps are intentionally excluded because they reflect import
+time. Unsupported fields and invalid records retain their validation errors and
+`not_checked` status; the importer does not silently discard them.
+
+A valid dry run with no existing target reports `not_imported`, with expected
+status/category counts and null comparison values. It never claims a match or
+allocates target IDs. Verification errors after commit retain `status: imported`
+and the generated IDs, while reporting `verification.status: unavailable`;
+they do not imply that the transaction was rolled back.
+
+Top-level `verification.version` is `1`. It includes counts for `matched`,
+`mismatched`, `unavailable`, `notImported` and `notChecked`, plus
+`expectedByStatus`, `actualByStatus`, and category totals `{ expected, actual }`.
+Expected totals cover fully validated definitions only; actual totals cover
+successfully read targets only. Use the coverage counts before interpreting a
+smaller actual total as missing data. The concise `summary` and CLI output report
+both import outcomes and verification coverage. Save the JSON alongside the
+unchanged archive as deployment evidence.
+
+A mismatch does not overwrite or roll back anything. Inspect the false checks:
+an organizer may have edited the target, removed a category, or a scheduled draft
+may have published since import. An unchanged retry verifies it again but does
+not repair it. For unavailable verification, restore database availability and
+retry the same archive/owner mapping. If a genuine migration problem requires
+rollback, use reviewed restore procedures and account for any tickets issued since
+import. Reports are per-record observations, not one atomic snapshot of the whole
+catalog, and do not verify tickets, buyers, payment records or scan activity.
