@@ -1,6 +1,8 @@
 import { bookingSamples } from "./booking-samples";
 import { exportEventArchive } from './event-archive';
 import { ExportEventsDto } from './dto/export-events.dto';
+import { ImportEventsDto } from './dto/import-events.dto';
+import { importEventArchive } from './import-event-archive';
 import { validateBooking, seatLabels, Booking } from "../common/booking";
 import {
   Injectable,
@@ -182,6 +184,10 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
 
   exportArchive(dto: ExportEventsDto, user: AuthUser) {
     return exportEventArchive(this.prisma, user, dto);
+  }
+
+  importArchive(dto: ImportEventsDto, user: AuthUser) {
+    return importEventArchive(this.prisma, user, dto);
   }
 
   async onApplicationBootstrap() {
