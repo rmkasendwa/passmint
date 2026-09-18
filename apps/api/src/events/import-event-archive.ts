@@ -10,6 +10,12 @@ import { PrismaService } from "../prisma/prisma.service";
 import { UserRole } from "../users/user-role.enum";
 import { ImportEventsDto } from "./dto/import-events.dto";
 import {
+  ImportVerification,
+  uncheckedImport,
+  verifyEventImport,
+  summarizeVerification,
+} from "./verify-event-import";
+import {
   validateArchive,
   validateArchiveEvent,
   invalid,
@@ -24,6 +30,7 @@ type Result = {
   ticketTypes?: Mapping[];
   warnings: string[];
   error?: string;
+  verification: ImportVerification;
 };
 
 export async function importEventArchive(
@@ -59,9 +66,11 @@ export async function importEventArchive(
       sourceId: sourceIds[index],
       status: "failed",
       warnings: [],
+      verification: uncheckedImport(),
     };
     try {
       const event = validateArchiveEvent(events[index]);
+      result.verification = uncheckedImport(event);
       let targetOwner = explicitOwner;
       if (!targetOwner) {
         if (!event.owner)
@@ -101,7 +110,7 @@ export async function importEventArchive(
         );
       if (event.data.thumbnailUrl)
         result.warnings.push(
-          "Thumbnail reference preserved without copying or checking media availability.",
+          "Thumbnail media is reference-only; image availability is not checked.",
         );
 
       const ownerId = targetOwner.id;
@@ -172,6 +181,33 @@ export async function importEventArchive(
         });
         Object.assign(result, outcome);
       }
+      if (result.status === "skipped")
+        result.warnings.push(
+          "Duplicate skipped; existing target data was checked without overwriting it.",
+        );
+      if (result.targetId) {
+        try {
+          result.verification = await verifyEventImport(
+            prisma,
+            event,
+            result.targetId,
+            ownerId,
+            result.ticketTypes ?? [],
+          );
+        } catch {
+          result.verification.status = "unavailable";
+        }
+        if (result.verification.status === "mismatch")
+          result.warnings.push(
+            "Target differs from the archive; review verification checks before retrying or rolling back.",
+          );
+        if (result.verification.status === "unavailable")
+          result.warnings.push(
+            "Import result is retained, but target verification is unavailable. Retry the same archive and owner mapping to verify.",
+          );
+      } else if (result.status === "valid") {
+        result.verification.status = "not_imported";
+      }
     } catch (error) {
       // Do not expose ORM errors, connection strings or raw archive contents.
       result.error =
@@ -189,11 +225,13 @@ export async function importEventArchive(
     failed: 0,
   };
   for (const record of records) counts[record.status]++;
+  const verification = summarizeVerification(records);
   return {
     archiveId,
     dryRun,
     counts,
     records,
-    summary: `${counts.total} events: ${counts.valid} valid, ${counts.imported} imported, ${counts.skipped} skipped, ${counts.failed} failed.`,
+    verification,
+    summary: `${counts.total} events: ${counts.valid} valid, ${counts.imported} imported, ${counts.skipped} skipped, ${counts.failed} failed. Verification: ${verification.matched} matched, ${verification.mismatched} mismatched, ${verification.unavailable} unavailable, ${verification.notImported} not imported, ${verification.notChecked} not checked.`,
   };
 }
