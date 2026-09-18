@@ -220,6 +220,9 @@ test("HTTP authentication, explicit owner remapping and dry-run default do not w
   assert.equal(preview.body.counts.valid, 1);
   assert.equal(preview.body.records[0].targetId, undefined);
   assert.equal(preview.body.records[0].targetOwnerId, users.host.id);
+  assert.equal(preview.body.records[0].verification.status, "not_imported");
+  assert.equal(preview.body.records[0].verification.checks.capacity, null);
+  assert.equal(preview.body.verification.notImported, 1);
   assert.deepEqual(await counts(), baseline);
   const missing = structuredClone(data);
   missing.events[0].owner.email = "missing@example.com";
@@ -282,6 +285,27 @@ test("bulk round trip creates new event/category IDs, preserves definitions and 
     targetOwnerId: users.other.id,
   });
   assert.equal(imported.body.counts.imported, 2);
+  assert.equal(imported.body.verification.matched, 2);
+  assert.deepEqual(imported.body.verification.expectedByStatus, {
+    draft: 1,
+    published: 1,
+    scheduled: 0,
+    cancelled: 0,
+  });
+  assert.deepEqual(
+    imported.body.verification.actualByStatus,
+    imported.body.verification.expectedByStatus,
+  );
+  assert.deepEqual(imported.body.verification.categories, {
+    expected: 1,
+    actual: 1,
+  });
+  assert.equal(
+    imported.body.records[0].verification.media,
+    "reference_preserved",
+  );
+  assert.equal(imported.body.records[1].verification.media, "absent");
+  assert.equal(imported.body.records[0].verification.checks.ownerId, true);
   const record = imported.body.records[0];
   assert.notEqual(record.targetId, source.id);
   assert.match(record.targetId, /^evt_/);
@@ -408,6 +432,8 @@ test("per-record validation reports failures while valid records import without 
   });
   assert.equal(result.body.counts.imported, 1);
   assert.equal(result.body.counts.failed, 1);
+  assert.equal(result.body.records[1].verification.status, "not_checked");
+  assert.equal(result.body.verification.notChecked, 1);
   assert.equal(
     await prisma.eventImport.count({
       where: { archiveId: result.body.archiveId },
@@ -492,6 +518,8 @@ test("scheduled and cancelled events preserve lifecycle without silently publish
   const input = resign(data);
   const result = await request("host", { archive: input, dryRun: false });
   assert.equal(result.body.counts.imported, 3);
+  assert.equal(result.body.verification.actualByStatus.scheduled, 2);
+  assert.equal(result.body.verification.actualByStatus.cancelled, 1);
   for (const record of result.body.records) {
     const target = await prisma.event.findUnique({
       where: { id: record.targetId },
@@ -544,6 +572,78 @@ test("concurrent imports create one event/category set and receipt", async () =>
     await prisma.ticketType.count({ where: { eventId: [...ids][0] } }),
     1,
   );
+});
+
+test("verification reads edited target state on skipped retries and never overwrites drift", async () => {
+  const data = await archive();
+  const first = await request("host", { archive: data, dryRun: false });
+  const record = first.body.records[0];
+  assert.equal(record.verification.status, "match");
+  assert.ok(
+    Object.values(record.verification.checks).every((value) => value === true),
+  );
+  await prisma.event.update({
+    where: { id: record.targetId },
+    data: { venue: "Changed venue", priceCents: 500, thumbnailUrl: null },
+  });
+  await prisma.ticketType.update({
+    where: { id: record.ticketTypes[0].targetId },
+    data: { maxPerOrder: 1 },
+  });
+  for (const dryRun of [true, false]) {
+    const retry = await request("host", { archive: data, dryRun });
+    assert.equal(retry.body.counts.skipped, 1);
+    assert.equal(retry.body.verification.mismatched, 1);
+    const verification = retry.body.records[0].verification;
+    assert.equal(verification.status, "mismatch");
+    assert.equal(verification.checks.venue, false);
+    assert.equal(verification.checks.priceCents, false);
+    assert.equal(verification.checks.startsAt, true);
+    assert.equal(verification.checks.booking, true);
+    assert.equal(verification.categories.matches, false);
+    assert.equal(verification.ticketTypes[0].matches, false);
+    assert.equal(verification.media, "changed");
+    assert.match(retry.body.records[0].warnings.join(" "), /Duplicate skipped/);
+    assert.match(retry.body.summary, /1 mismatched/);
+  }
+  await prisma.ticketType.delete({
+    where: { id: record.ticketTypes[0].targetId },
+  });
+  const missing = await request("host", { archive: data });
+  assert.deepEqual(missing.body.records[0].verification.categories, {
+    expected: 1,
+    actual: 0,
+    matches: false,
+  });
+  assert.equal(
+    (await prisma.event.findUnique({ where: { id: record.targetId } })).venue,
+    "Changed venue",
+  );
+});
+
+test("verification failure after commit retains import success and is recoverable by retry", async () => {
+  const data = await archive();
+  const unreadable = {
+    user: prisma.user,
+    $transaction: (work) => prisma.$transaction(work),
+    event: {
+      findFirst: async () => {
+        throw new Error("private database failure");
+      },
+    },
+  };
+  const first = await importEventArchive(unreadable, users.host, {
+    archive: data,
+    dryRun: false,
+  });
+  assert.equal(first.counts.imported, 1);
+  assert.equal(first.counts.failed, 0);
+  assert.equal(first.verification.unavailable, 1);
+  assert.ok(!JSON.stringify(first).includes("private database failure"));
+  const retry = await request("host", { archive: data });
+  assert.equal(retry.body.counts.skipped, 1);
+  assert.equal(retry.body.verification.matched, 1);
+  assert.equal(retry.body.records[0].targetId, first.records[0].targetId);
 });
 
 test("admin email matching handles multiple owners and changed ownership hides old mappings", async () => {

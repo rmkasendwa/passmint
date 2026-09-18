@@ -15,7 +15,7 @@ API URL: http://localhost:3000 or https://your-domain/api
 Tokens are read only from the named environment variable, never from arguments.
 Files must be new: existing archives and reports are never overwritten.
 Imports write only with --apply. Review a dry run first.
-Exit codes: 0 success, 1 command/API failure, 2 per-record import failures.
+Exit codes: 0 success, 1 command/API failure, 2 import failures or verification issues.
 `;
 
 class CommandError extends Error {}
@@ -285,6 +285,27 @@ async function main() {
       console.log(
         `${counts.total} events: ${counts.valid} valid, ${counts.imported} imported, ${counts.skipped} skipped, ${counts.failed} failed.`,
       );
+      const verification = result.verification;
+      if (verification) {
+        if (
+          [
+            "matched",
+            "mismatched",
+            "unavailable",
+            "notImported",
+            "notChecked",
+          ].some(
+            (key) =>
+              !Number.isSafeInteger(verification[key]) || verification[key] < 0,
+          )
+        )
+          fail("API returned invalid verification counts.");
+        console.log(
+          `Verification: ${verification.matched} matched, ${verification.mismatched} mismatched, ${verification.unavailable} unavailable, ${verification.notImported} not imported, ${verification.notChecked} not checked.`,
+        );
+        if (verification.mismatched > 0 || verification.unavailable > 0)
+          process.exitCode = 2;
+      }
       for (const record of result.records) {
         console.log(
           `${display(record.sourceId)}: ${display(record.status)}${record.targetId ? ` -> ${display(record.targetId)}` : ""}`,

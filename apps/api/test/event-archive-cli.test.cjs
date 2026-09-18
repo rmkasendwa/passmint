@@ -8,6 +8,47 @@ const { join, resolve } = require("node:path");
 const script = resolve(__dirname, "../../../scripts/event-archives.mjs");
 const token = "cli-test-bearer-secret";
 
+test("CLI saves verification evidence and signals mismatches even with no import failures", () =>
+  fixture(async ({ directory, url, respond }) => {
+    const file = join(directory, "archive.json");
+    await writeFile(file, "{}");
+    const report = {
+      dryRun: true,
+      counts: { total: 1, valid: 0, imported: 0, skipped: 1, failed: 0 },
+      records: [
+        {
+          sourceId: "source",
+          targetId: "target",
+          status: "skipped",
+          warnings: [],
+          verification: { status: "mismatch" },
+        },
+      ],
+      verification: {
+        version: 1,
+        matched: 0,
+        mismatched: 1,
+        unavailable: 0,
+        notImported: 0,
+        notChecked: 0,
+      },
+    };
+    respond(() => ({ status: 200, body: report }));
+    const reportFile = join(directory, "report.json");
+    const result = await run([
+      "import",
+      "--api-url",
+      url,
+      "--file",
+      file,
+      "--report",
+      reportFile,
+    ]);
+    assert.equal(result.code, 2);
+    assert.match(result.output, /Verification: 0 matched, 1 mismatched/);
+    assert.deepEqual(JSON.parse(await readFile(reportFile, "utf8")), report);
+  }));
+
 function run(args, extraEnv = {}) {
   return new Promise((resolveResult, reject) => {
     const child = spawn(process.execPath, [script, ...args], {
