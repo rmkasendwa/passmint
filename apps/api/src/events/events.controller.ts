@@ -24,6 +24,7 @@ import { UpdateEventDto } from "./dto/update-event.dto";
 import { UploadEventImageDto } from "./dto/upload-event-image.dto";
 import { EventsService } from "./events.service";
 import { ExportEventsDto } from './dto/export-events.dto';
+import { ImportEventsDto } from './dto/import-events.dto';
 import { ImageStorageService } from "./image-storage.service";
 
 @Controller("events")
@@ -84,6 +85,14 @@ export class EventsController {
   @Header('Content-Disposition', 'attachment; filename="passmint-events.json"')
   exportArchive(@Body() dto: ExportEventsDto, @Req() request: AuthenticatedRequest) {
     return this.eventsService.exportArchive(dto, request.user!);
+  }
+
+  @Post('archives/import')
+  @HttpCode(200)
+  @UseGuards(AuthGuard)
+  @Header('Cache-Control', 'no-store')
+  importArchive(@Body() dto: ImportEventsDto, @Req() request: AuthenticatedRequest) {
+    return this.eventsService.importArchive(dto, request.user!);
   }
 
   @Get(":id/attendees")
