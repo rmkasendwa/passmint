@@ -1,8 +1,8 @@
 # Portable event archives
 
-The export endpoint implements issue #78. Import (#79), media transfer (#80),
+The export and import endpoints implement issues #78 and #79. Media transfer (#80),
 operator CLI (#81), and post-import verification (#82) are separate follow-ups.
-An export alone cannot yet bootstrap a target deployment.
+These endpoints move event definitions, not issued tickets or customers.
 
 ## Export
 
@@ -88,3 +88,127 @@ text pasted into event fields. Images are currently references only: `thumbnailU
 is preserved verbatim, no remote URL is fetched, and no image bytes are transferred.
 Local `/uploads` and localhost/object-storage references may not work on the target.
 Media classification, copying and URL rewriting are tracked in #80.
+
+## Import into another deployment
+
+`POST /events/archives/import` (production: `/api/events/archives/import`) requires
+a bearer token and accepts `{ archive, dryRun, targetOwnerId, onDuplicate }`.
+
+| Field           | Meaning                                                                                                                                                                             |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `archive`       | Required, complete version 1 JSON archive from the export endpoint.                                                                                                                 |
+| `dryRun`        | Boolean, defaults to **true**. Only explicit `false` writes events.                                                                                                                 |
+| `targetOwnerId` | Optional existing target account ID. Explicitly remaps **all** archive events to that owner. Ordinary users may specify only their own ID; admins may specify any existing account. |
+| `onDuplicate`   | `skip` (default) or `error`. Existing records are never overwritten.                                                                                                                |
+
+Without `targetOwnerId`, owners are matched by trimmed, lowercase email, never by
+source database ID. Ordinary users may import only records matching their own
+email; admins can match multiple existing owners. Missing or unowned source
+owners fail per record unless explicitly remapped. Create target accounts through
+normal registration first. Import never creates accounts, passwords or roles.
+An admin importing another owner's draft cannot subsequently view that draft
+through ordinary event reads; it remains private to its assigned owner.
+
+Archives must fit within 6 MiB of compact JSON and 1000 events (20 categories per
+event). The complete request must also fit the API/proxy request body limit of
+7 MiB. Unsupported versions, mismatched checksums/counts, duplicate source event
+IDs and malformed envelopes return 400 before any writes. Unauthorized target
+ownership returns 403; an explicit nonexistent target owner returns 404.
+The checksum is an integrity check, not a trust or authorization mechanism.
+
+Every record is validated, including booking/seat capacity, category limits,
+integer ranges, unique category names and IDs, sale windows, and publication
+state. Unsupported fields are rejected rather than copied into the database.
+Past event dates and past ticket sale windows are retained. Scheduled drafts must
+have a **future** publication time before the start time; expired schedules fail
+instead of immediately publishing. Version 1 `scheduled` status is accepted and
+mapped to the application's actual representation, `draft` with `publishAt`.
+Cancelled events retain `cancelledAt`; other statuses cannot carry it. Incomplete
+unscheduled drafts are allowed. No date or sale window is shifted automatically.
+
+### Schema setup for an existing target
+
+Import adds the `event_imports` table for persistent duplicate detection and source
+to target mappings. A brand-new empty database receives it during normal schema
+initialization. **Already deployed databases need an explicit upgrade**; startup
+skips schema changes when any tables exist.
+
+Back up and rehearse on a copy, then run the additive
+[`20260918-event-imports.sql`](../prisma/upgrades/20260918-event-imports.sql) once
+against the application's database/schema before enabling import. It creates one
+table, two foreign keys and a unique index; it does not alter retained events or
+tickets. The SQL is transactional and deliberately errors if already applied.
+The runtime image contains this file. From its `/app` directory, with the target
+`DATABASE_URL` configured, an operator can run:
+
+```sh
+node node_modules/prisma/build/index.js db execute --schema prisma/schema.prisma --file prisma/upgrades/20260918-event-imports.sql
+```
+
+Use the same schema/search path as the application. This repository still uses
+explicit schema setup rather than a Prisma migration history; do not run
+`migrate reset`. Local development can use the existing `pnpm run db:push` workflow.
+No schema upgrade is performed by the import endpoint.
+
+### Dry run, review, then import
+
+PowerShell example with the **target** session token and existing target owner ID:
+
+```powershell
+$headers = @{ Authorization = "Bearer $env:PASSMINT_TARGET_TOKEN" }
+$archive = Get-Content -Raw './passmint-events.json' | ConvertFrom-Json
+$request = @{ archive = $archive; dryRun = $true; targetOwnerId = 'usr_target_owner'; onDuplicate = 'skip' }
+$body = $request | ConvertTo-Json -Depth 20 -Compress
+$report = Invoke-RestMethod -Uri 'https://your-domain/api/events/archives/import' -Method Post -Headers $headers -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($body))
+$report | ConvertTo-Json -Depth 20 | Set-Content './import-dry-run.json'
+$report.summary
+# Review all failures and warnings in import-dry-run.json before running this part.
+$request.dryRun = $false
+$body = $request | ConvertTo-Json -Depth 20 -Compress
+$report = Invoke-RestMethod -Uri 'https://your-domain/api/events/archives/import' -Method Post -Headers $headers -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($body))
+$report | ConvertTo-Json -Depth 20 | Set-Content './import-result.json'
+$report.summary
+```
+
+HTTP 200 returns `{ archiveId, dryRun, counts, records, summary }`, **including when
+individual records fail**. Check `counts.failed` and each record; HTTP success
+alone does not mean the entire archive was imported. Counts include `total`,
+`valid` (dry run only), `imported`, `skipped`, and `failed`. Each record includes
+`sourceId`, `status`, `warnings`, and, after owner resolution, `targetOwnerId`.
+Successful imports and skips also return `targetId` and `ticketTypes` mappings
+of `{ sourceId, targetId }`. Failures include a safe `error` string. A valid dry
+run allocates no target IDs and writes no events, categories or import records.
+
+All imported events/categories get new prefixed IDs. Target creation/update
+timestamps reflect the import time; retain the archive for original provenance.
+Artwork URLs are preserved verbatim, with a warning: uploads and localhost URLs
+do not become portable merely because definitions import successfully. Use shared
+public storage or repair artwork in the target; image transfer remains #80.
+
+### Retry and recovery
+
+Each event, all its categories, and its import receipt are committed in one
+transaction. A failed event leaves none of those records behind; other successful
+events remain committed. Parallel/repeated imports are serialized per archive,
+source event and target owner, with a unique database key as a second safeguard.
+An unchanged archive retried for the same target owner skips completed records
+and returns their original mappings. `onDuplicate: "error"` reports those as failed
+instead. Dry runs also report existing duplicates. A skipped record's mapping is
+the original mapping, not a fresh verification of edited target data (#82).
+
+If a response is lost or a database problem occurs, retry the **same archive and
+owner mapping**. Changing archive content, environment label or ownership changes
+the duplicate scope and may create another copy. Keep exports stable across retries.
+Validate and fix records in the source **before** the first real import. If only
+some records fail and source corrections are needed, export just those failed
+source IDs into a new archive; re-exporting the entire changed archive could
+duplicate successes. Missing-owner failures can instead be retried with the same
+archive after registering the correct account. A previously imported event whose
+ownership has since changed reports a failure rather than exposing its mapping.
+
+There is no automatic bulk rollback. Save the report, inspect imported target
+records, and use your reviewed backup/restore process if rollback is necessary;
+do not erase events that have subsequently issued tickets. Deleting a target event
+also deletes its receipt, so reimporting can create a replacement. Do not delete
+receipts alone to force retries. Post-import comparison against target state and
+the operator CLI are tracked separately in #82 and #81.
