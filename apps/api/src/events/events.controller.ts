@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Header,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -22,6 +23,7 @@ import { TicketTypeDto } from "./dto/ticket-type.dto";
 import { UpdateEventDto } from "./dto/update-event.dto";
 import { UploadEventImageDto } from "./dto/upload-event-image.dto";
 import { EventsService } from "./events.service";
+import { ExportEventsDto } from './dto/export-events.dto';
 import { ImageStorageService } from "./image-storage.service";
 
 @Controller("events")
@@ -73,6 +75,15 @@ export class EventsController {
   @UseGuards(AuthGuard)
   uploadImage(@Body() body: UploadEventImageDto) {
     return this.imageStorage.uploadImage(body);
+  }
+
+  @Post('archives/export')
+  @HttpCode(200)
+  @UseGuards(AuthGuard)
+  @Header('Cache-Control', 'no-store')
+  @Header('Content-Disposition', 'attachment; filename="passmint-events.json"')
+  exportArchive(@Body() dto: ExportEventsDto, @Req() request: AuthenticatedRequest) {
+    return this.eventsService.exportArchive(dto, request.user!);
   }
 
   @Get(":id/attendees")
