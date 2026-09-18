@@ -77,8 +77,8 @@ See [docs/product-flow.md](docs/product-flow.md) for the fuller product model.
 
 ## Useful Commands
 
-Authenticated organizers and admins can [export portable event definition archives](docs/event-portability.md).
-Importing those archives into another deployment is tracked separately in #79.
+Authenticated organizers and admins can [export, dry-run, and import portable event definition archives](docs/event-portability.md).
+Existing deployments must apply the documented event-import schema upgrade first.
 
 Hosts can leave capacity blank for unlimited sales. Limited events display remaining availability and stop checkout when sold out. Cancelled tickets release capacity; capacity cannot be reduced below the active ticket count. Run `pnpm run db:push` after updating an existing installation to allow unlimited capacity.
 
