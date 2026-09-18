@@ -90,6 +90,67 @@ after(async () => {
   await app?.close();
   await prisma.$disconnect();
 });
+
+test("operator CLI exports a real archive and dry-runs it through the authenticated API", async () => {
+  const { mkdtemp, readFile, rm } = require("node:fs/promises");
+  const { tmpdir } = require("node:os");
+  const { join, resolve } = require("node:path");
+  const { spawn } = require("node:child_process");
+  const directory = await mkdtemp(join(tmpdir(), "passmint-cli-api-"));
+  const run = (args) =>
+    new Promise((done, reject) => {
+      const child = spawn(
+        process.execPath,
+        [resolve(__dirname, "../../../scripts/event-archives.mjs"), ...args],
+        { env: { ...process.env, PASSMINT_TOKEN: "host" } },
+      );
+      let output = "";
+      child.stdout.on("data", (chunk) => {
+        output += chunk;
+      });
+      child.stderr.on("data", (chunk) => {
+        output += chunk;
+      });
+      child.on("error", reject);
+      child.on("close", (code) => done({ code, output }));
+    });
+  try {
+    const file = join(directory, "archive.json");
+    const reportFile = join(directory, "dry-run.json");
+    const baseline = await counts();
+    const exported = await run([
+      "export",
+      "--api-url",
+      url,
+      "--file",
+      file,
+      "--event-id",
+      source.id,
+      "--source-environment",
+      "cli-test",
+    ]);
+    assert.equal(exported.code, 0, exported.output);
+    const archive = JSON.parse(await readFile(file, "utf8"));
+    assert.equal(archive.events[0].sourceId, source.id);
+    const imported = await run([
+      "import",
+      "--api-url",
+      url,
+      "--file",
+      file,
+      "--report",
+      reportFile,
+    ]);
+    assert.equal(imported.code, 0, imported.output);
+    const report = JSON.parse(await readFile(reportFile, "utf8"));
+    assert.equal(report.dryRun, true);
+    assert.equal(report.counts.valid, 1);
+    assert.equal(report.records[0].targetId, undefined);
+    assert.deepEqual(await counts(), baseline);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
 async function archive() {
   return exportEventArchive(prisma, users.host, {
     eventIds: [source.id],
