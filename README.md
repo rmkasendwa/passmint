@@ -80,6 +80,14 @@ See [docs/product-flow.md](docs/product-flow.md) for the fuller product model.
 Authenticated organizers and admins can [export, dry-run, and import portable event definition archives](docs/event-portability.md).
 Existing deployments must apply the documented event-import schema upgrade first.
 
+With source/target session tokens set in the named environment variables:
+
+```sh
+pnpm events:archive export --api-url http://localhost:3000 --token-env PASSMINT_SOURCE_TOKEN --file events.json --source-environment local
+pnpm events:archive import --api-url https://your-domain/api --token-env PASSMINT_TARGET_TOKEN --file events.json --target-owner-id usr_target --report dry-run.json
+# Review the dry run, then repeat with --apply and a new report filename.
+```
+
 Hosts can leave capacity blank for unlimited sales. Limited events display remaining availability and stop checkout when sold out. Cancelled tickets release capacity; capacity cannot be reduced below the active ticket count. Run `pnpm run db:push` after updating an existing installation to allow unlimited capacity.
 
 Run `pnpm test` with PostgreSQL available. Tests use a unique temporary schema, leaving application records untouched. Set `TEST_DATABASE_URL` to use a separate PostgreSQL test database. Pull requests also run integration tests, type checks, and production builds in CI.

@@ -1,8 +1,62 @@
 # Portable event archives
 
-The export and import endpoints implement issues #78 and #79. Media transfer (#80),
-operator CLI (#81), and post-import verification (#82) are separate follow-ups.
+The export/import endpoints and operator CLI implement issues #78, #79 and #81.
+Media transfer (#80) and post-import verification (#82) are separate follow-ups.
 These endpoints move event definitions, not issued tickets or customers.
+
+## Operator CLI
+
+From a repository checkout with Node.js 22+, use `pnpm events:archive` (or
+`node scripts/event-archives.mjs` without pnpm). It calls the supported API;
+it does not access a database or load `.env` files. Register/log in normally on
+each deployment and supply its session token through the shell environment.
+
+PowerShell example, after setting `PASSMINT_SOURCE_TOKEN` and
+`PASSMINT_TARGET_TOKEN` to the respective session tokens:
+
+```powershell
+# Omit --event-id to export all events accessible to this account.
+pnpm events:archive export --api-url http://localhost:3000 --token-env PASSMINT_SOURCE_TOKEN --file events.json --source-environment local --event-id evt_first --event-id evt_second
+pnpm events:archive import --api-url https://your-domain/api --token-env PASSMINT_TARGET_TOKEN --file events.json --target-owner-id usr_target --report dry-run.json
+# Review dry-run.json and its warnings before applying.
+pnpm events:archive import --api-url https://your-domain/api --token-env PASSMINT_TARGET_TOKEN --file events.json --target-owner-id usr_target --apply --report import-result.json
+```
+
+`--api-url` is the API **base**, including `/api` for same-origin production.
+Trailing slashes work. Credentials, query parameters and fragments in this URL
+are rejected, and redirects are not followed. Use the final HTTPS URL directly.
+
+- Common: `--api-url`, `--file`, `--token-env` (defaults to `PASSMINT_TOKEN`), `--help`.
+- Export: repeat `--event-id` to select events; `--owner-id` filters the source
+  owner; `--source-environment` labels the archive.
+- Import: `--dry-run` is the default; only `--apply` writes. `--target-owner-id`
+  explicitly remaps all records; omit it for email-based ownership matching.
+  `--on-duplicate skip|error` defaults to `skip`. `--report` saves the complete
+  machine-readable import response, including warnings and ID mappings.
+
+The command prints counts, per-record failures/warnings, and generated event and
+category IDs. Exit code `0` means success, `1` means a command/network/API/file
+error, and `2` means the API reported one or more per-record failures (even though
+HTTP returned 200). Review the saved report on partial failures. The report is the
+import result, not a comparison against later target state; that remains #82.
+
+Archive input and API responses are bounded at 6 MiB. Files and responses are read
+in bounded chunks, then parsed in memory; expect several times the file size in
+memory for buffers, parsed objects and request serialization. Use smaller exports
+for large catalogs or image data URLs. Requests time out after 120 seconds. A lost
+response can follow a committed import: retry the **same** archive and owner
+mapping with a new report filename, allowing duplicate detection to recover.
+
+Output files are created exclusively and never overwrite existing files. A report
+filename is reserved before any import request, so a path/permission error is
+detected before mutation. New files request owner-only permissions where the OS
+supports them; on Windows, restrict the containing folder's ACL. Failed operations
+can leave empty/incomplete output files: inspect them and choose a new filename
+on retry. The original input archive is never rewritten. Bearer tokens are never
+printed, and raw HTTP error bodies are not echoed.
+
+Apply the [schema upgrade](#schema-setup-for-an-existing-target) first on existing
+targets. Media is still reference-only; inspect thumbnail warnings before applying.
 
 ## Export
 
@@ -210,5 +264,5 @@ There is no automatic bulk rollback. Save the report, inspect imported target
 records, and use your reviewed backup/restore process if rollback is necessary;
 do not erase events that have subsequently issued tickets. Deleting a target event
 also deletes its receipt, so reimporting can create a replacement. Do not delete
-receipts alone to force retries. Post-import comparison against target state and
-the operator CLI are tracked separately in #82 and #81.
+receipts alone to force retries. Post-import comparison against target state is
+tracked separately in #82.

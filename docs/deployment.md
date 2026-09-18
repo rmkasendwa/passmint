@@ -82,6 +82,9 @@ Event archive import adds the `event_imports` table. Existing deployments must
 apply the [additive SQL upgrade](event-portability.md#schema-setup-for-an-existing-target)
 before using import. Follow the [export, dry-run and import workflow](event-portability.md#import-into-another-deployment)
 to bootstrap event definitions; media transfer and ticket migration are not included.
+The [operator CLI](event-portability.md#operator-cli) runs from your checkout using
+source/target session tokens, with dry-run as the default and explicit `--apply`
+for writes. Use the production API base `https://your-domain/api`.
 
 The ticket-category release adds `ticket_types` and optional category/price snapshot fields to `tickets`. An existing installation needs this schema update before starting the new app. Automatic initialization intentionally skips schemas with tables, so it does not perform this upgrade. Back up and rehearse the schema change, then use the explicit `db-setup` operation described above. Existing tickets remain valid with general-admission labels; legacy null price snapshots display the event's current price.
 
