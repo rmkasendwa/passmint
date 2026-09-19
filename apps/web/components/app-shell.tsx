@@ -62,6 +62,12 @@ export function AppShell({
       ? pathname === href ||
         (pathname.startsWith(href + "/") && pathname !== "/events/new")
       : pathname === href;
+  const accountMenuLinkClass = (href: string) =>
+    `mb-2 block rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+      active(href)
+        ? "bg-surface-muted text-text"
+        : "text-text hover:bg-surface-muted"
+    }`;
   const publicLinks = [
     { href: "/", label: "Discover events" },
     { href: "/organizers", label: "For organizers" },
@@ -149,11 +155,19 @@ export function AppShell({
                   <p className="mb-4 truncate text-xs text-text-muted">
                     {session.user.email}
                   </p>
-                  <Link href="/events" className="mb-3 block text-sm text-text">
-                    Your events
+                  <Link
+                    href="/events"
+                    aria-current={active("/events") ? "page" : undefined}
+                    className={accountMenuLinkClass("/events")}
+                  >
+                    My Events
                   </Link>
                   {(session.user.role === "admin" || session.user.role === "root_admin") && (
-                    <Link href="/admin" className="mb-3 block text-sm text-text">
+                    <Link
+                      href="/admin"
+                      aria-current={active("/admin") ? "page" : undefined}
+                      className={accountMenuLinkClass("/admin")}
+                    >
                       Administration
                     </Link>
                   )}
