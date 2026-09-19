@@ -1,7 +1,8 @@
 # Portable event archives
 
 The export/import endpoints, operator CLI and verification reports implement
-issues #78, #79, #81 and #82. Media transfer remains a separate follow-up (#80).
+issues #78, #79, #80, #81 and #82. Artwork uses reference-only export with explicit
+target uploads and URL mappings; automatic bucket copying is not supported.
 These endpoints move event definitions, not issued tickets or customers.
 
 ## Operator CLI
@@ -31,7 +32,8 @@ are rejected, and redirects are not followed. Use the final HTTPS URL directly.
   owner; `--source-environment` labels the archive.
 - Import: `--dry-run` is the default; only `--apply` writes. `--target-owner-id`
   explicitly remaps all records; omit it for email-based ownership matching.
-  `--on-duplicate skip|error` defaults to `skip`. `--report` saves the complete
+  `--on-duplicate skip|error` defaults to `skip`. `--thumbnail-map media.json`
+  supplies source event IDs mapped to uploaded target URLs or null. `--report` saves the complete
   machine-readable import response, including warnings and ID mappings.
 
 The command prints counts, per-record failures/warnings, and generated event and
@@ -140,9 +142,10 @@ No tickets, ticket codes, QR payloads, buyers, scan activity, password hashes,
 auth tokens, database configuration or object-storage configuration are selected.
 Event text is user-authored content, so the exporter is not a secret scrubber for
 text pasted into event fields. Images are currently references only: `thumbnailUrl`
-is preserved verbatim, no remote URL is fetched, and no image bytes are transferred.
-Local `/uploads` and localhost/object-storage references may not work on the target.
-Media classification, copying and URL rewriting are tracked in #80.
+is preserved for URL references, no remote URL is fetched, and no image bytes are
+transferred. Embedded data URLs are omitted (set to null). Local `/uploads` and
+localhost/object-storage references may not work on the target. See the artwork
+workflow below to upload replacement images and map their target URLs.
 
 ## Import into another deployment
 
@@ -236,9 +239,68 @@ run allocates no target IDs and writes no events, categories or import records.
 
 All imported events/categories get new prefixed IDs. Target creation/update
 timestamps reflect the import time; retain the archive for original provenance.
-Artwork URLs are preserved verbatim, with a warning: uploads and localhost URLs
-do not become portable merely because definitions import successfully. Use shared
-public storage or repair artwork in the target; image transfer remains #80.
+Artwork URLs are preserved unless explicitly overridden, with a warning: uploads
+and localhost URLs do not become portable merely because definitions import
+successfully. Use shared public storage or the upload-and-map workflow below.
+
+## Artwork portability
+
+The default is **reference-only**. New exports include optional `manifest.media`
+entries `{ sourceId, mode, strategy: "reference-only" }` for every event. `mode`
+is `external` for HTTP(S) hostname URLs, `local` for relative URLs, localhost,
+single-label hosts, `.local` names and IP literals, or `omitted` for no thumbnail.
+IP literals are conservatively marked local even when publicly routed. This is a
+classification, not a connectivity or licensing check. Embedded data URLs are
+omitted on export: save their original image separately before migration.
+
+Media metadata is advisory and excluded from the content checksum; import derives
+the source classification from the actual event URL. Old version 1 archives without
+media entries are still accepted. Deploy this release to both exporter and importer:
+older importers reject the new optional manifest field. Legacy archives containing
+inline data URLs need an explicit override or null; importing raw inline image
+bytes without upload validation is rejected. Bundled/inline-transfer manifest modes
+are unsupported and fail per event without creating its event or categories.
+
+For S3-compatible target storage, configure the existing `S3_BUCKET`, `S3_REGION`,
+access-key/secret settings and optional endpoint/public base URL in the target
+environment before uploading. Ensure its public image URLs are reachable by users.
+For local target uploads, mount persistent `/app/uploads` storage. No storage
+credentials belong in an archive or mapping file. Reference-preserved source
+storage must remain available after cutover.
+
+Use the target's existing `POST /events/uploads` endpoint (production:
+`/api/events/uploads`) to upload files you obtained from the source. It enforces
+the configured byte limit (5 MiB by default), supported JPEG/PNG/WebP/GIF types,
+40-megapixel input limit, orientation correction, a maximum 1920-pixel side, and
+metadata-free WebP conversion. The import endpoint never fetches arbitrary URLs
+or copies image bytes itself. Example for one original PNG:
+
+```powershell
+$bytes = [IO.File]::ReadAllBytes((Resolve-Path './banner.png'))
+$image = @{ fileName = 'banner.png'; contentType = 'image/png'; dataUrl = 'data:image/png;base64,' + [Convert]::ToBase64String($bytes) } | ConvertTo-Json -Compress
+$headers = @{ Authorization = "Bearer $env:PASSMINT_TARGET_TOKEN" }
+$uploaded = Invoke-RestMethod -Uri 'https://your-domain/api/events/uploads' -Method Post -Headers $headers -ContentType 'application/json' -Body $image
+@{ evt_source = $uploaded.url } | ConvertTo-Json | Set-Content -Encoding utf8 './media.json'
+pnpm events:archive import --api-url https://your-domain/api --token-env PASSMINT_TARGET_TOKEN --file events.json --thumbnail-map media.json --target-owner-id usr_target --report media-dry-run.json
+# After reviewing the report, repeat with --apply and a new report filename.
+```
+
+Direct API requests pass the same object as `thumbnailOverrides`. Keys must be
+source event IDs in the archive; values must be HTTP(S) URLs without embedded
+credentials, target `/uploads/event-images/...webp` or `/api/uploads/event-images/...webp`
+paths, or null to omit artwork. Invalid values fail only their event; unknown keys
+reject the request before writes. External URLs are preserved without fetching or
+validating their remote contents, so use the upload endpoint when importing bytes.
+
+Per-record `media` reports `sourceMode` and `action` (`preserved`, `rewritten` or
+`omitted`). Verification compares the **effective mapped URL**, while still leaving
+actual image availability unchecked. Keep the same archive, owner mapping **and
+thumbnail map** on retries. Overrides do not change archive identity: an already
+imported duplicate is never rewritten, and a different override appears as a
+verification mismatch. Decide image mappings before the first real import.
+Uploads occur separately from the database transaction; a failed event import can
+leave an unused uploaded object. Retain and reuse its URL on retry; clean up unused
+objects only after checking they are not referenced by another event.
 
 ### Retry and recovery
 
