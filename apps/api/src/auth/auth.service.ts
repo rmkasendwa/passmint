@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, OnApplicationBootstrap, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { User } from '@prisma/client';
 import { createHmac, pbkdf2Sync, randomBytes, timingSafeEqual } from 'crypto';
@@ -17,11 +17,41 @@ type TokenPayload = {
 };
 
 @Injectable()
-export class AuthService {
+export class AuthService implements OnApplicationBootstrap {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
   ) {}
+
+  async onApplicationBootstrap() {
+    await this.reconcileRootAdmin();
+  }
+
+  async reconcileRootAdmin() {
+    const email = this.rootAdminEmail();
+    await this.prisma.$transaction(async (tx) => {
+      await tx.user.updateMany({
+        where: {
+          role: UserRole.RootAdmin,
+          ...(email ? { email: { not: email } } : {}),
+        },
+        data: { role: UserRole.User },
+      });
+      if (email) {
+        await tx.user.updateMany({
+          where: { email },
+          data: { role: UserRole.RootAdmin },
+        });
+      }
+    });
+    this.logger.log(
+      email
+        ? 'Root administrator configuration reconciled.'
+        : 'No root administrator is configured.',
+    );
+  }
 
   async register(dto: RegisterDto) {
     const email = dto.email.trim().toLowerCase();
@@ -37,7 +67,7 @@ export class AuthService {
         email,
         name: dto.name.trim(),
         passwordHash: this.hashPassword(dto.password),
-        role: this.resolveRole(email),
+        role: email === this.rootAdminEmail() ? UserRole.RootAdmin : UserRole.User,
       },
     });
 
@@ -113,13 +143,11 @@ export class AuthService {
     return this.config.get<string>('AUTH_SECRET') ?? 'passmint-dev-secret-change-me';
   }
 
-  private resolveRole(email: string) {
-    const adminEmails = (this.config.get<string>('ADMIN_EMAILS') ?? '')
-      .split(',')
-      .map((value) => value.trim().toLowerCase())
-      .filter(Boolean);
-
-    return adminEmails.includes(email) ? UserRole.Admin : UserRole.User;
+  private rootAdminEmail() {
+    const value = (this.config.get<string>('ROOT_ADMIN_EMAIL') ?? '')
+      .trim()
+      .toLowerCase();
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? value : null;
   }
 
   private hashPassword(password: string) {

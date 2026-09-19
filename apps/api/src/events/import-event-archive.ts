@@ -7,7 +7,7 @@ import { Prisma } from "@prisma/client";
 import { AuthUser } from "../auth/auth.types";
 import { prefixedId } from "../common/prefixed-id";
 import { PrismaService } from "../prisma/prisma.service";
-import { UserRole } from "../users/user-role.enum";
+import { isPlatformAdmin } from "../users/user-role.enum";
 import { ImportEventsDto } from "./dto/import-events.dto";
 import {
   mediaMode,
@@ -45,7 +45,7 @@ export async function importEventArchive(
   dto: ImportEventsDto,
   now = new Date(),
 ) {
-  const admin = user.role === UserRole.Admin;
+  const admin = isPlatformAdmin(user.role);
   if (
     !admin &&
     dto.targetOwnerId !== undefined &&

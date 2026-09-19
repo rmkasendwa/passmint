@@ -8,7 +8,7 @@ import { createHash } from "node:crypto";
 import { AuthUser } from "../auth/auth.types";
 import { validateBooking } from "../common/booking";
 import { PrismaService } from "../prisma/prisma.service";
-import { UserRole } from "../users/user-role.enum";
+import { isPlatformAdmin } from "../users/user-role.enum";
 import { ExportEventsDto } from "./dto/export-events.dto";
 import { mediaMode } from "./archive-media";
 
@@ -64,7 +64,7 @@ export async function exportEventArchive(
   dto: ExportEventsDto,
   now = new Date(),
 ) {
-  const admin = user.role === UserRole.Admin;
+  const admin = isPlatformAdmin(user.role);
   if (!admin && dto.ownerId !== undefined && dto.ownerId !== user.id) {
     throw new ForbiddenException("You can only export your own events.");
   }
