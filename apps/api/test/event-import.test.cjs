@@ -17,12 +17,136 @@ const {
 } = require("../dist/events/event-archive");
 const { importEventArchive } = require("../dist/events/import-event-archive");
 const prisma = new PrismaClient();
+
+test("artwork uploads use image validation and import overrides preserve retry identity", async () => {
+  const sharp = require("sharp");
+  const { readFile, readdir } = require("node:fs/promises");
+  const { join } = require("node:path");
+  const data = await archive();
+  data.events[0].thumbnailUrl = "/api/uploads/event-images/source.webp";
+  const input = resign(data);
+  const png = await sharp({
+    create: { width: 20, height: 10, channels: 3, background: "blue" },
+  })
+    .png()
+    .toBuffer();
+  const upload = (body) =>
+    fetch(`${url}/events/uploads`, {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer host",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+  const validImage = {
+    fileName: "source.png",
+    contentType: "image/png",
+    dataUrl: `data:image/png;base64,${png.toString("base64")}`,
+  };
+  assert.equal(
+    (await upload({ ...validImage, contentType: "image/jpeg" })).status,
+    400,
+  );
+  assert.deepEqual(await readdir(uploadRoot), []);
+  const uploaded = await upload(validImage);
+  assert.equal(uploaded.status, 201);
+  const { url: targetUrl } = await uploaded.json();
+  const image = await readFile(
+    join(uploadRoot, targetUrl.split("/uploads/")[1]),
+  );
+  assert.equal((await sharp(image).metadata()).format, "webp");
+  const thumbnailOverrides = { [source.id]: targetUrl };
+  const preview = await request("host", { archive: input, thumbnailOverrides });
+  assert.equal(preview.body.counts.valid, 1);
+  assert.deepEqual(preview.body.records[0].media, {
+    sourceMode: "local",
+    action: "rewritten",
+  });
+  const applied = await request("host", {
+    archive: input,
+    thumbnailOverrides,
+    dryRun: false,
+  });
+  assert.equal(applied.body.counts.imported, 1);
+  assert.equal(applied.body.verification.matched, 1);
+  assert.equal(
+    (
+      await prisma.event.findUnique({
+        where: { id: applied.body.records[0].targetId },
+      })
+    ).thumbnailUrl,
+    targetUrl,
+  );
+  const repeat = await request("host", { archive: input, thumbnailOverrides });
+  assert.equal(repeat.body.counts.skipped, 1);
+  assert.equal(repeat.body.verification.matched, 1);
+  const changed = await request("host", {
+    archive: input,
+    thumbnailOverrides: { [source.id]: null },
+    dryRun: false,
+  });
+  assert.equal(changed.body.counts.skipped, 1);
+  assert.equal(changed.body.verification.mismatched, 1);
+  assert.equal(changed.body.archiveId, applied.body.archiveId);
+  for (const value of [
+    "data:image/png;base64,AAAA",
+    "javascript:alert(1)",
+    "https://user:secret@example.com/a.webp",
+    "/unrelated.webp",
+  ]) {
+    const failed = await request("host", {
+      archive: input,
+      thumbnailOverrides: { [source.id]: value },
+    });
+    assert.equal(failed.body.counts.failed, 1);
+  }
+  assert.equal(
+    (
+      await request("host", {
+        archive: input,
+        thumbnailOverrides: { missing: null },
+      })
+    ).status,
+    400,
+  );
+  const omittedInput = await archive();
+  const omitted = await request("host", {
+    archive: omittedInput,
+    thumbnailOverrides: { [source.id]: null },
+    dryRun: false,
+  });
+  assert.equal(omitted.body.records[0].verification.media, "absent");
+  const bundled = await archive();
+  bundled.manifest.media = [
+    { sourceId: source.id, mode: "bundled", strategy: "bundle" },
+  ];
+  const failure = await request("host", { archive: bundled, dryRun: false });
+  assert.equal(failure.body.counts.failed, 1);
+  assert.equal(
+    await prisma.eventImport.count({
+      where: { archiveId: bundled.manifest.archiveId },
+    }),
+    0,
+  );
+  const inline = await archive();
+  inline.events[0].thumbnailUrl = validImage.dataUrl;
+  assert.equal(
+    (await request("host", { archive: resign(inline), dryRun: false })).body
+      .counts.failed,
+    1,
+  );
+});
 // Exercise production bootstrap without racing other test apps' demo seeding.
 process.env.NODE_ENV = "production";
 process.env.SEED_DEMO_DATA = "false";
 const users = {};
-let app, url, source;
+let app, url, source, uploadRoot;
 before(async () => {
+  const { mkdtemp } = require("node:fs/promises");
+  const { tmpdir } = require("node:os");
+  const { join } = require("node:path");
+  uploadRoot = await mkdtemp(join(tmpdir(), "passmint-import-images-"));
   for (const role of ["host", "other", "admin"])
     users[role] = await prisma.user.create({
       data: {
@@ -44,7 +168,16 @@ before(async () => {
         provide: AuthService,
         useValue: { verifyToken: async (token) => users[token] ?? null },
       },
-      { provide: ImageStorageService, useValue: {} },
+      {
+        provide: ImageStorageService,
+        useValue: new ImageStorageService({
+          get: (key) =>
+            ({
+              LOCAL_UPLOAD_DIR: uploadRoot,
+              PUBLIC_API_URL: "https://target.example/api",
+            })[key],
+        }),
+      },
     ],
   }).compile();
   app = module.createNestApplication({ logger: false });
@@ -89,10 +222,14 @@ before(async () => {
 after(async () => {
   await app?.close();
   await prisma.$disconnect();
+  await require("node:fs/promises").rm(uploadRoot, {
+    recursive: true,
+    force: true,
+  });
 });
 
 test("operator CLI exports a real archive and dry-runs it through the authenticated API", async () => {
-  const { mkdtemp, readFile, rm } = require("node:fs/promises");
+  const { mkdtemp, readFile, writeFile, rm } = require("node:fs/promises");
   const { tmpdir } = require("node:os");
   const { join, resolve } = require("node:path");
   const { spawn } = require("node:child_process");
@@ -117,6 +254,8 @@ test("operator CLI exports a real archive and dry-runs it through the authentica
   try {
     const file = join(directory, "archive.json");
     const reportFile = join(directory, "dry-run.json");
+    const mediaFile = join(directory, "media.json");
+    await writeFile(mediaFile, JSON.stringify({ [source.id]: null }));
     const baseline = await counts();
     const exported = await run([
       "export",
@@ -140,12 +279,15 @@ test("operator CLI exports a real archive and dry-runs it through the authentica
       file,
       "--report",
       reportFile,
+      "--thumbnail-map",
+      mediaFile,
     ]);
     assert.equal(imported.code, 0, imported.output);
     const report = JSON.parse(await readFile(reportFile, "utf8"));
     assert.equal(report.dryRun, true);
     assert.equal(report.counts.valid, 1);
     assert.equal(report.records[0].targetId, undefined);
+    assert.equal(report.records[0].media.action, "omitted");
     assert.deepEqual(await counts(), baseline);
   } finally {
     await rm(directory, { recursive: true, force: true });
