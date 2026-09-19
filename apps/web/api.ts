@@ -118,6 +118,10 @@ export async function request<T>(
 }
 
 export const api = {
+  exportEvents: (payload: Record<string, unknown>, token: string) =>
+    request<Record<string, unknown>>("/events/archives/export", { method: "POST", body: JSON.stringify(payload) }, token),
+  importEvents: (payload: Record<string, unknown>, token: string) =>
+    request<ImportReport>("/events/archives/import", { method: "POST", body: JSON.stringify(payload) }, token),
   scanMetrics: (id: string, day: string, token: string) =>
     request<ScanMetrics>(
       `/events/${encodeURIComponent(id)}/scan-metrics?${new URLSearchParams({ day })}`,
@@ -289,6 +293,13 @@ export const api = {
       body: JSON.stringify(payload),
     }),
   me: (token: string) => request<User>("/auth/me", undefined, token),
+};
+
+export type ImportReport = {
+  archiveId: string;
+  dryRun: boolean;
+  counts: { total: number; valid: number; imported: number; skipped: number; failed: number };
+  summary: string;
 };
 
 export type TicketType = {
