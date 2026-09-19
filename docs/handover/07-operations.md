@@ -22,7 +22,7 @@ Never place real values in this document. [`.env.example`](../../.env.example) c
 | `AUTH_SECRET` | HMAC token signing secret; must replace development fallback |
 | `INITIALIZE_DATABASE` | Initializes an empty schema automatically, skips existing tables; set false to manage schema setup separately |
 | `SEED_DEMO_DATA` | Production seeding is disabled unless explicitly set to `true` |
-| `ADMIN_EMAILS` | Comma-separated email list assigning platform-admin role at registration; privileged configuration |
+| `ROOT_ADMIN_EMAIL` | Single configuration-owned root administrator; reconciled at startup and registration |
 | `MINIO_API_PORT`, `MINIO_CONSOLE_PORT`, `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD` | Local storage service and administrative credentials |
 | `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT`, `S3_FORCE_PATH_STYLE` | Object destination and addressing; custom endpoint forces path-style behavior in service |
 | `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_SESSION_TOKEN` | Storage credentials, including optional session token |

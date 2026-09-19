@@ -25,7 +25,7 @@ In another terminal, run both local apps:
 pnpm run dev
 ```
 
-Set `ADMIN_EMAILS` in `.env` to a comma-separated list of platform admin email addresses. Users register and log in the same way; any registered user can publish events and validate tickets for events they created, while matching admin emails receive marketplace-wide verifier access.
+Set `ROOT_ADMIN_EMAIL` in `.env` to the single account that owns configuration-level platform authority. The application reconciles this role at startup and registration. Changing or removing the value revokes the previous root role; delegated administrators remain database-managed separately.
 
 Event thumbnails upload through the API into MinIO during local development. `pnpm run dev` starts MinIO, creates the `passmint-event-images` bucket, and makes uploaded event images readable at `http://localhost:${MINIO_API_PORT}/passmint-event-images/...`. The MinIO console runs at `http://localhost:${MINIO_CONSOLE_PORT}`. To use production object storage, set `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, and optionally `S3_ENDPOINT`, `S3_FORCE_PATH_STYLE`, and `S3_PUBLIC_BASE_URL` for S3-compatible providers such as R2 or MinIO.
 
@@ -77,7 +77,7 @@ See [docs/product-flow.md](docs/product-flow.md) for the fuller product model.
 
 ## Useful Commands
 
-Authenticated organizers and admins can [export, dry-run, and import portable event definition archives](docs/event-portability.md).
+Authenticated organizers can use the CLI, while platform administrators can use `/admin` to [export, validate, and import portable event definition archives](docs/event-portability.md).
 Existing deployments must apply the documented event-import schema upgrade first.
 
 With source/target session tokens set in the named environment variables:

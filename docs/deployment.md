@@ -21,7 +21,7 @@ Use the repository Dockerfile with a separate PostgreSQL 16 resource in Coolify.
 
 1. Create/start PostgreSQL in Coolify. Ensure the app and database share a reachable Docker network; use its internal connection URL as `DATABASE_URL`, not `localhost`.
 2. Connect `rmkasendwa/passmint`, branch `main`. Select **Dockerfile** build pack, base directory `/`, Dockerfile `/Dockerfile`, and **Ports Exposes `8088`**. Keep the image's default start command. The web listens on `0.0.0.0:8088`; the internal API on port 3000 must remain private.
-3. Add runtime environment variables: `DATABASE_URL`, a unique random `AUTH_SECRET` (at least 32 characters), `PORT=8088`, `PUBLIC_API_URL=/api`, `SEED_DEMO_DATA=false`. Leave `ADMIN_EMAILS` empty. Do not override `NEXT_PUBLIC_API_URL`; `/api` is already built into the image. Secrets need runtime availability, not build-time injection.
+3. Add runtime environment variables: `DATABASE_URL`, a unique random `AUTH_SECRET` (at least 32 characters), `PORT=8088`, `PUBLIC_API_URL=/api`, `SEED_DEMO_DATA=false`, and an optional single `ROOT_ADMIN_EMAIL`. Do not override `NEXT_PUBLIC_API_URL`; `/api` is already built into the image. Secrets need runtime availability, not build-time injection.
 4. For a **new, empty database**, no initialization variable is needed. The initializer checks for tables and creates the schema before starting the API. A database advisory lock serializes concurrent first starts. Existing tables cause setup to be skipped entirely; this is not an upgrade/migration mechanism. Set `INITIALIZE_DATABASE=false` only if schema setup is managed separately.
 5. Add persistent storage with destination `/app/uploads`, writable by UID 1000, or configure external S3 storage. Prefer a named volume; an empty root-owned bind directory needs its permissions prepared. Keep the same storage on redeploy.
 6. Assign your HTTPS domain and retain the image's health check. It uses Node (already installed) to call `/api/ready`; no curl installation is required. Deploy and check the logs, healthy state, event creation, upload and ticket scan.
@@ -40,7 +40,12 @@ Copy `.env.production.example` to `.env.production`. Generate **two independent*
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
-Use URL-safe hexadecimal for the database password because Compose embeds it in a connection URL. Keep the environment file outside source control. The startup script requires `DATABASE_URL` and a non-placeholder signing secret of at least 32 characters. Ordinary users already own/administer their events; leave `ADMIN_EMAILS` empty unless you have reviewed privileged provisioning separately.
+Use URL-safe hexadecimal for the database password because Compose embeds it in a connection URL. Keep the environment file outside source control. The startup script requires `DATABASE_URL` and a non-placeholder signing secret of at least 32 characters. Set `ROOT_ADMIN_EMAIL` only to the normalized email of the intended root account.
+
+Before deploying this feature to an existing database, apply
+`prisma/upgrades/20260920-root-admin-role.sql`. It adds the `root_admin` enum value
+without changing existing delegated administrators. Apply the event-import upgrade
+documented in `docs/event-portability.md` before enabling the admin import action.
 
 ```sh
 docker compose --env-file .env.production -f compose.production.yml build app
@@ -70,7 +75,7 @@ PostgreSQL has no published host port in the production Compose file. Database a
 | `PUBLIC_API_URL` | Defaults to `/api`, so local images use same-origin `/api/uploads/...` URLs |
 | `S3_*` | Optional object storage settings; omit bucket/access keys to use filesystem volume |
 | `SEED_DEMO_DATA` | Production does not seed demo events unless explicitly `true` |
-| `ADMIN_EMAILS` | Optional platform-wide role assignment, independent of ordinary event ownership |
+| `ROOT_ADMIN_EMAIL` | Optional single root account email; reconciled at startup and registration |
 
 Image startup bypasses the local development environment loader, so it does not silently supply MinIO credentials. External S3-compatible storage requires bucket, access key and secret, plus appropriate endpoint/region and a browser-reachable public base URL. Only event artwork should be public. Back up object storage separately if used.
 

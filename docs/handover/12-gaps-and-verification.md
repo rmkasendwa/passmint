@@ -17,7 +17,7 @@ Priority here describes recommended handover attention, not a claim of exploitab
 | G03 | Password reset is a UI placeholder | App-provider handlers only update text | Complete auth recovery before claiming it works |
 | G04 | Resolved in #67: missing Docker build/runtime inputs | Image builds include scripts, Prisma generation and public assets; CI exercises both setup modes | Retain release-specific build/smoke evidence and validate live hosting |
 | G05 | Resolved production defaults in #67: unintended demo seeding/fallback | Production skips seeding unless explicitly enabled; frontend fallback is development-only | Keep `SEED_DEMO_DATA` disabled on live service; exclude intentional samples from metrics |
-| G06 | Unverified admin-email registration; development auth fallback | Auth service; production supervisor now rejects missing/placeholder secrets | Review privileged provisioning and keep `ADMIN_EMAILS` empty unless intentionally configured |
+| G06 | Root email is not yet verified; development auth fallback | Root authority is reconciled from `ROOT_ADMIN_EMAIL`; production rejects missing/placeholder signing secrets | Complete verified-email authentication before enabling root access on a public deployment |
 | G07 | Repeat-email response exposes purchase count | Ticket service conflict response | Implement privacy-preserving guest flow |
 | G08 | No versioned database migration history | Prisma schema and `db push` scripts | Establish reviewed migration/rollback history and restore proof |
 | G09 | No verified backup, monitoring, hosting or support record | Not provided in repository | Complete D05/D07/D08/D11 |
