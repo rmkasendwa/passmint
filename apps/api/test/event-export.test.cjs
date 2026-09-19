@@ -16,6 +16,58 @@ const {
   exportEventArchive,
 } = require("../dist/events/event-archive");
 const prisma = new PrismaClient();
+process.env.NODE_ENV = "production";
+process.env.SEED_DEMO_DATA = "false";
+
+test("exports classify reference-only media and older archives remain valid", async () => {
+  const { mediaMode } = require("../dist/events/archive-media");
+  for (const [value, mode] of [
+    [null, "omitted"],
+    ["https://cdn.example.com/a.webp", "external"],
+    ["/api/uploads/a.webp", "local"],
+    ["http://localhost:9001/bucket/a.webp", "local"],
+    ["http://127.0.0.1/a.webp", "local"],
+    ["http://minio/a.webp", "local"],
+  ])
+    assert.equal(mediaMode(value), mode);
+  const result = await request("host", { eventIds: [hosted.id, draft.id] });
+  assert.deepEqual(
+    result.body.manifest.media.find((m) => m.sourceId === hosted.id),
+    { sourceId: hosted.id, mode: "external", strategy: "reference-only" },
+  );
+  assert.equal(
+    result.body.manifest.media.find((m) => m.sourceId === draft.id).mode,
+    "omitted",
+  );
+  const {
+    validateArchive,
+  } = require("../dist/events/import-archive-validation");
+  delete result.body.manifest.media;
+  assert.equal(
+    validateArchive(result.body).archiveId,
+    result.body.manifest.archiveId,
+  );
+  const embedded = await prisma.event.create({
+    data: {
+      id: randomUUID(),
+      ownerId: users.host.id,
+      name: "Inline",
+      description: "Inline",
+      venue: "Venue",
+      startsAt: new Date("2099-01-01"),
+      priceCents: 0,
+      thumbnailUrl: "data:image/png;base64,AAAA",
+    },
+  });
+  try {
+    const exported = await request("host", { eventIds: [embedded.id] });
+    assert.equal(exported.body.events[0].thumbnailUrl, null);
+    assert.equal(exported.body.manifest.media[0].mode, "omitted");
+    assert.ok(!JSON.stringify(exported.body).includes("base64"));
+  } finally {
+    await prisma.event.delete({ where: { id: embedded.id } });
+  }
+});
 const users = {};
 let app, url, hosted, foreign, draft, adminDraft, orphan;
 before(async () => {
