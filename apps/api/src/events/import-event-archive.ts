@@ -10,6 +10,11 @@ import { PrismaService } from "../prisma/prisma.service";
 import { UserRole } from "../users/user-role.enum";
 import { ImportEventsDto } from "./dto/import-events.dto";
 import {
+  mediaMode,
+  thumbnailOverride,
+  validateThumbnailOverrides,
+} from "./archive-media";
+import {
   ImportVerification,
   uncheckedImport,
   verifyEventImport,
@@ -31,6 +36,7 @@ type Result = {
   warnings: string[];
   error?: string;
   verification: ImportVerification;
+  media?: { sourceMode: string; action: "preserved" | "rewritten" | "omitted" };
 };
 
 export async function importEventArchive(
@@ -49,7 +55,11 @@ export async function importEventArchive(
       "You can only import into your own ownership scope.",
     );
   }
-  const { archiveId, events, sourceIds } = validateArchive(dto.archive);
+  const { archiveId, events, sourceIds, media } = validateArchive(dto.archive);
+  const overrides = validateThumbnailOverrides(
+    dto.thumbnailOverrides,
+    sourceIds,
+  );
   const explicitOwner =
     dto.targetOwnerId === undefined
       ? null
@@ -70,6 +80,42 @@ export async function importEventArchive(
     };
     try {
       const event = validateArchiveEvent(events[index]);
+      const entry = media.find((item) => item.sourceId === event.sourceId);
+      if (
+        entry &&
+        (!["external", "local", "omitted"].includes(entry.mode) ||
+          entry.strategy !== "reference-only")
+      )
+        invalid(
+          "Bundled or inline media transfer is unsupported. Upload the image to the target and use thumbnailOverrides.",
+        );
+      const sourceMode = mediaMode(event.data.thumbnailUrl);
+      const overridden = Object.prototype.hasOwnProperty.call(
+        overrides,
+        event.sourceId,
+      );
+      if (!overridden && event.data.thumbnailUrl?.startsWith("data:"))
+        invalid(
+          "Inline image bytes must be uploaded through /events/uploads first; provide a thumbnail override or null.",
+        );
+      if (overridden)
+        event.data.thumbnailUrl = thumbnailOverride(overrides[event.sourceId]);
+      result.media = {
+        sourceMode,
+        action: overridden
+          ? event.data.thumbnailUrl
+            ? "rewritten"
+            : "omitted"
+          : "preserved",
+      };
+      if (overridden)
+        result.warnings.push(
+          "Thumbnail override applied for comparison and new imports; existing duplicates are never overwritten.",
+        );
+      if (!overridden && sourceMode === "local")
+        result.warnings.push(
+          "Source-local artwork may be unavailable on the target. Upload it to the target and supply thumbnailOverrides, or explicitly omit it with null.",
+        );
       result.verification = uncheckedImport(event);
       let targetOwner = explicitOwner;
       if (!targetOwner) {

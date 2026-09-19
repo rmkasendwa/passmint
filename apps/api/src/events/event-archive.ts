@@ -10,6 +10,7 @@ import { validateBooking } from "../common/booking";
 import { PrismaService } from "../prisma/prisma.service";
 import { UserRole } from "../users/user-role.enum";
 import { ExportEventsDto } from "./dto/export-events.dto";
+import { mediaMode } from "./archive-media";
 
 // Keep an explicit allowlist: adding a database field must never expand an archive.
 const definitionSelect = {
@@ -95,6 +96,10 @@ export async function exportEventArchive(
   const events = rows.map(({ id, owner, ticketTypes, booking, ...event }) => ({
     sourceId: id,
     ...event,
+    // Inline bytes are not part of reference-only exports. Upload them separately.
+    thumbnailUrl: event.thumbnailUrl?.startsWith("data:")
+      ? null
+      : event.thumbnailUrl,
     startsAt: event.startsAt.toISOString(),
     publishAt: event.publishAt?.toISOString() ?? null,
     cancelledAt: event.cancelledAt?.toISOString() ?? null,
@@ -129,6 +134,11 @@ export async function exportEventArchive(
       checksum: { algorithm: "sha256", value: checksum },
       exportedAt: now.toISOString(),
       application: "passmint",
+      media: events.map((event) => ({
+        sourceId: event.sourceId,
+        mode: mediaMode(event.thumbnailUrl),
+        strategy: "reference-only",
+      })),
       counts: {
         events: events.length,
         ticketTypes: events.reduce(
