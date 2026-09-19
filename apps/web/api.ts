@@ -80,7 +80,7 @@ export type User = {
   id: string;
   name: string;
   email: string;
-  role: "user" | "admin";
+  role: "user" | "admin" | "root_admin";
 };
 
 export type AuthSession = {

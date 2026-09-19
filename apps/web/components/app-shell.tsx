@@ -152,6 +152,11 @@ export function AppShell({
                   <Link href="/events" className="mb-3 block text-sm text-text">
                     Your events
                   </Link>
+                  {(session.user.role === "admin" || session.user.role === "root_admin") && (
+                    <Link href="/admin" className="mb-3 block text-sm text-text">
+                      Administration
+                    </Link>
+                  )}
                   <div className="mb-3 flex items-center justify-between border-y border-border py-3">
                     <span className="text-sm text-text-muted">Appearance</span>
                     <ThemeToggle
