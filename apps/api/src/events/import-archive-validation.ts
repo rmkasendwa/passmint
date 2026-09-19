@@ -101,12 +101,33 @@ export function validateArchive(input: unknown) {
     invalid("Archive source event IDs must be unique.");
   const manifest = object(
     archive.manifest,
-    ["application", "exportedAt", "counts", "checksum", "archiveId"],
+    ["application", "exportedAt", "counts", "checksum", "archiveId", "media"],
     "Manifest",
   );
   if (manifest.application !== "passmint")
     invalid("Manifest application must be passmint.");
   date(manifest.exportedAt, "exportedAt");
+  if (
+    manifest.media !== undefined &&
+    (!Array.isArray(manifest.media) || manifest.media.length > 1000)
+  )
+    invalid("Manifest media must be an array of at most 1000 entries.");
+  const media = (manifest.media ?? []) as unknown[];
+  const mediaIds = media.map((value) => {
+    const entry = object(
+      value,
+      ["sourceId", "mode", "strategy"],
+      "Media entry",
+    );
+    const sourceId = text(entry.sourceId, "Media sourceId", 200, true);
+    if (!sourceIds.includes(sourceId))
+      invalid("Media entry must reference an archive event.");
+    text(entry.mode, "Media mode", 30, true);
+    text(entry.strategy, "Media strategy", 30, true);
+    return sourceId;
+  });
+  if (new Set(mediaIds).size !== mediaIds.length)
+    invalid("Media entries must have unique source IDs.");
   const counts = object(
     manifest.counts,
     ["events", "ticketTypes"],
@@ -140,7 +161,12 @@ export function validateArchive(input: unknown) {
     .digest("hex");
   if (checksum.value !== digest || manifest.archiveId !== `sha256:${digest}`)
     invalid("Archive checksum or archiveId does not match its content.");
-  return { archiveId: `sha256:${digest}`, events, sourceIds };
+  return {
+    archiveId: `sha256:${digest}`,
+    events,
+    sourceIds,
+    media: media as { sourceId: string; mode: string; strategy: string }[],
+  };
 }
 
 export function validateArchiveEvent(input: unknown) {

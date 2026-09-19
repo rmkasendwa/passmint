@@ -12,6 +12,10 @@ export class ImportEventsDto {
   @IsObject()
   archive: Record<string, unknown>;
 
+  @ValidateIf((_, value) => value !== undefined)
+  @IsObject()
+  thumbnailOverrides?: Record<string, unknown>;
+
   @IsBoolean()
   dryRun: boolean = true;
 

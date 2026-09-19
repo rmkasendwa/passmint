@@ -9,7 +9,8 @@ const HELP = `Usage:
 Common: --token-env NAME (default PASSMINT_TOKEN), --help
 Export: --event-id ID (repeatable), --owner-id ID, --source-environment LABEL
 Import: --dry-run (default), --apply, --target-owner-id ID,
-        --on-duplicate skip|error (default skip), --report report.json
+        --on-duplicate skip|error (default skip), --report report.json,
+        --thumbnail-map media.json (source event ID to target URL or null)
 
 API URL: http://localhost:3000 or https://your-domain/api
 Tokens are read only from the named environment variable, never from arguments.
@@ -47,6 +48,7 @@ function options(args) {
           "target-owner-id": { type: "string" },
           "on-duplicate": { type: "string", default: "skip" },
           report: { type: "string" },
+          "thumbnail-map": { type: "string" },
         };
   let values;
   try {
@@ -224,6 +226,9 @@ async function main() {
       dryRun: !values.apply,
       targetOwnerId: values["target-owner-id"],
       onDuplicate: values["on-duplicate"],
+      thumbnailOverrides: values["thumbnail-map"]
+        ? await readArchive(values["thumbnail-map"])
+        : undefined,
     };
   }
   const outputPath = command === "export" ? values.file : values.report;
