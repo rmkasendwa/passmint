@@ -75,6 +75,10 @@ const quantityFormat = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
+function formatTicketCategoryCount(count: number) {
+  return `${count} ticket ${count === 1 ? "category" : "categories"}`;
+}
+
 function toLocalInputValue(value: string) {
   const date = new Date(value);
   if (date.getTime() === 0) return "";
@@ -259,6 +263,7 @@ export function EventDetail({
   const categoryUnavailable = Boolean(
     displayEvent.ticketTypes?.length && selectedSalesState !== "available",
   );
+  const ticketCategoryCount = displayEvent.ticketTypes?.length || 1;
   useEffect(() => {
     if (
       !displayEvent.ticketTypes?.some(
@@ -1128,7 +1133,7 @@ export function EventDetail({
               <div>
                 <p className={kicker}>Select tickets</p>
                 <h2 className="mb-0 text-[1.55rem]">
-                  {displayEvent.ticketTypes?.length || 1} ticket categories
+                  {formatTicketCategoryCount(ticketCategoryCount)}
                 </h2>
               </div>
             </div>
