@@ -5,6 +5,19 @@ issues #78, #79, #80, #81 and #82. Artwork uses reference-only export with expli
 target uploads and URL mappings; automatic bucket copying is not supported.
 These endpoints move event definitions, not issued tickets or customers.
 
+## Admin interface
+
+Platform administrators can open `/admin` to download an export or select an
+archive for import. Selecting a file keeps it in the browser and does not start
+an import. The interface requires a successful dry run before enabling the write
+operation and displays the latest validation/import counts. Authenticated
+non-admin users receive a not-found page for this route; API authorization remains
+the security boundary.
+
+The browser and CLI use the same versioned archive endpoints and validation logic.
+The current version 1 format remains definition-only and reference-only for media;
+do not describe it as fully self-contained until the package/media work is complete.
+
 ## Operator CLI
 
 From a repository checkout with Node.js 22+, use `pnpm events:archive` (or

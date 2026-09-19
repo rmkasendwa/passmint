@@ -17,7 +17,7 @@ erDiagram
 
 | Entity / table | Fields and meanings |
 | --- | --- |
-| User / `users` | `id` prefixed `usr_`; unique normalized `email`; `name`; salted `passwordHash`; `role` enum `user` or `admin`; `createdAt`, `updatedAt` |
+| User / `users` | `id` prefixed `usr_`; unique normalized `email`; `name`; salted `passwordHash`; `role` enum `user`, `admin`, or configuration-derived `root_admin`; `createdAt`, `updatedAt` |
 | Event / `events` | `id` prefixed `evt_`; `name`, `description`, `venue`; optional `mapLocation`, `thumbnailUrl`; `startsAt`; optional `capacity`; integer `priceCents`; optional `ownerId`; string `status` default `published`; nullable `cancelledAt`, `publishAt`; creation/update timestamps |
 | Ticket / `tickets` | `id` prefixed `tkt_`; unique random `code`; required `buyerName`, normalized `buyerEmail`; `status` enum `issued`, `checked_in`, `cancelled`; optional `checkedInAt`; nullable `eventId`, `ownerId`, `ticketTypeId`; category-name snapshot `ticketTypeName`; optional price snapshot `unitPriceCents`; creation/update timestamps |
 | TicketType / `ticket_types` | `id` prefixed `typ_`; required `eventId`; `name`, integer `priceCents`; nullable `capacity`; `maxPerOrder` default 10; optional `salesStart`, `salesEnd`; `createdAt`; index on `eventId` |

@@ -9,6 +9,7 @@ x-app: &app
   environment:
     DATABASE_URL: postgresql://passmint:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/passmint
     AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET}
+    ROOT_ADMIN_EMAIL: ${ROOT_ADMIN_EMAIL:-}
     PORT: '8088'
   init: true
 

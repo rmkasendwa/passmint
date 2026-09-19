@@ -19,7 +19,7 @@ This records inspected implementation and unresolved evidence. It is not a penet
 | Finding | Evidence / consequence | Next review action |
 | --- | --- | --- |
 | Default token secret exists | Missing `AUTH_SECRET` falls back to a known development string | Require explicit production configuration and validate startup behavior |
-| Platform-admin assignment uses unverified email at registration | `ADMIN_EMAILS` is consulted when creating users; no email-verification flow exists | Review privileged provisioning before public registration in any environment using that list |
+| Root assignment currently relies on account email | `ROOT_ADMIN_EMAIL` is reconciled at startup and registration; email verification is not implemented yet | Restrict the configured address and complete verified-email authentication before public rollout |
 | Browser local-storage sessions | Scripts on the origin can access tokens; logout removes browser state, not server sessions | Review session design, XSS controls and revocation requirements |
 | No reset/verification backend | Account recovery and verified guest ownership are not implemented | Implement with scoped, expiring credentials; never recover ownership from email text alone |
 | Repeat-email count disclosure | Public purchase conflict reveals event/email ticket count | Replace with privacy-preserving confirmation/recovery design in #51 |
@@ -46,6 +46,6 @@ For diligence use aggregate or synthetic data first. Customer exports should doc
 
 ## Security handover
 
-Inventory repository, cloud, database, storage, DNS and CI principals; identify a named owner for each. Transfer access through provider-supported invitations and a secrets manager. Validate new access before removing old access. Schedule credential rotation and verify application operation afterward. Rotating `AUTH_SECRET` invalidates signatures of existing sessions; plan the user impact. Changing `ADMIN_EMAILS` does not automatically change existing stored roles.
+Inventory repository, cloud, database, storage, DNS and CI principals; identify a named owner for each. Transfer access through provider-supported invitations and a secrets manager. Validate new access before removing old access. Schedule credential rotation and verify application operation afterward. Rotating `AUTH_SECRET` invalidates signatures of existing sessions; plan the user impact. Changing or removing `ROOT_ADMIN_EMAIL` transfers or revokes configuration-derived authority at the next application startup.
 
 Record unresolved risks, acceptance owner and mitigation dates in the [gap register](12-gaps-and-verification.md). A formal security review of the chosen release remains a separate deliverable.

@@ -18,7 +18,7 @@ import { AuthUser } from "../auth/auth.types";
 import { prefixedId } from "../common/prefixed-id";
 import { isWithinSalesWindow } from "../common/ticket-sales";
 import { PrismaService } from "../prisma/prisma.service";
-import { UserRole } from "../users/user-role.enum";
+import { isPlatformAdmin } from "../users/user-role.enum";
 import { CreateEventDto } from "./dto/create-event.dto";
 import { UpdateEventDto } from "./dto/update-event.dto";
 import { TicketTypeDto } from "./dto/ticket-type.dto";
@@ -320,7 +320,7 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
     return this.prisma.$transaction(async tx => {
       const event = await tx.event.findUnique({ where: { id }, select: { ownerId: true, status: true } });
       if (!event || (event.status === 'draft' && event.ownerId !== user.id)) throw new NotFoundException('Event not found');
-      if (event.ownerId !== user.id && user.role !== UserRole.Admin) throw new ForbiddenException('You can only inspect scan metrics for your own events.');
+      if (event.ownerId !== user.id && !isPlatformAdmin(user.role)) throw new ForbiddenException('You can only inspect scan metrics for your own events.');
       const rows = await tx.$queryRaw<{ hour: string; attempts: number; accepted: number; duplicates: number; timedScans: number; totalDurationMs: number }[]>`
         SELECT to_char(a."createdAt" AT TIME ZONE 'UTC', 'HH24') AS hour,
           COUNT(*)::int AS attempts,
@@ -364,7 +364,7 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
       if (eventId) {
         const event = await tx.event.findUnique({ where: { id: eventId }, select: { ownerId: true, status: true } });
         if (!event || (event.status === 'draft' && event.ownerId !== user.id)) throw new NotFoundException('Event not found');
-        if (event.ownerId !== user.id && user.role !== UserRole.Admin) throw new ForbiddenException('You can only view sales for your own events.');
+        if (event.ownerId !== user.id && !isPlatformAdmin(user.role)) throw new ForbiddenException('You can only view sales for your own events.');
       }
       // All-organizer reports always scope to the caller, including platform admins.
       const scope = eventId ? Prisma.sql`e.id = ${eventId}` : Prisma.sql`e."ownerId" = ${user.id}`;
@@ -402,7 +402,7 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
   async findAttendees(id: string, query: AttendeeQueryDto, user: AuthUser) {
     const event = await this.prisma.event.findUnique({ where: { id }, select: { ownerId: true, status: true } });
     if (!event || (event.status === "draft" && event.ownerId !== user.id)) throw new NotFoundException("Event not found");
-    if (event.ownerId !== user.id && user.role !== UserRole.Admin) throw new ForbiddenException("You can only view attendees for your own events.");
+    if (event.ownerId !== user.id && !isPlatformAdmin(user.role)) throw new ForbiddenException("You can only view attendees for your own events.");
     const search = query.search?.trim();
     const page = query.page ?? 1;
     const pageSize = 50;
@@ -502,7 +502,7 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
   async update(id: string, dto: UpdateEventDto, authUser: AuthUser) {
     const event = await this.findOneWithOwner(id);
     const canUpdate =
-      authUser.role === UserRole.Admin || event.owner?.id === authUser.id;
+      isPlatformAdmin(authUser.role) || event.owner?.id === authUser.id;
 
     if (!canUpdate || (event.status === "draft" && event.ownerId !== authUser.id)) {
       throw new ForbiddenException("You can only edit events you created.");
@@ -558,7 +558,7 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
       if (!event) throw new NotFoundException("Event not found");
       if (event.status === "draft" && event.ownerId !== authUser.id) throw new NotFoundException("Event not found");
       if (event.status === "draft") throw new BadRequestException("Drafts are private. Remove their publication schedule to keep them unpublished.");
-      if (event.ownerId !== authUser.id && authUser.role !== UserRole.Admin) {
+      if (event.ownerId !== authUser.id && !isPlatformAdmin(authUser.role)) {
         throw new ForbiddenException("You can only cancel events you created.");
       }
       const cancelled = await tx.event.update({
@@ -604,7 +604,7 @@ export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
       await tx.$queryRaw`SELECT id FROM events WHERE id = ${eventId} FOR UPDATE`;
       const event = await tx.event.findUnique({ where: { id: eventId } });
       if (!event) throw new NotFoundException("Event not found");
-      if (event.ownerId !== user.id && (user.role !== UserRole.Admin || event.status === "draft")) throw new ForbiddenException("You can only manage ticket types for your own events.");
+      if (event.ownerId !== user.id && (!isPlatformAdmin(user.role) || event.status === "draft")) throw new ForbiddenException("You can only manage ticket types for your own events.");
       if (event.status === "cancelled") throw new BadRequestException("Cancelled events cannot be edited.");
       const existing = typeId ? await tx.ticketType.findUnique({ where: { id: typeId } }) : null;
       if (typeId && existing?.eventId !== eventId) throw new NotFoundException("Ticket type not found");

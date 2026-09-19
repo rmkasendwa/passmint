@@ -13,7 +13,7 @@ import { prefixedId } from "../common/prefixed-id";
 import { isWithinSalesWindow } from "../common/ticket-sales";
 import { EventsService } from "../events/events.service";
 import { PrismaService } from "../prisma/prisma.service";
-import { UserRole } from "../users/user-role.enum";
+import { isPlatformAdmin } from "../users/user-role.enum";
 import { CreateTicketDto } from "./dto/create-ticket.dto";
 import { TicketStatus } from "./ticket-status.enum";
 import { toTicketResponse } from "./ticket-response";
@@ -110,7 +110,7 @@ export class TicketsService {
       include: { event: true },
     });
     if (!ticket) throw new NotFoundException("Ticket not found");
-    if (ticket.ownerId !== authUser.id && ticket.event?.ownerId !== authUser.id && authUser.role !== UserRole.Admin) {
+    if (ticket.ownerId !== authUser.id && ticket.event?.ownerId !== authUser.id && !isPlatformAdmin(authUser.role)) {
       throw new ForbiddenException("You do not have access to this ticket.");
     }
     return toTicketResponse(ticket);
@@ -130,7 +130,7 @@ export class TicketsService {
     if (!Number.isInteger(page) || page < 1 || page > 100000) throw new BadRequestException('Invalid activity page.');
     const ticket = await this.prisma.ticket.findUnique({ where: { id }, include: { event: true } });
     if (!ticket?.event || (ticket.event.status === 'draft' && ticket.event.ownerId !== authUser.id)) throw new NotFoundException('Ticket not found');
-    if (ticket.event.ownerId !== authUser.id && authUser.role !== UserRole.Admin) throw new ForbiddenException('You can only inspect ticket activity for events you manage.');
+    if (ticket.event.ownerId !== authUser.id && !isPlatformAdmin(authUser.role)) throw new ForbiddenException('You can only inspect ticket activity for events you manage.');
     const rows = await this.prisma.ticketActivity.findMany({
       where: { ticketId: id }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], skip: (page - 1) * 50, take: 51,
       select: { id: true, kind: true, createdAt: true, operatorId: true, operatorName: true, device: true },
@@ -174,7 +174,7 @@ export class TicketsService {
     } });
 
     const canValidate =
-      authUser.role === UserRole.Admin ||
+      isPlatformAdmin(authUser.role) ||
       ticket.event.ownerId === authUser.id;
 
     if (!canValidate) {
