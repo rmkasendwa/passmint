@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ArrowLeft,
   Menu,
   Plus,
   X,
@@ -57,6 +58,7 @@ export function AppShell({
     { href: "/reports", label: "Reports" },
     { href: "/check-in", label: "Check-in" },
   ];
+  const isAdminRoute = pathname.startsWith("/admin");
   const active = (href: string) =>
     href === "/events"
       ? pathname === href ||
@@ -73,7 +75,8 @@ export function AppShell({
     { href: "/organizers", label: "For organizers" },
     { href: "/help", label: "Help" },
   ];
-  const navigationLinks = (session ? links : publicLinks).map(
+  const navigationItems = session ? links : publicLinks;
+  const navigationLinks = navigationItems.map(
     ({ href, label }) => (
       <Link
         key={href}
@@ -86,7 +89,7 @@ export function AppShell({
       </Link>
     ),
   );
-  const createEventAction = session && (
+  const createEventAction = session && !isAdminRoute && (
     <Link
       href="/events/new"
       aria-current={pathname === "/events/new" ? "page" : undefined}
@@ -99,41 +102,53 @@ export function AppShell({
   );
 
   return (
-    <div className={`app-shell theme-${resolvedTheme}`}>
+    <div className={`app-shell theme-${resolvedTheme} ${isAdminRoute ? "app-shell--admin" : ""}`}>
       <a href="#main-content" className="skip-link">
         Skip to content
       </a>
       <header className="site-header sticky top-0 z-30 min-h-16 w-full border-b border-border bg-[color-mix(in_srgb,var(--surface-raised)_92%,transparent)] backdrop-blur-[18px]">
         <div className="mx-auto grid min-h-16 w-[min(var(--content-max),calc(100%-var(--content-gutter)*2))] grid-cols-[auto_1fr_auto] items-center gap-6">
-          <Link className="brand" href="/" aria-label="Passmint home">
+          <Link className="brand" href={isAdminRoute ? "/admin" : "/"} aria-label={isAdminRoute ? "Passmint admin home" : "Passmint home"}>
             <span className="brand-mark">
               <TicketIcon size={22} />
             </span>
             <span>
-              Passmint<span className="brand-dot">.</span>
+              {isAdminRoute ? "Passmint Admin" : "Passmint"}<span className="brand-dot">.</span>
             </span>
           </Link>
-          <nav
-            className="hidden items-center gap-1 min-[900px]:flex"
-            aria-label="Main navigation"
-          >
-            {navigationLinks}
-            {createEventAction}
-          </nav>
+          {isAdminRoute ? (
+            <p className="admin-header__context">Platform administration</p>
+          ) : (
+            <nav
+              className="hidden items-center gap-1 min-[900px]:flex"
+              aria-label="Main navigation"
+            >
+              {navigationLinks}
+              {createEventAction}
+            </nav>
+          )}
 
           {session ? (
             <div className="col-start-3 flex items-center gap-2 justify-self-end">
-              <button
-                ref={menuButton}
-                type="button"
-                aria-label={menuOpen ? "Close navigation" : "Open navigation"}
-                aria-expanded={menuOpen}
-                aria-controls="mobile-navigation"
-                onClick={() => setMenuOpen((value) => !value)}
-                className="grid size-11 place-items-center rounded-lg text-text hover:bg-surface-muted min-[900px]:hidden"
-              >
-                {menuOpen ? <X size={21} /> : <Menu size={21} />}
-              </button>
+              {isAdminRoute && (
+                <Link href="/" className="admin-header__back">
+                  <ArrowLeft size={16} />
+                  <span>Back to Passmint</span>
+                </Link>
+              )}
+              {!isAdminRoute && (
+                <button
+                  ref={menuButton}
+                  type="button"
+                  aria-label={menuOpen ? "Close navigation" : "Open navigation"}
+                  aria-expanded={menuOpen}
+                  aria-controls="mobile-navigation"
+                  onClick={() => setMenuOpen((value) => !value)}
+                  className="grid size-11 place-items-center rounded-lg text-text hover:bg-surface-muted min-[900px]:hidden"
+                >
+                  {menuOpen ? <X size={21} /> : <Menu size={21} />}
+                </button>
+              )}
               <AccountPopover
                 trigger={
                   <>
@@ -221,22 +236,24 @@ export function AppShell({
             </div>
           )}
         </div>
-        <MobileNavigationDrawer
-          open={menuOpen}
-          onClose={() => setMenuOpen(false)}
-        >
-          {navigationLinks}
-          {createEventAction}
-          {!session && (
-            <div className="flex items-center justify-between px-3 py-2 text-sm text-text-muted">
-              <span>Appearance</span>
-              <ThemeToggle
-                preference={themePreference}
-                onChange={setThemePreference}
-              />
-            </div>
-          )}
-        </MobileNavigationDrawer>
+        {!isAdminRoute && (
+          <MobileNavigationDrawer
+            open={menuOpen}
+            onClose={() => setMenuOpen(false)}
+          >
+            {navigationLinks}
+            {createEventAction}
+            {!session && (
+              <div className="flex items-center justify-between px-3 py-2 text-sm text-text-muted">
+                <span>Appearance</span>
+                <ThemeToggle
+                  preference={themePreference}
+                  onChange={setThemePreference}
+                />
+              </div>
+            )}
+          </MobileNavigationDrawer>
+        )}
       </header>
       <main id="main-content" tabIndex={-1} className="min-w-0 flex-1">
         {children}
