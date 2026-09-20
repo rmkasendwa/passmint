@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ArrowLeft,
   Menu,
   Plus,
   X,
@@ -58,12 +59,6 @@ export function AppShell({
     { href: "/check-in", label: "Check-in" },
   ];
   const isAdminRoute = pathname.startsWith("/admin");
-  const adminLinks = [
-    { href: "/admin", label: "Operations" },
-    { href: "/admin#portability", label: "Portability" },
-    { href: "/reports", label: "Reports" },
-    { href: "/events", label: "Event inventory" },
-  ];
   const active = (href: string) =>
     href === "/events"
       ? pathname === href ||
@@ -80,7 +75,7 @@ export function AppShell({
     { href: "/organizers", label: "For organizers" },
     { href: "/help", label: "Help" },
   ];
-  const navigationItems = isAdminRoute && session ? adminLinks : session ? links : publicLinks;
+  const navigationItems = session ? links : publicLinks;
   const navigationLinks = navigationItems.map(
     ({ href, label }) => (
       <Link
@@ -121,27 +116,39 @@ export function AppShell({
               {isAdminRoute ? "Passmint Admin" : "Passmint"}<span className="brand-dot">.</span>
             </span>
           </Link>
-          <nav
-            className="hidden items-center gap-1 min-[900px]:flex"
-            aria-label="Main navigation"
-          >
-            {navigationLinks}
-            {createEventAction}
-          </nav>
+          {isAdminRoute ? (
+            <p className="admin-header__context">Platform administration</p>
+          ) : (
+            <nav
+              className="hidden items-center gap-1 min-[900px]:flex"
+              aria-label="Main navigation"
+            >
+              {navigationLinks}
+              {createEventAction}
+            </nav>
+          )}
 
           {session ? (
             <div className="col-start-3 flex items-center gap-2 justify-self-end">
-              <button
-                ref={menuButton}
-                type="button"
-                aria-label={menuOpen ? "Close navigation" : "Open navigation"}
-                aria-expanded={menuOpen}
-                aria-controls="mobile-navigation"
-                onClick={() => setMenuOpen((value) => !value)}
-                className="grid size-11 place-items-center rounded-lg text-text hover:bg-surface-muted min-[900px]:hidden"
-              >
-                {menuOpen ? <X size={21} /> : <Menu size={21} />}
-              </button>
+              {isAdminRoute && (
+                <Link href="/" className="admin-header__back">
+                  <ArrowLeft size={16} />
+                  <span>Back to Passmint</span>
+                </Link>
+              )}
+              {!isAdminRoute && (
+                <button
+                  ref={menuButton}
+                  type="button"
+                  aria-label={menuOpen ? "Close navigation" : "Open navigation"}
+                  aria-expanded={menuOpen}
+                  aria-controls="mobile-navigation"
+                  onClick={() => setMenuOpen((value) => !value)}
+                  className="grid size-11 place-items-center rounded-lg text-text hover:bg-surface-muted min-[900px]:hidden"
+                >
+                  {menuOpen ? <X size={21} /> : <Menu size={21} />}
+                </button>
+              )}
               <AccountPopover
                 trigger={
                   <>
@@ -229,22 +236,24 @@ export function AppShell({
             </div>
           )}
         </div>
-        <MobileNavigationDrawer
-          open={menuOpen}
-          onClose={() => setMenuOpen(false)}
-        >
-          {navigationLinks}
-          {createEventAction}
-          {!session && (
-            <div className="flex items-center justify-between px-3 py-2 text-sm text-text-muted">
-              <span>Appearance</span>
-              <ThemeToggle
-                preference={themePreference}
-                onChange={setThemePreference}
-              />
-            </div>
-          )}
-        </MobileNavigationDrawer>
+        {!isAdminRoute && (
+          <MobileNavigationDrawer
+            open={menuOpen}
+            onClose={() => setMenuOpen(false)}
+          >
+            {navigationLinks}
+            {createEventAction}
+            {!session && (
+              <div className="flex items-center justify-between px-3 py-2 text-sm text-text-muted">
+                <span>Appearance</span>
+                <ThemeToggle
+                  preference={themePreference}
+                  onChange={setThemePreference}
+                />
+              </div>
+            )}
+          </MobileNavigationDrawer>
+        )}
       </header>
       <main id="main-content" tabIndex={-1} className="min-w-0 flex-1">
         {children}

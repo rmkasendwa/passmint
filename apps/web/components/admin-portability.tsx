@@ -2,10 +2,8 @@
 
 import {
   AlertTriangle,
-  ArrowRight,
   CheckCircle2,
   ClipboardCheck,
-  DatabaseBackup,
   Download,
   FileJson,
   RefreshCw,
@@ -80,8 +78,6 @@ export function AdminPortability() {
   if (!session) return null;
 
   const dryRunPassed = Boolean(report?.dryRun && !report.counts.failed);
-  const hasImportReport = Boolean(report && !report.dryRun);
-  const archiveReady = Boolean(archive);
 
   async function download() {
     setBusy(true);
@@ -167,71 +163,34 @@ export function AdminPortability() {
     <div className="admin-workspace">
       <aside className="admin-sidebar" aria-label="Administration sections">
         <div>
-          <p className="admin-sidebar__eyebrow">Platform control</p>
+          <p className="admin-sidebar__eyebrow">Admin console</p>
           <h1>Administration</h1>
         </div>
         <nav>
           <a href="#portability" aria-current="page">
-            <DatabaseBackup size={17} />
+            <Upload size={17} />
             Event portability
           </a>
-          <a href="#import-review">
-            <ClipboardCheck size={17} />
-            Import review
-          </a>
-          <a href="#governance">
-            <ShieldCheck size={17} />
-            Governance
-          </a>
         </nav>
-        <div className="admin-sidebar__note">
-          <ShieldCheck size={18} />
-          <p>Exports are read-only. Imports stay locked until a successful dry run clears the archive.</p>
-        </div>
       </aside>
 
       <main className="admin-console" id="portability">
         <section className="admin-hero">
           <div>
-            <p className="admin-kicker">Event operations</p>
-            <h2>Move event data with evidence, review, and control.</h2>
+            <p className="admin-kicker">Event portability</p>
+            <h2>Import and export events</h2>
             <p>
-              Export portable event definitions, validate archives before writes, and keep the
-              latest import report visible while the operation is still fresh.
+              Move event definitions between deployments. Every import requires a successful
+              validation before data can be written.
             </p>
-          </div>
-          <div className="admin-hero__status" aria-label="Portability workflow status">
-            <StatusPill tone={archiveReady ? "good" : "neutral"}>
-              {archiveReady ? "Archive loaded" : "Awaiting archive"}
-            </StatusPill>
-            <ArrowRight size={16} />
-            <StatusPill tone={dryRunPassed ? "good" : report?.counts.failed ? "warn" : "neutral"}>
-              {dryRunPassed ? "Dry run passed" : "Dry run required"}
-            </StatusPill>
-            <ArrowRight size={16} />
-            <StatusPill tone={hasImportReport ? "good" : "neutral"}>
-              {hasImportReport ? "Import recorded" : "Import locked"}
-            </StatusPill>
           </div>
         </section>
 
-        <section className="admin-overview" aria-label="Operational summary">
-          <div>
-            <span>Signed in as</span>
-            <strong>{session.user.name}</strong>
-            <small>{session.user.role.replace("_", " ")}</small>
-          </div>
-          <div>
-            <span>Owner scope</span>
-            <strong>{ownerId.trim() || "All accessible owners"}</strong>
-            <small>Used for export filters and target imports</small>
-          </div>
-          <div>
-            <span>Review gate</span>
-            <strong>{dryRunPassed ? "Passed" : "Required"}</strong>
-            <small>Real imports stay disabled until validation succeeds</small>
-          </div>
-        </section>
+        <div className="admin-context-line">
+          <span>Signed in as {session.user.name}</span>
+          <span>{ownerId.trim() ? `Owner scope: ${ownerId.trim()}` : "All accessible owners"}</span>
+          <span>{dryRunPassed ? "Validation passed" : "Validation required"}</span>
+        </div>
 
         <div className="admin-portability-grid">
           <section className="admin-panel">
@@ -322,56 +281,41 @@ export function AdminPortability() {
           </section>
         )}
 
-        <section className="admin-report" aria-label="Latest portability report">
-          <div className="admin-report__heading">
-            <div>
-              <p className="admin-kicker">Latest report</p>
-              <h3>{report ? (report.dryRun ? "Validation result" : "Import result") : "No archive reviewed yet"}</h3>
-            </div>
-            {report ? (
+        {report && (
+          <section className="admin-report" aria-label="Latest portability report">
+            <div className="admin-report__heading">
+              <div>
+                <p className="admin-kicker">Latest report</p>
+                <h3>{report.dryRun ? "Validation result" : "Import result"}</h3>
+              </div>
               <StatusPill tone={report.counts.failed ? "warn" : "good"}>
                 {report.counts.failed ? "Needs attention" : report.dryRun ? "Ready to import" : "Completed"}
               </StatusPill>
-            ) : (
-              <StatusPill>Waiting</StatusPill>
-            )}
-          </div>
-          {report ? (
-            <>
-              <dl className="admin-report__metrics">
-                {Object.entries(report.counts).map(([key, value]) => (
-                  <ReportMetric
-                    key={key}
-                    label={reportLabels[key as keyof ImportReport["counts"]]}
-                    value={value}
-                    tone={key === "failed" && value > 0 ? "warn" : key === "imported" || key === "valid" ? "good" : "neutral"}
-                  />
-                ))}
-              </dl>
-              <div className="admin-report__summary">
-                {report.counts.failed ? <XCircle size={18} /> : <CheckCircle2 size={18} />}
-                <p>{report.summary}</p>
-              </div>
-              <p className="admin-report__archive">Archive ID: {report.archiveId}</p>
-            </>
-          ) : (
-            <div className="admin-empty-report">
-              <FileJson size={26} />
-              <p>Load an archive and run validation to populate counts before any import can begin.</p>
             </div>
-          )}
-        </section>
+            <dl className="admin-report__metrics">
+              {Object.entries(report.counts).map(([key, value]) => (
+                <ReportMetric
+                  key={key}
+                  label={reportLabels[key as keyof ImportReport["counts"]]}
+                  value={value}
+                  tone={key === "failed" && value > 0 ? "warn" : key === "imported" || key === "valid" ? "good" : "neutral"}
+                />
+              ))}
+            </dl>
+            <div className="admin-report__summary">
+              {report.counts.failed ? <XCircle size={18} /> : <CheckCircle2 size={18} />}
+              <p>{report.summary}</p>
+            </div>
+            <p className="admin-report__archive">Archive ID: {report.archiveId}</p>
+          </section>
+        )}
 
         <section className="admin-governance" id="governance">
-          <div>
-            <ShieldCheck size={20} />
-            <h3>Operational guardrails</h3>
-          </div>
-          <ul>
-            <li>Duplicate source records are skipped during import.</li>
-            <li>Dry runs do not write events, categories, tickets, or import receipts.</li>
-            <li>Owner ID applies as a source filter for exports and target mapping for imports.</li>
-          </ul>
+          <ShieldCheck size={19} />
+          <p>
+            <strong>Protected workflow.</strong> Exports are read-only, duplicate records are
+            skipped, and dry runs never write event data.
+          </p>
         </section>
       </main>
     </div>
