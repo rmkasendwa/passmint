@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   ClipboardCheck,
   Download,
+  FileArchive,
   FileJson,
   RefreshCw,
   ShieldCheck,
@@ -13,6 +14,12 @@ import {
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { api, type ImportReport } from "../api";
+import {
+  createEventBundle,
+  imageDataUrl,
+  readEventArchive,
+  type ImportedBundle,
+} from "../archive-bundle";
 import { useAppContext } from "./app-provider";
 
 const input =
@@ -62,7 +69,11 @@ function StatusPill({
   children: ReactNode;
   tone?: "neutral" | "good" | "warn";
 }) {
-  return <span className={`admin-status-pill admin-status-pill--${tone}`}>{children}</span>;
+  return (
+    <span className={`admin-status-pill admin-status-pill--${tone}`}>
+      {children}
+    </span>
+  );
 }
 
 export function AdminPortability() {
@@ -70,36 +81,72 @@ export function AdminPortability() {
   const [ownerId, setOwnerId] = useState("");
   const [source, setSource] = useState("");
   const [archive, setArchive] = useState<Record<string, unknown> | null>(null);
+  const [bundleMedia, setBundleMedia] = useState<ImportedBundle["media"]>([]);
+  const [uploadedArtwork, setUploadedArtwork] = useState<Record<
+    string,
+    string
+  > | null>(null);
   const [fileName, setFileName] = useState("");
   const [report, setReport] = useState<ImportReport | null>(null);
   const [status, setStatus] = useState("");
-  const [statusTone, setStatusTone] = useState<"neutral" | "good" | "warn">("neutral");
+  const [statusTone, setStatusTone] = useState<"neutral" | "good" | "warn">(
+    "neutral",
+  );
   const [busy, setBusy] = useState(false);
   if (!session) return null;
 
   const dryRunPassed = Boolean(report?.dryRun && !report.counts.failed);
 
-  async function download() {
+  function save(blob: Blob, extension: "json" | "zip") {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `passmint-events-${new Date().toISOString().slice(0, 10)}.${extension}`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function exportedArchive() {
+    return api.exportEvents(
+      {
+        ...(ownerId.trim() && { ownerId: ownerId.trim() }),
+        ...(source.trim() && { sourceEnvironment: source.trim() }),
+      },
+      session!.token,
+    );
+  }
+
+  async function downloadDefinitions() {
     setBusy(true);
     setStatus("");
     try {
-      const data = await api.exportEvents(
-        {
-          ...(ownerId.trim() && { ownerId: ownerId.trim() }),
-          ...(source.trim() && { sourceEnvironment: source.trim() }),
-        },
-        session!.token,
-      );
-      const url = URL.createObjectURL(
+      const data = await exportedArchive();
+      save(
         new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }),
+        "json",
       );
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `passmint-events-${new Date().toISOString().slice(0, 10)}.json`;
-      link.click();
-      URL.revokeObjectURL(url);
       setStatusTone("good");
-      setStatus("Export prepared and downloaded.");
+      setStatus("Definitions-only JSON downloaded. Artwork remains URL-based.");
+    } catch (error) {
+      setStatusTone("warn");
+      setStatus(errorMessage(error));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function downloadComplete() {
+    setBusy(true);
+    setStatusTone("neutral");
+    setStatus("Collecting event artwork...");
+    try {
+      const data = await exportedArchive();
+      const bundle = await createEventBundle(data);
+      save(bundle.blob, "zip");
+      setStatusTone("good");
+      setStatus(
+        `Complete ZIP downloaded with ${bundle.mediaCount} artwork file${bundle.mediaCount === 1 ? "" : "s"}.`,
+      );
     } catch (error) {
       setStatusTone("warn");
       setStatus(errorMessage(error));
@@ -110,19 +157,23 @@ export function AdminPortability() {
 
   async function select(file?: File) {
     setArchive(null);
+    setBundleMedia([]);
+    setUploadedArtwork(null);
     setReport(null);
     setFileName(file?.name ?? "");
     setStatus("");
     setStatusTone("neutral");
     if (!file) return;
     try {
-      const value = JSON.parse(await file.text());
-      if (!value || typeof value !== "object" || Array.isArray(value)) {
-        throw new Error("Choose a valid Passmint JSON archive.");
-      }
-      setArchive(value);
+      const value = await readEventArchive(file);
+      setArchive(value.archive);
+      setBundleMedia(value.media);
       setStatusTone("good");
-      setStatus("Archive loaded. Run validation before importing.");
+      setStatus(
+        value.media.length
+          ? `Archive loaded and ${value.media.length} artwork file${value.media.length === 1 ? "" : "s"} verified. Run validation before importing.`
+          : "Definitions-only archive loaded. Run validation before importing.",
+      );
     } catch (error) {
       setStatusTone("warn");
       setStatus(errorMessage(error));
@@ -139,11 +190,33 @@ export function AdminPortability() {
     setBusy(true);
     setStatus("");
     try {
+      let thumbnailOverrides = uploadedArtwork;
+      if (!dryRun && bundleMedia.length) {
+        const uploaded: Record<string, string> = { ...(uploadedArtwork ?? {}) };
+        for (const [index, media] of bundleMedia.entries()) {
+          if (uploaded[media.sourceId]) continue;
+          setStatus(
+            `Uploading artwork ${index + 1} of ${bundleMedia.length}...`,
+          );
+          const result = await api.uploadEventImage(
+            {
+              fileName: media.path.split("/").at(-1) ?? "artwork",
+              contentType: media.contentType,
+              dataUrl: imageDataUrl(media.bytes, media.contentType),
+            },
+            session!.token,
+          );
+          uploaded[media.sourceId] = result.url;
+          setUploadedArtwork({ ...uploaded });
+        }
+        thumbnailOverrides = uploaded;
+      }
       const next = await api.importEvents(
         {
           archive,
           dryRun,
           onDuplicate: "skip",
+          ...(thumbnailOverrides && { thumbnailOverrides }),
           ...(ownerId.trim() && { targetOwnerId: ownerId.trim() }),
         },
         session!.token,
@@ -180,16 +253,22 @@ export function AdminPortability() {
             <p className="admin-kicker">Event portability</p>
             <h2>Import and export events</h2>
             <p>
-              Move event definitions between deployments. Every import requires a successful
-              validation before data can be written.
+              Move event definitions between deployments. Every import requires
+              a successful validation before data can be written.
             </p>
           </div>
         </section>
 
         <div className="admin-context-line">
           <span>Signed in as {session.user.name}</span>
-          <span>{ownerId.trim() ? `Owner scope: ${ownerId.trim()}` : "All accessible owners"}</span>
-          <span>{dryRunPassed ? "Validation passed" : "Validation required"}</span>
+          <span>
+            {ownerId.trim()
+              ? `Owner scope: ${ownerId.trim()}`
+              : "All accessible owners"}
+          </span>
+          <span>
+            {dryRunPassed ? "Validation passed" : "Validation required"}
+          </span>
         </div>
 
         <div className="admin-portability-grid">
@@ -204,8 +283,9 @@ export function AdminPortability() {
               </div>
             </div>
             <p className="admin-panel__copy">
-              Create a reviewed JSON archive from the current deployment. Leave owner blank when
-              the administrator should export every event they can access.
+              Download a complete ZIP with event artwork. Use definitions-only
+              JSON when the target should continue using the existing artwork
+              URLs.
             </p>
             <div className="grid gap-4">
               <label className="grid gap-2 text-sm font-semibold">
@@ -226,10 +306,24 @@ export function AdminPortability() {
                   placeholder="production-east"
                 />
               </label>
-              <button className={primaryButton} disabled={busy} onClick={download}>
-                {busy ? <RefreshCw size={18} /> : <Download size={18} />}
-                Download archive
-              </button>
+              <div className="admin-action-row">
+                <button
+                  className={primaryButton}
+                  disabled={busy}
+                  onClick={downloadComplete}
+                >
+                  {busy ? <RefreshCw size={18} /> : <FileArchive size={18} />}
+                  Download complete ZIP
+                </button>
+                <button
+                  className={secondaryButton}
+                  disabled={busy}
+                  onClick={downloadDefinitions}
+                >
+                  <FileJson size={18} />
+                  Definitions only
+                </button>
+              </div>
             </div>
           </section>
 
@@ -244,21 +338,29 @@ export function AdminPortability() {
               </div>
             </div>
             <p className="admin-panel__copy">
-              File selection only loads the archive in the browser. Validate first, inspect the
-              counts, then start the write operation when the report is clean.
+              ZIP artwork is verified locally and uploaded only when the real
+              import starts. Validate first, inspect the counts, then apply the
+              archive when the report is clean.
             </p>
             <label className="admin-file-drop">
-              <FileJson size={24} />
-              <span>{fileName || "Choose a Passmint archive"}</span>
-              <small>JSON archive only. No import starts from file selection.</small>
+              <FileArchive size={24} />
+              <span>{fileName || "Choose a Passmint ZIP or JSON archive"}</span>
+              <small>
+                File selection and validation do not upload artwork or write
+                event data.
+              </small>
               <input
                 type="file"
-                accept="application/json,.json"
+                accept="application/json,application/zip,.json,.zip"
                 onChange={(event) => select(event.target.files?.[0])}
               />
             </label>
             <div className="admin-action-row">
-              <button className={secondaryButton} disabled={busy || !archive} onClick={() => run(true)}>
+              <button
+                className={secondaryButton}
+                disabled={busy || !archive}
+                onClick={() => run(true)}
+              >
                 <ClipboardCheck size={18} />
                 Validate archive
               </button>
@@ -275,21 +377,35 @@ export function AdminPortability() {
         </div>
 
         {status && (
-          <section className={`admin-alert admin-alert--${statusTone}`} role="status">
-            {statusTone === "warn" ? <AlertTriangle size={18} /> : <CheckCircle2 size={18} />}
+          <section
+            className={`admin-alert admin-alert--${statusTone}`}
+            role="status"
+          >
+            {statusTone === "warn" ? (
+              <AlertTriangle size={18} />
+            ) : (
+              <CheckCircle2 size={18} />
+            )}
             <p>{status}</p>
           </section>
         )}
 
         {report && (
-          <section className="admin-report" aria-label="Latest portability report">
+          <section
+            className="admin-report"
+            aria-label="Latest portability report"
+          >
             <div className="admin-report__heading">
               <div>
                 <p className="admin-kicker">Latest report</p>
                 <h3>{report.dryRun ? "Validation result" : "Import result"}</h3>
               </div>
               <StatusPill tone={report.counts.failed ? "warn" : "good"}>
-                {report.counts.failed ? "Needs attention" : report.dryRun ? "Ready to import" : "Completed"}
+                {report.counts.failed
+                  ? "Needs attention"
+                  : report.dryRun
+                    ? "Ready to import"
+                    : "Completed"}
               </StatusPill>
             </div>
             <dl className="admin-report__metrics">
@@ -298,23 +414,35 @@ export function AdminPortability() {
                   key={key}
                   label={reportLabels[key as keyof ImportReport["counts"]]}
                   value={value}
-                  tone={key === "failed" && value > 0 ? "warn" : key === "imported" || key === "valid" ? "good" : "neutral"}
+                  tone={
+                    key === "failed" && value > 0
+                      ? "warn"
+                      : key === "imported" || key === "valid"
+                        ? "good"
+                        : "neutral"
+                  }
                 />
               ))}
             </dl>
             <div className="admin-report__summary">
-              {report.counts.failed ? <XCircle size={18} /> : <CheckCircle2 size={18} />}
+              {report.counts.failed ? (
+                <XCircle size={18} />
+              ) : (
+                <CheckCircle2 size={18} />
+              )}
               <p>{report.summary}</p>
             </div>
-            <p className="admin-report__archive">Archive ID: {report.archiveId}</p>
+            <p className="admin-report__archive">
+              Archive ID: {report.archiveId}
+            </p>
           </section>
         )}
 
         <section className="admin-governance" id="governance">
           <ShieldCheck size={19} />
           <p>
-            <strong>Protected workflow.</strong> Exports are read-only, duplicate records are
-            skipped, and dry runs never write event data.
+            <strong>Protected workflow.</strong> Exports are read-only,
+            duplicate records are skipped, and dry runs never write event data.
           </p>
         </section>
       </main>
