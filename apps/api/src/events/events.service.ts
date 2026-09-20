@@ -92,7 +92,7 @@ const seedEvents = [
     capacity: 300,
     priceCents: 4000000,
     thumbnailUrl:
-      "https://images.unsplash.com/photo-1515169067865-5387ec356754?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80",
   },
   {
     name: "Sunday Craft Market",
