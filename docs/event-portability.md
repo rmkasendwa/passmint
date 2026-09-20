@@ -154,11 +154,12 @@ identity. A checksum detects content changes; it is not a signature or authoriza
 No tickets, ticket codes, QR payloads, buyers, scan activity, password hashes,
 auth tokens, database configuration or object-storage configuration are selected.
 Event text is user-authored content, so the exporter is not a secret scrubber for
-text pasted into event fields. Images are currently references only: `thumbnailUrl`
-is preserved for URL references, no remote URL is fetched, and no image bytes are
-transferred. Embedded data URLs are omitted (set to null). Local `/uploads` and
-localhost/object-storage references may not work on the target. See the artwork
-workflow below to upload replacement images and map their target URLs.
+text pasted into event fields. The version 1 JSON document is definitions-only:
+`thumbnailUrl` is preserved for URL references, no remote URL is fetched by the
+API, and no image bytes are part of that JSON. Embedded data URLs are omitted (set
+to null). Local `/uploads` and localhost/object-storage references may not work on
+the target. The browser admin can wrap this document and its artwork in a complete
+ZIP as described below.
 
 ## Import into another deployment
 
@@ -258,6 +259,33 @@ successfully. Use shared public storage or the upload-and-map workflow below.
 
 ## Artwork portability
 
+### Browser ZIP bundle
+
+The admin interface defaults to a complete `.zip` download. It first requests the
+same checksummed `archive.json`, then downloads every referenced event image in the
+operator's browser. Export fails rather than silently producing an incomplete ZIP
+when an image is unavailable, blocked by cross-origin policy, unsupported, empty,
+or larger than 5 MiB. The complete ZIP is limited to 100 MiB.
+
+The ZIP contains `archive.json`, `media-manifest.json`, and numbered files under
+`media/`. The media manifest is bound to the archive ID and records each source
+event ID, relative path, MIME type, byte size and SHA-256 digest. ZIP import rejects
+duplicate, undeclared or unsafe paths, unsupported manifests, missing referenced
+artwork, digest mismatches, individual files over 5 MiB and expanded bundles over
+100 MiB before any upload starts.
+
+Selecting or dry-running a ZIP does not write data. When the operator starts the
+real import, the browser uploads verified artwork through `POST /events/uploads`,
+then supplies the returned target URLs as `thumbnailOverrides` to the existing
+import endpoint. Successful uploads are retained in the current browser session
+for a safe retry. A partially interrupted upload can leave an unused object, so
+operators must check references before cleaning up target storage.
+
+The definitions-only `.json` option remains available for shared public artwork
+URLs and for the operator CLI. It does not contain file bytes.
+
+### JSON and direct API workflow
+
 The default is **reference-only**. New exports include optional `manifest.media`
 entries `{ sourceId, mode, strategy: "reference-only" }` for every event. `mode`
 is `external` for HTTP(S) hostname URLs, `local` for relative URLs, localhost,
@@ -271,8 +299,10 @@ the source classification from the actual event URL. Old version 1 archives with
 media entries are still accepted. Deploy this release to both exporter and importer:
 older importers reject the new optional manifest field. Legacy archives containing
 inline data URLs need an explicit override or null; importing raw inline image
-bytes without upload validation is rejected. Bundled/inline-transfer manifest modes
-are unsupported and fail per event without creating its event or categories.
+bytes without upload validation is rejected. The API continues to reject bundled
+or inline-transfer modes inside `archive.json`; browser ZIPs are verified, uploaded
+and converted to ordinary thumbnail overrides before the JSON reaches the import
+endpoint.
 
 For S3-compatible target storage, configure the existing `S3_BUCKET`, `S3_REGION`,
 access-key/secret settings and optional endpoint/public base URL in the target
