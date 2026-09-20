@@ -57,6 +57,13 @@ export function AppShell({
     { href: "/reports", label: "Reports" },
     { href: "/check-in", label: "Check-in" },
   ];
+  const isAdminRoute = pathname.startsWith("/admin");
+  const adminLinks = [
+    { href: "/admin", label: "Operations" },
+    { href: "/admin#portability", label: "Portability" },
+    { href: "/reports", label: "Reports" },
+    { href: "/events", label: "Event inventory" },
+  ];
   const active = (href: string) =>
     href === "/events"
       ? pathname === href ||
@@ -73,7 +80,8 @@ export function AppShell({
     { href: "/organizers", label: "For organizers" },
     { href: "/help", label: "Help" },
   ];
-  const navigationLinks = (session ? links : publicLinks).map(
+  const navigationItems = isAdminRoute && session ? adminLinks : session ? links : publicLinks;
+  const navigationLinks = navigationItems.map(
     ({ href, label }) => (
       <Link
         key={href}
@@ -86,7 +94,7 @@ export function AppShell({
       </Link>
     ),
   );
-  const createEventAction = session && (
+  const createEventAction = session && !isAdminRoute && (
     <Link
       href="/events/new"
       aria-current={pathname === "/events/new" ? "page" : undefined}
@@ -99,18 +107,18 @@ export function AppShell({
   );
 
   return (
-    <div className={`app-shell theme-${resolvedTheme}`}>
+    <div className={`app-shell theme-${resolvedTheme} ${isAdminRoute ? "app-shell--admin" : ""}`}>
       <a href="#main-content" className="skip-link">
         Skip to content
       </a>
       <header className="site-header sticky top-0 z-30 min-h-16 w-full border-b border-border bg-[color-mix(in_srgb,var(--surface-raised)_92%,transparent)] backdrop-blur-[18px]">
         <div className="mx-auto grid min-h-16 w-[min(var(--content-max),calc(100%-var(--content-gutter)*2))] grid-cols-[auto_1fr_auto] items-center gap-6">
-          <Link className="brand" href="/" aria-label="Passmint home">
+          <Link className="brand" href={isAdminRoute ? "/admin" : "/"} aria-label={isAdminRoute ? "Passmint admin home" : "Passmint home"}>
             <span className="brand-mark">
               <TicketIcon size={22} />
             </span>
             <span>
-              Passmint<span className="brand-dot">.</span>
+              {isAdminRoute ? "Passmint Admin" : "Passmint"}<span className="brand-dot">.</span>
             </span>
           </Link>
           <nav
