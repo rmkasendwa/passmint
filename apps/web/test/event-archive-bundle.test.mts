@@ -6,7 +6,7 @@ import { strToU8, zipSync } from "fflate";
 import {
   createEventBundle,
   readEventArchive,
-} from "../apps/web/archive-bundle.ts";
+} from "../archive-bundle.ts";
 
 function archive(thumbnailUrl: string | null = null) {
   return {
