@@ -286,24 +286,48 @@ export class AuthService implements OnApplicationBootstrap {
   }
 
   private googleRedirectUri() {
-    return this.config.get<string>('GOOGLE_REDIRECT_URI') ?? `${this.apiOrigin()}/auth/google/callback`;
-  }
-
-  private apiOrigin() {
-    const configured = this.config.get<string>('PUBLIC_API_URL') ?? this.config.get<string>('NEXT_PUBLIC_API_URL');
-    if (configured?.startsWith('http')) return configured.replace(/\/$/, '');
-    if (configured?.startsWith('/')) return `${this.webOrigin()}${configured.replace(/\/$/, '')}`;
-
-    const port = this.config.get<string>('PORT') ?? this.config.get<string>('API_PORT') ?? '3000';
-    return `http://localhost:${port}`;
+    const webOrigin = this.webOrigin();
+    const configured = this.config.get<string>('GOOGLE_REDIRECT_URI')?.trim();
+    return configured
+      ? this.publicUrl(configured, 'GOOGLE_REDIRECT_URI')
+      : `${webOrigin}/auth/google/callback`;
   }
 
   private webOrigin() {
-    const configured = this.config.get<string>('WEB_ORIGIN') ?? this.config.get<string>('CORS_ORIGIN');
-    if (configured?.startsWith('http')) return configured.replace(/\/$/, '');
+    const configured = (
+      this.config.get<string>('WEB_ORIGIN') ??
+      this.config.get<string>('CORS_ORIGIN')
+    )?.trim();
+    if (configured) return new URL(this.publicUrl(configured, 'WEB_ORIGIN')).origin;
+
+    if (this.config.get<string>('NODE_ENV') === 'production') {
+      throw new BadRequestException('WEB_ORIGIN must be configured for Google sign-in.');
+    }
 
     const port = this.config.get<string>('WEB_PORT') ?? '8088';
     return `http://localhost:${port}`;
+  }
+
+  private publicUrl(value: string, key: string) {
+    let url: URL;
+    try {
+      url = new URL(value);
+    } catch {
+      throw new BadRequestException(`${key} must be a valid HTTP URL.`);
+    }
+
+    if (!['http:', 'https:'].includes(url.protocol)) {
+      throw new BadRequestException(`${key} must be a valid HTTP URL.`);
+    }
+
+    if (['0.0.0.0', '[::]', '::'].includes(url.hostname)) {
+      if (this.config.get<string>('NODE_ENV') === 'production') {
+        throw new BadRequestException(`${key} must use a public hostname.`);
+      }
+      url.hostname = 'localhost';
+    }
+
+    return url.toString().replace(/\/$/, '');
   }
 
   googleCallbackUrl(token: string, next?: string) {
