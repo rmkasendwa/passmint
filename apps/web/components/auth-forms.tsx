@@ -1,8 +1,15 @@
 "use client";
 
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, LogIn } from "lucide-react";
 import Link from "next/link";
-import { type ChangeEventHandler, type FormEvent, useState } from "react";
+import {
+  type ChangeEventHandler,
+  type FormEvent,
+  type MouseEvent,
+  useEffect,
+  useState,
+} from "react";
+import { getApiUrl } from "../api";
 import { useAppContext } from "./app-provider";
 import {
   FieldMessage,
@@ -25,6 +32,10 @@ const textLinkClass =
   "font-(--weight-semibold) text-accent hover:text-text";
 const submitClass =
   "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-(--button-bg) px-4 font-(--weight-bold) text-(--button-text) hover:bg-accent";
+const oauthButtonClass =
+  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border bg-surface px-4 font-(--weight-bold) text-text hover:border-border-strong hover:bg-surface-muted";
+const dividerClass =
+  "flex items-center gap-3 text-[0.76rem] font-(--weight-semibold) uppercase text-text-soft before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border";
 const stateClass =
   "mb-0 w-full max-w-107.5 rounded-lg bg-accent-soft p-3 text-[0.92rem] font-(--weight-medium) text-accent max-[820px]:max-w-none";
 const switchClass =
@@ -142,6 +153,33 @@ function PasswordInput({
   );
 }
 
+function googleAuthHref() {
+  const params = new URLSearchParams();
+  if (typeof window !== "undefined") {
+    const next = new URLSearchParams(window.location.search).get("next");
+    if (next) params.set("next", next);
+  }
+  const query = params.toString();
+
+  return `${getApiUrl().replace(/\/$/, "")}/auth/google${query ? `?${query}` : ""}`;
+}
+
+function GoogleAuthButton({ label }: { label: string }) {
+  const href = `${getApiUrl().replace(/\/$/, "")}/auth/google`;
+
+  function handleClick(event: MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault();
+    window.location.assign(googleAuthHref());
+  }
+
+  return (
+    <a className={oauthButtonClass} href={href} onClick={handleClick}>
+      <LogIn aria-hidden="true" size={18} strokeWidth={2.2} />
+      {label}
+    </a>
+  );
+}
+
 export function LoginForm() {
   const {
     authEmail,
@@ -151,6 +189,7 @@ export function LoginForm() {
     setAuthPassword,
     submitAuth,
   } = useAppContext();
+  const [oauthError, setOauthError] = useState("");
   const validation = useInlineFormValidation();
   const [passwordRevealed, setPasswordRevealed] = useState(false);
   const emailError = validation.fieldError({
@@ -165,10 +204,18 @@ export function LoginForm() {
     required: true,
     value: authPassword,
   });
+  const visibleAuthState = authState || oauthError;
+
+  useEffect(() => {
+    const error = new URLSearchParams(window.location.search).get("error");
+    if (error) setOauthError(error);
+  }, []);
 
   return (
     <>
       <form className={formClass} {...validation.formProps(submitAuth)}>
+        <GoogleAuthButton label="Continue with Google" />
+        <div className={dividerClass}>or</div>
         <label className={labelClass}>
           <RequiredLabel>Email</RequiredLabel>
           <input
@@ -212,7 +259,7 @@ export function LoginForm() {
         </button>
       </form>
 
-      {authState && <p className={stateClass}>{authState}</p>}
+      {visibleAuthState && <p className={stateClass}>{visibleAuthState}</p>}
 
       <div className={switchClass}>
         <p>
@@ -280,6 +327,8 @@ export function RegisterForm() {
   return (
     <>
       <form className={formClass} {...validation.formProps(handleSubmit)}>
+        <GoogleAuthButton label="Sign up with Google" />
+        <div className={dividerClass}>or</div>
         <label className={labelClass}>
           <RequiredLabel>Name</RequiredLabel>
           <input

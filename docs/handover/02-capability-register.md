@@ -7,7 +7,7 @@ Status reflects the source reviewed on 8 September 2026, not a deployed-release 
 | Capability | Status | Actual scope and evidence |
 | --- | --- | --- |
 | Public event discovery and details | Implemented in source | [Web data loading](../../apps/web/server-events.ts), [event service](../../apps/api/src/events/events.service.ts); excludes drafts, includes cancelled events; UI search/date filters |
-| Registration and login | Implemented in source | [Auth service](../../apps/api/src/auth/auth.service.ts); email/password and signed bearer sessions |
+| Registration and login | Implemented in source | [Auth service](../../apps/api/src/auth/auth.service.ts); email/password, optional Google OAuth with Google-verified email, and signed bearer sessions. Google verification partially addresses [issue #2](https://github.com/rmkasendwa/passmint/issues/2); native email verification and revocable sessions remain separate. |
 | Self-service event ownership | Implemented in source | Any authenticated user creates; owner edits/scans; selected platform-admin overrides |
 | Organizer event management | Implemented in source (12 September 2026) | Own-event dashboard with search, lifecycle/local-date filters, sorting, refresh and ticket/capacity summaries; create/edit/draft/cancel flows retain their server permissions; stale/error states are explicit and undated drafts do not display 1970 |
 | Drafts and scheduled publication | Implemented in source | Private owner-only drafts, scheduled publication, 30-second in-process poll and request-triggered catch-up |
@@ -28,7 +28,7 @@ Status reflects the source reviewed on 8 September 2026, not a deployed-release 
 | Mobile-money checkout | Partial | UI/DTO collects number; service neither persists it nor invokes a provider; paid-priced tickets issue without payment confirmation |
 | Email delivery and recovery | Not implemented in inspected source | No mail provider, delivery queue or guest recovery endpoint |
 | Forgot/reset password | UI placeholder | Forms show explanatory messages; no reset-token backend |
-| Verified email, refresh/revocable sessions | Proposed | No verification or session storage models; [issue #2](https://github.com/rmkasendwa/passmint/issues/2) |
+| Verified email, refresh/revocable sessions | Proposed | Google OAuth accepts only Google-verified email profiles, but native email verification and session storage models remain unimplemented; [issue #2](https://github.com/rmkasendwa/passmint/issues/2) |
 | Orders and settlement | Proposed | [#6](https://github.com/rmkasendwa/passmint/issues/6), [#52](https://github.com/rmkasendwa/passmint/issues/52); no order/payment tables |
 | Tenants and shared staff | Proposed | [#45](https://github.com/rmkasendwa/passmint/issues/45), [#19](https://github.com/rmkasendwa/passmint/issues/19); current ownership is User → Event |
 | Reusable seating and holds | Proposed | [#48](https://github.com/rmkasendwa/passmint/issues/48), [#49](https://github.com/rmkasendwa/passmint/issues/49), [#50](https://github.com/rmkasendwa/passmint/issues/50) |
