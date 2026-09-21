@@ -15,7 +15,9 @@ These rules apply to all work in this repository.
 - Use exactly one line in conventional format: `<type>: <description>`.
 - Use an appropriate lowercase type such as `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `build`, `ci`, `perf`, `style`, or `revert`.
 - Keep the description concise, lowercase, and without a trailing period, for example `feat: bundle event artwork with portable archives`.
-- Keep each commit focused and leave unrelated working-tree changes untouched.
+- Prefer a series of small, logically complete commits over one broad commit whenever the work can be separated cleanly.
+- Keep each commit simple enough for a human to review independently and keep the repository working at commit boundaries wherever practical.
+- Leave unrelated working-tree changes untouched.
 - Do not add commit bodies, tool or automation attribution, or co-author trailers.
 
 ## Pull requests
