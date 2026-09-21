@@ -59,6 +59,29 @@ function fakeImageStorage() {
   };
 }
 
+test("production startup never seeds demo events", async () => {
+  const previousNodeEnv = process.env.NODE_ENV;
+  const previousSeedSetting = process.env.SEED_DEMO_DATA;
+  process.env.NODE_ENV = "production";
+  process.env.SEED_DEMO_DATA = "true";
+
+  try {
+    const prisma = fakePrisma();
+    const images = fakeImageStorage();
+    const service = new EventSeedService(prisma, images);
+
+    await service.onApplicationBootstrap();
+
+    assert.equal(prisma.records.size, 0);
+    assert.equal(images.uploads.length, 0);
+  } finally {
+    if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = previousNodeEnv;
+    if (previousSeedSetting === undefined) delete process.env.SEED_DEMO_DATA;
+    else process.env.SEED_DEMO_DATA = previousSeedSetting;
+  }
+});
+
 test("seed events are varied, local, and scheduled more than one month ahead", () => {
   const now = new Date("2026-09-21T15:00:00.000Z");
   const oneMonthAhead = new Date(now);

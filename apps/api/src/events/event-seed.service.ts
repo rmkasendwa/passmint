@@ -14,12 +14,7 @@ export class EventSeedService implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap() {
-    if (
-      process.env.NODE_ENV === "production" &&
-      process.env.SEED_DEMO_DATA !== "true"
-    ) {
-      return;
-    }
+    if (process.env.NODE_ENV === "production") return;
 
     await this.seed();
   }

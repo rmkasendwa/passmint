@@ -17,7 +17,6 @@ const {
 } = require("../dist/events/event-archive");
 const prisma = new PrismaClient();
 process.env.NODE_ENV = "production";
-process.env.SEED_DEMO_DATA = "false";
 
 test("exports classify reference-only media and older archives remain valid", async () => {
   const { mediaMode } = require("../dist/events/archive-media");
