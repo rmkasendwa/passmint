@@ -22,11 +22,11 @@ Use the repository Dockerfile with a separate PostgreSQL 16 resource in Coolify.
 1. Create/start PostgreSQL in Coolify. Ensure the app and database share a reachable Docker network; use its internal connection URL as `DATABASE_URL`, not `localhost`.
 2. Connect `rmkasendwa/passmint`, branch `main`. Select **Dockerfile** build pack, base directory `/`, Dockerfile `/Dockerfile`, and **Ports Exposes `8088`**. Keep the image's default start command. The web listens on `0.0.0.0:8088`; the internal API on port 3000 must remain private.
 3. Add runtime environment variables: `DATABASE_URL`, a unique random `AUTH_SECRET` (at least 32 characters), `PORT=8088`, `PUBLIC_API_URL=/api`, and an optional single `ROOT_ADMIN_EMAIL`. Do not override `NEXT_PUBLIC_API_URL`; `/api` is already built into the image. Secrets need runtime availability, not build-time injection.
-4. For a **new, empty database**, no initialization variable is needed. The initializer checks for tables and creates the schema before starting the API. A database advisory lock serializes concurrent first starts. Existing tables cause setup to be skipped entirely; this is not an upgrade/migration mechanism. Set `INITIALIZE_DATABASE=false` only if schema setup is managed separately.
+4. For a **new, empty database**, no initialization variable is needed. The initializer checks for tables and creates the schema before starting the API. A database advisory lock serializes concurrent first starts. Existing tables skip full schema setup, but receive the compatible `root_admin` enum addition when needed. Other upgrades remain operator-managed. Set `INITIALIZE_DATABASE=false` only if all schema setup and upgrades are managed separately.
 5. Add persistent storage with destination `/app/uploads`, writable by UID 1000, or configure external S3 storage. Prefer a named volume; an empty root-owned bind directory needs its permissions prepared. Keep the same storage on redeploy.
 6. Assign your HTTPS domain and retain the image's health check. It uses Node (already installed) to call `/api/ready`; no curl installation is required. Deploy and check the logs, healthy state, event creation, upload and ticket scan.
 
-Coolify's pre-deployment hook runs in the old container and cannot initialize the first deployment. Post-deployment is also too late for an API that needs tables to start. Use the automatic empty-schema initializer above, or initialize separately with the image's Prisma CLI before deploying. For later schema upgrades, back up and apply a reviewed migration explicitly; automatic initialization does not update existing tables.
+Coolify's pre-deployment hook runs in the old container and cannot initialize the first deployment. Post-deployment is also too late for an API that needs tables to start. Use the automatic initializer above, or initialize separately with the image's Prisma CLI before deploying. Except for the additive `root_admin` enum upgrade, later schema upgrades still require a backup and an explicitly reviewed migration.
 
 The same first-start flow is covered by `node scripts/docker-smoke.mjs passmint:local --initialize-at-startup`, including a redeploy that proves existing records and extra schema objects are preserved. This validates the container behavior, not your particular Coolify server, DNS or database credentials.
 
@@ -42,10 +42,12 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 Use URL-safe hexadecimal for the database password because Compose embeds it in a connection URL. Keep the environment file outside source control. The startup script requires `DATABASE_URL` and a non-placeholder signing secret of at least 32 characters. Set `ROOT_ADMIN_EMAIL` only to the normalized email of the intended root account.
 
-Before deploying this feature to an existing database, apply
-`prisma/upgrades/20260920-root-admin-role.sql`. It adds the `root_admin` enum value
-without changing existing delegated administrators. Apply the event-import upgrade
-documented in `docs/event-portability.md` before enabling the admin import action.
+With the default startup initializer enabled, the app adds the `root_admin` enum value
+to an existing database before starting the API. When `INITIALIZE_DATABASE=false`,
+apply `prisma/upgrades/20260920-root-admin-role.sql` manually before deployment. The
+upgrade does not change existing delegated administrators. Apply the event-import
+upgrade documented in `docs/event-portability.md` before enabling the admin import
+action.
 
 ```sh
 docker compose --env-file .env.production -f compose.production.yml build app
@@ -66,7 +68,7 @@ PostgreSQL has no published host port in the production Compose file. Database a
 | --- | --- |
 | `DATABASE_URL` | Required by the image; Compose constructs an internal PostgreSQL URL |
 | `AUTH_SECRET` | Required; rotation invalidates existing bearer sessions |
-| `INITIALIZE_DATABASE` | Default on; initializes only an empty schema before the API starts; skips any schema with tables; `false` disables setup |
+| `INITIALIZE_DATABASE` | Default on; initializes an empty schema and applies the compatible `root_admin` enum upgrade before the API starts; `false` disables both |
 | `PORT` / `WEB_PORT` | Image web listener, default 8088; production Compose fixes container port to 8088 and uses `WEB_PORT` for host mapping |
 | Internal API | Fixed loopback port 3000, not exposed by production Compose; do not use 3000 as the web port |
 | Browser API | Built as relative `/api`, proxied by Next to internal API; works across domains without rebuilding |
