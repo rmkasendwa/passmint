@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { canonicalBrowserUrl } from "../../../../browser-url";
 import { organizerReturnPath } from "../../../../organizer-routes";
 import {
   SESSION_COOKIE,
@@ -9,7 +10,7 @@ import {
 const GOOGLE_OAUTH_STATE_COOKIE = "passmint-google-oauth-state";
 
 export async function GET(request: Request) {
-  const url = new URL(request.url);
+  const url = canonicalBrowserUrl(request.url);
   const token = url.searchParams.get("token");
   const next = organizerReturnPath(url.searchParams.get("next"));
 
@@ -35,7 +36,10 @@ export async function GET(request: Request) {
       const location = backendResponse.headers.get("location");
 
       if (location) {
-        const response = NextResponse.redirect(new URL(location, url), 302);
+        const response = NextResponse.redirect(
+          canonicalBrowserUrl(new URL(location, url)),
+          302,
+        );
         response.cookies.delete(GOOGLE_OAUTH_STATE_COOKIE);
         return response;
       }
