@@ -36,6 +36,22 @@ test('local banners are resized, oriented, metadata-free WebP with safe extensio
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
+test('seed artwork uses stable first-party keys', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'passmint-seed-images-'));
+  try {
+    const service = new ImageStorageService(config({ LOCAL_UPLOAD_DIR: root, PUBLIC_API_URL: 'https://example.com/api' }));
+    const artwork = input(await pixels().jpeg().toBuffer(), 'image/jpeg', 'seed.jpg');
+    const first = await service.uploadSeedImage('sample-event', artwork);
+    const second = await service.uploadSeedImage('sample-event', artwork);
+    assert.equal(first.url, 'https://example.com/api/uploads/event-images/seed/sample-event.webp');
+    assert.equal(second.url, first.url);
+    assert.equal(service.seedImageUrl('sample-event'), first.url);
+    assert.equal((await sharp(await readFile(join(root, 'event-images/seed/sample-event.webp'))).metadata()).format, 'webp');
+    await assert.rejects(service.uploadSeedImage('../escape', artwork), /slug is invalid/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+
 test('invalid, mislabeled, oversized and excessive-pixel images never reach storage', async () => {
   const root = await mkdtemp(join(tmpdir(), 'passmint-images-'));
   try {
