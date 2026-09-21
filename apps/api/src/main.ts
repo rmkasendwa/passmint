@@ -9,10 +9,8 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bodyParser: false });
   const config = app.get(ConfigService);
 
-  const webPort = config.get<string>('WEB_PORT') ?? '8088';
-
   app.enableCors({
-    origin: config.get<string>('CORS_ORIGIN') ?? `http://localhost:${webPort}`,
+    origin: config.getOrThrow<string>('WEB_ORIGIN'),
   });
   app.use(
     '/uploads',

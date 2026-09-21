@@ -53,24 +53,14 @@ export function loadRootEnv() {
     `@${process.env.POSTGRES_HOST}:${process.env.POSTGRES_PORT}/${process.env.POSTGRES_DB}`;
 
   const localApiOrigin = `http://localhost:${process.env.API_PORT}`;
-  const localWebOrigin = `http://localhost:${process.env.WEB_PORT}`;
-
   if (
     !process.env.NEXT_PUBLIC_API_URL ||
     (process.env.API_PORT !== '3000' &&
       process.env.NEXT_PUBLIC_API_URL === 'http://localhost:3000') ||
     (process.env.API_PORT !== process.env.WEB_PORT &&
-      process.env.NEXT_PUBLIC_API_URL === localWebOrigin)
+      process.env.NEXT_PUBLIC_API_URL === process.env.WEB_ORIGIN)
   ) {
     process.env.NEXT_PUBLIC_API_URL = localApiOrigin;
-  }
-
-  if (
-    !process.env.CORS_ORIGIN ||
-    (process.env.WEB_PORT !== '8088' &&
-      process.env.CORS_ORIGIN === 'http://localhost:8088')
-  ) {
-    process.env.CORS_ORIGIN = localWebOrigin;
   }
 }
 

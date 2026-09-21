@@ -18,7 +18,7 @@ Never place real values in this document. [`.env.example`](../../.env.example) c
 | `APP_DATABASE_URL` | Compose application's database URL; default uses `postgres` hostname |
 | `API_PORT`, `WEB_PORT`, `PORT`, `API_HOST` | Development listener settings; production supervisor reserves loopback port 3000 for API and uses `PORT`/`WEB_PORT` (8088 default) for web |
 | `NEXT_PUBLIC_API_URL`, `API_INTERNAL_URL` | Browser API address (image builds `/api`) and internal server fetch address (loopback in image) |
-| `CORS_ORIGIN` | Allowed browser origin; default local web origin; Compose app currently sets localhost explicitly |
+| `WEB_ORIGIN` | Required browser origin used directly by CORS and authentication redirects |
 | `AUTH_SECRET` | HMAC token signing secret; must replace development fallback |
 | `INITIALIZE_DATABASE` | Initializes an empty schema automatically, skips existing tables; set false to manage schema setup separately |
 | `ROOT_ADMIN_EMAIL` | Single configuration-owned root administrator; reconciled at startup and registration |
