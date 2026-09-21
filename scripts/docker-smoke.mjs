@@ -44,6 +44,7 @@ async function startApp() {
   docker(['run', '-d', '--init', '--name', app, '--network', network,
     '-p', '127.0.0.1::8088', '-v', `${volume}:/app/uploads`,
     '-e', `DATABASE_URL=${databaseUrl}`, '-e', `AUTH_SECRET=${authSecret}`,
+    '-e', 'WEB_ORIGIN=http://localhost:8088',
     ...(initializeAtStartup ? [] : ['-e', 'INITIALIZE_DATABASE=false']), image]);
   resources.app = true;
   await waitFor(() => {

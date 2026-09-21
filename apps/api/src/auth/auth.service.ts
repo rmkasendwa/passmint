@@ -294,18 +294,11 @@ export class AuthService implements OnApplicationBootstrap {
   }
 
   private webOrigin() {
-    const configured = (
-      this.config.get<string>('WEB_ORIGIN') ??
-      this.config.get<string>('CORS_ORIGIN')
-    )?.trim();
-    if (configured) return new URL(this.publicUrl(configured, 'WEB_ORIGIN')).origin;
-
-    if (this.config.get<string>('NODE_ENV') === 'production') {
+    const configured = this.config.get<string>('WEB_ORIGIN')?.trim();
+    if (!configured) {
       throw new BadRequestException('WEB_ORIGIN must be configured for Google sign-in.');
     }
-
-    const port = this.config.get<string>('WEB_PORT') ?? '8088';
-    return `http://localhost:${port}`;
+    return new URL(this.publicUrl(configured, 'WEB_ORIGIN')).origin;
   }
 
   private publicUrl(value: string, key: string) {
