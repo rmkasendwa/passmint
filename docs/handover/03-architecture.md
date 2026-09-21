@@ -46,7 +46,7 @@ Gate validation looks up the code, checks ownership/admin privileges and cancell
 
 The event service publishes due drafts during startup, on a 30-second timer and during selected reads/purchases. It is an in-process mechanism, not a durable job queue. Each API process can run the timer; failure is logged and retried on a later tick.
 
-Development startup inserts named demo events and fills missing image/map details for matching names. Production skips this unless `SEED_DEMO_DATA=true`. Server and client demo fallback is disabled in production, so API errors do not become sample inventory. Exclude any deliberately seeded records from commercial reporting.
+Development startup inserts the catalog in `apps/api/src/events/seed-data` with stable IDs and recognizes older seed rows by name to avoid duplicates. New records are scheduled more than one month ahead. Artwork is committed under `apps/api/seed-data`, processed through event image storage, and served from stable first-party seed keys. Production never runs the seeder, and Docker excludes the source artwork from both its build context and final image. Server and client demo fallback is disabled in production, so API errors do not become sample inventory. Exclude any deliberately seeded records from commercial reporting.
 
 ## Deployment shape and dependencies
 

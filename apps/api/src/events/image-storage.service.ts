@@ -45,14 +45,34 @@ export class ImageStorageService {
   }
 
   async uploadImage(input: UploadImageInput) {
-    const decoded = await this.optimizeImage(this.decodeImage(input));
     const key = `event-images/${new Date().getFullYear()}/${randomUUID()}.webp`;
+    return this.storeImage(key, input);
+  }
+
+  seedImageUrl(slug: string) {
+    return this.publicUrl(`event-images/seed/${this.safeSeedSlug(slug)}.webp`);
+  }
+
+  async uploadSeedImage(slug: string, input: UploadImageInput) {
+    const key = `event-images/seed/${this.safeSeedSlug(slug)}.webp`;
+    return this.storeImage(key, input);
+  }
+
+  private async storeImage(key: string, input: UploadImageInput) {
+    const decoded = await this.optimizeImage(this.decodeImage(input));
 
     if (this.hasS3Config()) {
       return { url: await this.uploadToS3(key, decoded) };
     }
 
     return { url: await this.uploadLocally(key, decoded) };
+  }
+
+  private safeSeedSlug(slug: string) {
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+      throw new BadRequestException('Seed image slug is invalid.');
+    }
+    return slug;
   }
 
   private decodeImage(input: UploadImageInput): DecodedImage {
@@ -125,11 +145,7 @@ export class ImageStorageService {
     await mkdir(dirname(targetPath), { recursive: true });
     await writeFile(targetPath, image.buffer);
 
-    const publicBaseUrl =
-      this.config.get<string>('PUBLIC_API_URL') ??
-      `http://localhost:${this.config.get<string>('API_PORT') ?? '3000'}`;
-
-    return `${publicBaseUrl.replace(/\/$/, '')}/uploads/${key}`;
+    return this.publicUrl(key);
   }
 
   private async uploadToS3(key: string, image: DecodedImage) {
@@ -203,12 +219,31 @@ export class ImageStorageService {
       throw new InternalServerErrorException('Image upload failed.');
     }
 
-    const publicBaseUrl = this.config.get<string>('S3_PUBLIC_BASE_URL');
-    if (publicBaseUrl) {
-      return `${publicBaseUrl.replace(/\/$/, '')}/${key}`;
+    return this.publicUrl(key);
+  }
+
+  private publicUrl(key: string) {
+    if (this.hasS3Config()) {
+      const publicBaseUrl = this.config.get<string>('S3_PUBLIC_BASE_URL');
+      if (publicBaseUrl) {
+        return `${publicBaseUrl.replace(/\/$/, '')}/${key}`;
+      }
+
+      const endpoint = this.config.get<string>('S3_ENDPOINT');
+      return this.createS3ObjectUrl(
+        this.requiredConfig('S3_BUCKET'),
+        key,
+        this.config.get<string>('S3_REGION') ?? 'us-east-1',
+        endpoint,
+        this.config.get<string>('S3_FORCE_PATH_STYLE') === 'true' ||
+          Boolean(endpoint),
+      ).toString();
     }
 
-    return objectUrl.toString();
+    const publicBaseUrl =
+      this.config.get<string>('PUBLIC_API_URL') ??
+      `http://localhost:${this.config.get<string>('API_PORT') ?? '3000'}`;
+    return `${publicBaseUrl.replace(/\/$/, '')}/uploads/${key}`;
   }
 
   private createS3ObjectUrl(

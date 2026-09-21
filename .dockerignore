@@ -18,5 +18,6 @@ node_modules
 apps/*/.next
 apps/*/dist
 apps/*/node_modules
+apps/api/seed-data
 npm-debug.log*
 pnpm-debug.log*

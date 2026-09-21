@@ -16,7 +16,7 @@ This is a transfer inventory, not a declaration that all rights belong to a lega
 | Application hosting | Owner confirmation required | Provider, account/project, regions, releases, billing and access |
 | Database | PostgreSQL schema and local Compose volume | Real database endpoints, data ownership, backup schedule and export/restore evidence |
 | Event images | Storage code, MinIO local configuration, uploaded and remote artwork paths | Actual bucket inventory, account rights, content licenses, lifecycle and backup |
-| External demo artwork | Unsplash URLs in event seed/demo code | Applicable rights, provenance and dependency on externally available images |
+| Seed event artwork | Source JPEGs and provenance manifest in `apps/api/seed-data` | Applicable rights and provenance of the committed source images |
 | Payment-brand artwork | MTN/Airtel SVG files in web public directory | Source and permitted brand use; this is not evidence of a payment-provider partnership |
 | CI and build artifacts | GitHub workflow and Dockerfile | Actions permissions, artifact retention, registry ownership and release evidence |
 | Secrets and service identities | Configuration names only | Secrets-manager locations, custodians, rotation and recovery procedures |

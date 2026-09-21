@@ -137,9 +137,7 @@ test("artwork uploads use image validation and import overrides preserve retry i
     1,
   );
 });
-// Exercise production bootstrap without racing other test apps' demo seeding.
 process.env.NODE_ENV = "production";
-process.env.SEED_DEMO_DATA = "false";
 const users = {};
 let app, url, source, uploadRoot;
 before(async () => {

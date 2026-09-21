@@ -12,7 +12,7 @@ Open `/samples` (also linked from the footer). The server-rendered gallery inclu
 
 The layout playground on that page is local preview state. It does not modify sample bookings. The sample event checkout uses the application's existing ticket issuance flow; these changes do not add a payment gateway or payment verification.
 
-Samples are added idempotently by fixed IDs on API startup in development, or when `SEED_DEMO_DATA=true` in production. Existing sample records and purchases are never reset by startup. Sample bookings are fictional and use `sample@example.test`.
+Samples are added idempotently by fixed IDs on API startup in development. Production never runs the sample seeder. Existing sample records and purchases are never reset by development startup. Sample bookings are fictional and use `sample@example.test`.
 
 ## Create and manage
 
