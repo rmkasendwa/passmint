@@ -1,0 +1,25 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import {
+  canonicalBrowserUrl,
+  hasWildcardBrowserHost,
+} from "../browser-url.ts";
+
+test("wildcard browser hosts become localhost without losing navigation state", () => {
+  const url = canonicalBrowserUrl(
+    "http://0.0.0.0:3050/login?next=%2Fevents#content",
+  );
+
+  assert.equal(
+    url.toString(),
+    "http://localhost:3050/login?next=%2Fevents#content",
+  );
+  assert.equal(hasWildcardBrowserHost(url), false);
+});
+
+test("public browser hosts remain unchanged", () => {
+  const value = "https://tickets.example.com/auth/google/callback?code=code";
+  assert.equal(canonicalBrowserUrl(value).toString(), value);
+  assert.equal(hasWildcardBrowserHost(value), false);
+  assert.equal(hasWildcardBrowserHost("not a URL"), false);
+});

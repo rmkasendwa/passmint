@@ -75,6 +75,9 @@ PostgreSQL has no published host port in the production Compose file. Database a
 | `PUBLIC_API_URL` | Defaults to `/api`, so local images use same-origin `/api/uploads/...` URLs |
 | `S3_*` | Optional object storage settings; omit bucket/access keys to use filesystem volume |
 | `ROOT_ADMIN_EMAIL` | Optional single root account email; reconciled at startup and registration |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Optional Google OAuth credentials; when set, configure Google's redirect URI to `/auth/google/callback` on the public frontend origin |
+| `GOOGLE_REDIRECT_URI` | Optional explicit frontend callback URL when it differs from `WEB_ORIGIN`; the frontend passes Google's response through to the private API |
+| `WEB_ORIGIN` | Public web origin used for the Google callback and completed session; use the externally reachable HTTPS hostname, never `0.0.0.0` or `[::]` |
 
 Image startup bypasses the local development environment loader, so it does not silently supply MinIO credentials. External S3-compatible storage requires bucket, access key and secret, plus appropriate endpoint/region and a browser-reachable public base URL. Only event artwork should be public. Back up object storage separately if used.
 

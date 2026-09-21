@@ -2,7 +2,14 @@
 
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
-import { type ChangeEventHandler, type FormEvent, useState } from "react";
+import {
+  type ChangeEventHandler,
+  type FormEvent,
+  type MouseEvent,
+  useEffect,
+  useState,
+} from "react";
+import { getApiUrl } from "../api";
 import { useAppContext } from "./app-provider";
 import {
   FieldMessage,
@@ -25,6 +32,10 @@ const textLinkClass =
   "font-(--weight-semibold) text-accent hover:text-text";
 const submitClass =
   "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-(--button-bg) px-4 font-(--weight-bold) text-(--button-text) hover:bg-accent";
+const oauthButtonClass =
+  "inline-flex min-h-12 items-center justify-center gap-2.5 whitespace-nowrap rounded-sm border border-[#747775] bg-white px-3 text-sm leading-5 font-medium text-[#1f1f1f] hover:bg-[#f8faff] focus:outline-2 focus:outline-offset-2 focus:outline-[#0b57d0] active:bg-[#f2f2f2]";
+const dividerClass =
+  "flex items-center gap-3 text-[0.76rem] font-(--weight-semibold) uppercase text-text-soft before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border";
 const stateClass =
   "mb-0 w-full max-w-107.5 rounded-lg bg-accent-soft p-3 text-[0.92rem] font-(--weight-medium) text-accent max-[820px]:max-w-none";
 const switchClass =
@@ -142,6 +153,63 @@ function PasswordInput({
   );
 }
 
+function googleAuthHref() {
+  const params = new URLSearchParams();
+  if (typeof window !== "undefined") {
+    const next = new URLSearchParams(window.location.search).get("next");
+    if (next) params.set("next", next);
+  }
+  const query = params.toString();
+
+  return `${getApiUrl().replace(/\/$/, "")}/auth/google${query ? `?${query}` : ""}`;
+}
+
+function GoogleLogo() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="size-5 shrink-0"
+      viewBox="0 0 18 18"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        fill="#4285F4"
+        d="M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.797 2.716v2.258h2.909c1.702-1.567 2.684-3.875 2.684-6.615Z"
+      />
+      <path
+        fill="#34A853"
+        d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.909-2.258c-.806.54-1.835.859-3.047.859-2.344 0-4.328-1.585-5.037-3.714H.956v2.332A9 9 0 0 0 9 18Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M3.963 10.707A5.41 5.41 0 0 1 3.682 9c0-.592.102-1.168.281-1.707V4.961H.956A9 9 0 0 0 0 9c0 1.452.347 2.827.956 4.039l3.007-2.332Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M9 3.579c1.321 0 2.508.454 3.441 1.346l2.581-2.581C13.463.892 11.426 0 9 0A9 9 0 0 0 .956 4.961l3.007 2.332C4.672 5.164 6.656 3.579 9 3.579Z"
+      />
+    </svg>
+  );
+}
+
+function GoogleAuthButton() {
+  const href = `${getApiUrl().replace(/\/$/, "")}/auth/google`;
+
+  function handleClick(event: MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault();
+    window.location.assign(googleAuthHref());
+  }
+
+  return (
+    <a className={oauthButtonClass} href={href} onClick={handleClick}>
+      <GoogleLogo />
+      <span className="font-['Google_Sans',Roboto,Arial,sans-serif]">
+        Continue with Google
+      </span>
+    </a>
+  );
+}
+
 export function LoginForm() {
   const {
     authEmail,
@@ -151,6 +219,7 @@ export function LoginForm() {
     setAuthPassword,
     submitAuth,
   } = useAppContext();
+  const [oauthError, setOauthError] = useState("");
   const validation = useInlineFormValidation();
   const [passwordRevealed, setPasswordRevealed] = useState(false);
   const emailError = validation.fieldError({
@@ -165,10 +234,18 @@ export function LoginForm() {
     required: true,
     value: authPassword,
   });
+  const visibleAuthState = authState || oauthError;
+
+  useEffect(() => {
+    const error = new URLSearchParams(window.location.search).get("error");
+    if (error) setOauthError(error);
+  }, []);
 
   return (
     <>
       <form className={formClass} {...validation.formProps(submitAuth)}>
+        <GoogleAuthButton />
+        <div className={dividerClass}>or</div>
         <label className={labelClass}>
           <RequiredLabel>Email</RequiredLabel>
           <input
@@ -212,7 +289,7 @@ export function LoginForm() {
         </button>
       </form>
 
-      {authState && <p className={stateClass}>{authState}</p>}
+      {visibleAuthState && <p className={stateClass}>{visibleAuthState}</p>}
 
       <div className={switchClass}>
         <p>
@@ -280,6 +357,8 @@ export function RegisterForm() {
   return (
     <>
       <form className={formClass} {...validation.formProps(handleSubmit)}>
+        <GoogleAuthButton />
+        <div className={dividerClass}>or</div>
         <label className={labelClass}>
           <RequiredLabel>Name</RequiredLabel>
           <input
