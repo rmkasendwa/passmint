@@ -4,10 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node ../../scripts/run-with-env.mjs next dev --hostname 0.0.0.0 --port __WEB_PORT__",
+    "dev": "node ../../scripts/run-with-env.mjs next dev --hostname localhost --port __WEB_PORT__",
     "build": "node ../../scripts/run-with-env.mjs next build",
     "start": "node ../../scripts/run-with-env.mjs next start --hostname 0.0.0.0 --port __WEB_PORT__",
-    "preview": "node ../../scripts/run-with-env.mjs next start --hostname 0.0.0.0 --port __WEB_PORT__",
+    "preview": "node ../../scripts/run-with-env.mjs next start --hostname localhost --port __WEB_PORT__",
     "lint": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
