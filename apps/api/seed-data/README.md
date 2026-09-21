@@ -1,6 +1,6 @@
 # Seed data
 
-The API uses the files in `event-images` to create development and explicitly enabled demo events. At seed time, each source image passes through the normal event-image validation and optimization pipeline and is written to a stable `event-images/seed/<slug>.webp` storage key.
+The API uses the files in `event-images` to create development fixtures. At seed time, each source image passes through the normal event-image validation and optimization pipeline and is written to a stable `event-images/seed/<slug>.webp` storage key. Production never runs the seeder, and Docker excludes this directory from the build context and final image.
 
 The source JPEGs were downloaded from Unsplash on 2026-09-21. Retaining the source URL here preserves provenance without making seeded events depend on an external image host at runtime.
 

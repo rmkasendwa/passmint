@@ -21,7 +21,6 @@ Never place real values in this document. [`.env.example`](../../.env.example) c
 | `CORS_ORIGIN` | Allowed browser origin; default local web origin; Compose app currently sets localhost explicitly |
 | `AUTH_SECRET` | HMAC token signing secret; must replace development fallback |
 | `INITIALIZE_DATABASE` | Initializes an empty schema automatically, skips existing tables; set false to manage schema setup separately |
-| `SEED_DEMO_DATA` | Production seeding is disabled unless explicitly set to `true` |
 | `ROOT_ADMIN_EMAIL` | Single configuration-owned root administrator; reconciled at startup and registration |
 | `MINIO_API_PORT`, `MINIO_CONSOLE_PORT`, `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD` | Local storage service and administrative credentials |
 | `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT`, `S3_FORCE_PATH_STYLE` | Object destination and addressing; custom endpoint forces path-style behavior in service |
@@ -76,7 +75,7 @@ Record incident time, affected environment, release, symptoms, actions and custo
 
 Back up PostgreSQL and event-image objects, plus the release manifest, configuration names and secure access to the secrets store. Include externally hosted image rights/availability in the asset inventory. Docker named volumes persist locally but are not independent backups.
 
-For a restore rehearsal: choose a documented backup pair, restore into a new isolated database and storage target, point a staging release at it, verify row counts and referential integrity, sample event-image access, and check ticket status/history with synthetic or approved sanitized data. Disable or isolate unintended outbound traffic. Account for startup seeding, which can change restored data. Record start/end time, data cutoff, errors and acceptance evidence.
+For a restore rehearsal: choose a documented backup pair, restore into a new isolated database and storage target, point a staging release at it, verify row counts and referential integrity, sample event-image access, and check ticket status/history with synthetic or approved sanitized data. Disable or isolate unintended outbound traffic. Never run development startup commands against the restored environment because they seed fixtures. Record start/end time, data cutoff, errors and acceptance evidence.
 
 Only switch production traffic after the authorized operator verifies the target and reconciliation. Preserve the previous environment for rollback under an agreed retention window. If schema changes are incompatible with the older application, reverting code alone is not a rollback. Never use `db:reset` or `docker compose down -v` to recover production.
 
