@@ -8,7 +8,9 @@ import {
 } from "@prisma/client";
 import { readFile } from "fs/promises";
 import { join } from "path";
+import { AuthService } from "../auth/auth.service";
 import { PrismaService } from "../prisma/prisma.service";
+import { UserRole } from "../users/user-role.enum";
 import { ImageStorageService } from "./image-storage.service";
 import { buildSeedEvents, SeedEvent } from "./seed-data/events";
 
@@ -17,33 +19,69 @@ export class EventSeedService implements OnApplicationBootstrap {
   constructor(
     private readonly prisma: PrismaService,
     private readonly imageStorage: ImageStorageService,
+    private readonly authService: AuthService,
   ) {}
 
   async onApplicationBootstrap() {
-    if (process.env.PASSMINT_DEMO_MODE !== "true") return;
-    if (process.env.NODE_ENV === "production") {
+    const demoMode = process.env.PASSMINT_DEMO_MODE === "true";
+    if (demoMode && process.env.NODE_ENV === "production") {
       throw new Error("PASSMINT_DEMO_MODE cannot be enabled in production.");
     }
 
-    await this.seed();
+    const now = new Date();
+    const owner = await this.rootAdmin();
+    const seedEventWhere = this.seedEventWhere(now);
+    if (!owner) {
+      const existingSeedEvents = await this.prisma.event.count({
+        where: seedEventWhere,
+      });
+      if (demoMode || existingSeedEvents > 0) {
+        throw new Error(
+          "Seed events require an existing account matching ROOT_ADMIN_EMAIL.",
+        );
+      }
+      return;
+    }
+
+    if (demoMode) {
+      await this.seed(now, owner.id);
+      return;
+    }
+
+    await this.prisma.event.updateMany({
+      where: seedEventWhere,
+      data: { ownerId: owner.id },
+    });
   }
 
-  async seed(now = new Date()) {
-    const owner = await this.prisma.user.upsert({
-      where: { email: "demo.organizer@example.test" },
-      update: {},
-      create: {
-        id: "usr_demo_organizer",
-        name: "Passmint Demo Organizer",
-        email: "demo.organizer@example.test",
-        passwordHash: "demo-password-disabled",
-        role: "admin",
-      },
-    });
-    for (const event of buildSeedEvents(now)) {
-      await this.seedEvent(event, owner.id);
+  async seed(now = new Date(), rootOwnerId?: string) {
+    const ownerId = rootOwnerId ?? (await this.rootAdmin())?.id;
+    if (!ownerId) {
+      throw new Error(
+        "Demo mode requires an existing account matching ROOT_ADMIN_EMAIL.",
+      );
     }
-    await this.seedOperationalHistory(now, owner.id);
+    for (const event of buildSeedEvents(now)) {
+      await this.seedEvent(event, ownerId);
+    }
+    await this.seedOperationalHistory(now, ownerId);
+  }
+
+  private async rootAdmin() {
+    await this.authService.reconcileRootAdmin();
+    return this.prisma.user.findFirst({
+      where: { role: UserRole.RootAdmin },
+      select: { id: true },
+    });
+  }
+
+  private seedEventWhere(now: Date): Prisma.EventWhereInput {
+    return {
+      OR: buildSeedEvents(now).flatMap((event) => [
+        { id: event.id },
+        { name: event.name },
+      ]),
+    };
   }
 
   private async seedEvent(event: SeedEvent, ownerId: string) {
@@ -58,17 +96,19 @@ export class EventSeedService implements OnApplicationBootstrap {
     });
 
     if (existing) {
-      if (existing.ownerId) return;
-
       const thumbnailUrl = this.imageStorage.seedImageUrl(event.imageSlug);
-      const data: Prisma.EventUpdateInput = {
-        owner: { connect: { id: ownerId } },
-      };
+      const data: Prisma.EventUpdateInput = {};
 
-      if (existing.thumbnailUrl !== thumbnailUrl) {
+      if (existing.ownerId !== ownerId) {
+        data.owner = { connect: { id: ownerId } };
+      }
+
+      if (!existing.ownerId && existing.thumbnailUrl !== thumbnailUrl) {
         data.thumbnailUrl = await this.uploadArtwork(event);
       }
-      if (!existing.mapLocation) data.mapLocation = event.mapLocation;
+      if (!existing.ownerId && !existing.mapLocation) {
+        data.mapLocation = event.mapLocation;
+      }
 
       if (Object.keys(data).length > 0) {
         await this.prisma.event.update({ where: { id: existing.id }, data });
