@@ -24,6 +24,14 @@ The demo seed creates:
 
 All demo emails use the reserved `.example.test` domain.
 
+## Sign in
+
+Open the regular sign-in page and choose **Enter demo**. The button is shown
+only when the API reports that demo mode is enabled. It creates a normal session
+for the dedicated demo organizer and opens the organizer events view without a
+shared password. Both the availability check and demo-session endpoint remain
+disabled in production.
+
 ## Reset
 
 For a fully clean local demo, reset the development database and start with demo

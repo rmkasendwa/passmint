@@ -8,17 +8,10 @@ import {
 } from "@prisma/client";
 import { readFile } from "fs/promises";
 import { join } from "path";
+import { demoOrganizerUpsert } from "../common/demo-mode";
 import { PrismaService } from "../prisma/prisma.service";
 import { ImageStorageService } from "./image-storage.service";
 import { buildSeedEvents, SeedEvent } from "./seed-data/events";
-
-const demoOrganizer = {
-  id: "usr_demo_organizer",
-  name: "Passmint Demo Organizer",
-  email: "demo.organizer@example.test",
-  passwordHash: "demo-password-disabled",
-  role: "user" as const,
-};
 
 @Injectable()
 export class EventSeedService implements OnApplicationBootstrap {
@@ -64,13 +57,7 @@ export class EventSeedService implements OnApplicationBootstrap {
 
   private ensureDemoOrganizer() {
     return this.prisma.user.upsert({
-      where: { email: demoOrganizer.email },
-      update: {
-        name: demoOrganizer.name,
-        passwordHash: demoOrganizer.passwordHash,
-        role: demoOrganizer.role,
-      },
-      create: demoOrganizer,
+      ...demoOrganizerUpsert(),
       select: { id: true },
     });
   }

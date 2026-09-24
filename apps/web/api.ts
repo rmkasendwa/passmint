@@ -309,6 +309,9 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  demoAvailability: () =>
+    request<{ enabled: boolean }>("/auth/demo", { cache: "no-store" }),
+  loginToDemo: () => request<AuthSession>("/auth/demo", { method: "POST" }),
   me: (token: string) => request<User>("/auth/me", undefined, token),
 };
 

@@ -101,11 +101,11 @@ function fakeImageStorage() {
   };
 }
 
-test("production startup never seeds demo events", async () => {
+test("production startup does not seed when demo mode is disabled", async () => {
   const previousNodeEnv = process.env.NODE_ENV;
-  const previousSeedSetting = process.env.SEED_DEMO_DATA;
+  const previousDemoMode = process.env.PASSMINT_DEMO_MODE;
   process.env.NODE_ENV = "production";
-  process.env.SEED_DEMO_DATA = "true";
+  process.env.PASSMINT_DEMO_MODE = "false";
 
   try {
     const prisma = fakePrisma();
@@ -120,8 +120,28 @@ test("production startup never seeds demo events", async () => {
   } finally {
     if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
     else process.env.NODE_ENV = previousNodeEnv;
-    if (previousSeedSetting === undefined) delete process.env.SEED_DEMO_DATA;
-    else process.env.SEED_DEMO_DATA = previousSeedSetting;
+    if (previousDemoMode === undefined) delete process.env.PASSMINT_DEMO_MODE;
+    else process.env.PASSMINT_DEMO_MODE = previousDemoMode;
+  }
+});
+
+test("production startup refuses explicitly enabled demo mode", async () => {
+  const previousNodeEnv = process.env.NODE_ENV;
+  const previousDemoMode = process.env.PASSMINT_DEMO_MODE;
+  process.env.NODE_ENV = "production";
+  process.env.PASSMINT_DEMO_MODE = "true";
+
+  try {
+    const service = new EventSeedService(fakePrisma(), fakeImageStorage());
+    await assert.rejects(
+      service.onApplicationBootstrap(),
+      /PASSMINT_DEMO_MODE cannot be enabled in production/,
+    );
+  } finally {
+    if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = previousNodeEnv;
+    if (previousDemoMode === undefined) delete process.env.PASSMINT_DEMO_MODE;
+    else process.env.PASSMINT_DEMO_MODE = previousDemoMode;
   }
 });
 

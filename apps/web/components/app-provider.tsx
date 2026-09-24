@@ -66,6 +66,7 @@ type AppContextValue = {
   hostState: string;
   hostThumbnailName: string;
   loading: boolean;
+  loginToDemo: () => Promise<void>;
   mobileMoneyNumber: string;
   nextEvent?: Event;
   openAuth: (mode: "login" | "register") => void;
@@ -848,6 +849,24 @@ export function AppProvider({
     }
   }
 
+  async function loginToDemo() {
+    setAuthState("Starting demo...");
+    try {
+      const nextSession = await api.loginToDemo();
+      await establishServerSession(nextSession.token);
+      setSession(nextSession);
+      setBuyerName(nextSession.user.name);
+      setBuyerEmail(nextSession.user.email);
+      setAuthState("Demo ready.");
+      const next = new URLSearchParams(window.location.search).get("next");
+      router.push(organizerReturnPath(next));
+      router.refresh();
+    } catch (error) {
+      const fallback = error as { message?: string };
+      setAuthState(fallback.message ?? "Unable to start the demo.");
+    }
+  }
+
   function submitForgotPassword(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setResetState(
@@ -912,6 +931,7 @@ export function AppProvider({
     hostState,
     hostThumbnailName,
     loading,
+    loginToDemo,
     mobileMoneyNumber,
     nextEvent,
     openAuth,
