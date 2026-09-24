@@ -983,7 +983,7 @@ export function EventDetail({
           {ownedBySession && session && (
             <EventAttendees
               initialData={initialReports?.attendees}
-              key={`${displayEvent.id}:${session.user.id}`}
+              key={`attendees:${displayEvent.id}:${session.user.id}`}
               eventId={displayEvent.id}
               token={session.token}
             />
@@ -991,7 +991,7 @@ export function EventDetail({
           {ownedBySession && session && (
             <EventScanMetrics
               initialData={initialReports?.scans}
-              key={`${displayEvent.id}:${session.user.id}`}
+              key={`scans:${displayEvent.id}:${session.user.id}`}
               eventId={displayEvent.id}
               token={session.token}
             />
