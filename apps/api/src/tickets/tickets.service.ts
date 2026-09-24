@@ -166,11 +166,6 @@ export class TicketsService {
       }
 
       const unitPriceCents = type?.priceCents ?? event.priceCents;
-      if (unitPriceCents > 0 && !dto.mobileMoneyNumber?.trim()) {
-        throw new BadRequestException(
-          "Add a mobile money number before paid checkout.",
-        );
-      }
       const mobileMoneyNumber = dto.mobileMoneyNumber?.replace(/\s+/g, "");
       const totalCents = unitPriceCents * quantity;
       const paymentReference = totalCents > 0 ? prefixedId("momo") : null;
@@ -206,7 +201,9 @@ export class TicketsService {
                     status: PaymentStatus.authorized,
                     amountCents: totalCents,
                     currency: "UGX",
-                    metadata: { phone: mobileMoneyNumber },
+                    metadata: mobileMoneyNumber
+                      ? { phone: mobileMoneyNumber }
+                      : Prisma.DbNull,
                   },
                 },
               }

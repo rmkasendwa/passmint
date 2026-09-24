@@ -58,10 +58,12 @@ export class EventSeedService implements OnApplicationBootstrap {
     });
 
     if (existing) {
+      if (existing.ownerId) return;
+
       const thumbnailUrl = this.imageStorage.seedImageUrl(event.imageSlug);
-      const data: Prisma.EventUpdateInput = existing.ownerId
-        ? {}
-        : { owner: { connect: { id: ownerId } } };
+      const data: Prisma.EventUpdateInput = {
+        owner: { connect: { id: ownerId } },
+      };
 
       if (existing.thumbnailUrl !== thumbnailUrl) {
         data.thumbnailUrl = await this.uploadArtwork(event);

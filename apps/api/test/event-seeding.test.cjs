@@ -12,7 +12,15 @@ function fakePrisma(initialEvents = []) {
     records,
     created,
     updated,
+    user: {
+      async upsert() {
+        return { id: "usr_demo_organizer" };
+      },
+    },
     event: {
+      async findMany() {
+        return [];
+      },
       async findFirst({ where }) {
         return [...records.values()].find((event) =>
           where.OR.some((condition) =>
