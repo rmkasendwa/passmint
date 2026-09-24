@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  AlertTriangle,
   CalendarDays,
   CheckCircle2,
   CircleDollarSign,
@@ -8,6 +9,8 @@ import {
   Edit3,
   ExternalLink,
   LogIn,
+  LoaderCircle,
+  MailCheck,
   MapPin,
   Minus,
   Navigation,
@@ -131,6 +134,8 @@ export function EventDetail({
     mobileMoneyNumber,
     openAuth,
     purchaseState,
+    purchaseStatus,
+    resetPurchase,
     selectedSeats,
     setSelectedSeats,
     quantity,
@@ -176,6 +181,16 @@ export function EventDetail({
   });
   const editValidation = useInlineFormValidation();
   const checkoutValidation = useInlineFormValidation();
+
+  function openCheckout() {
+    resetPurchase();
+    setCheckoutOpen(true);
+  }
+
+  function closeCheckout() {
+    if (purchaseStatus === "processing") return;
+    setCheckoutOpen(false);
+  }
 
   useEffect(() => {
     chooseEvent(event.id);
@@ -1213,7 +1228,7 @@ export function EventDetail({
               disabled={
                 salesClosed || checkoutEvent.soldOut || categoryUnavailable
               }
-              onClick={() => setCheckoutOpen(true)}
+              onClick={openCheckout}
             >
               <CircleDollarSign size={18} />
               {isDraft
@@ -1252,260 +1267,364 @@ export function EventDetail({
                   className="mb-0 text-[clamp(1.6rem,3vw,2.35rem)] leading-tight text-text"
                   id="checkout-dialog-title"
                 >
-                  {unitPrice === 0 ? "Get your ticket" : "Complete payment"}
+                  {purchaseStatus === "processing"
+                    ? unitPrice === 0
+                      ? "Reserving tickets"
+                      : "Processing payment"
+                    : purchaseStatus === "success"
+                      ? "You’re all set"
+                      : unitPrice === 0
+                        ? "Get your ticket"
+                        : "Complete payment"}
                 </h2>
               </div>
               <button
                 className="grid size-10 shrink-0 place-items-center rounded-lg border border-border bg-surface-muted text-text"
                 type="button"
                 aria-label="Close checkout"
-                onClick={() => setCheckoutOpen(false)}
+                disabled={purchaseStatus === "processing"}
+                onClick={closeCheckout}
               >
                 <X size={18} />
               </button>
             </div>
 
             <div className="checkout-dialog__body">
-              {categoryUnavailable && (
-                <p role="status" className="text-text">
-                  {salesStateLabels[selectedSalesState]}. Choose an available
-                  category to continue.
-                </p>
-              )}
-              <div className="grid gap-3 rounded-lg border border-border bg-surface-muted p-3">
-                <div className="flex items-start justify-between gap-3">
-                  <strong className="text-text">
-                    {selectedType?.name ?? "General admission"}
-                  </strong>
-                  <strong className="text-price">
-                    {money.format(ticketTotalCents / 100)}
-                  </strong>
-                </div>
-                <span className="text-[0.9rem] text-text-muted">
-                  {checkoutQuantity.toLocaleString("en-UG")} x{" "}
-                  {money.format(unitPrice / 100)}
-                </span>
-                <span className="text-[0.9rem] text-text-muted">
-                  {dateTime.format(new Date(checkoutEvent.startsAt))}
-                </span>
-              </div>
-
-              <form
-                className={formGrid}
-                {...checkoutValidation.formProps(buyTickets)}
-              >
-                <label>
-                  <RequiredLabel>Buyer name</RequiredLabel>
-                  <input
-                    aria-describedby="detail-buyer-name-error"
-                    aria-invalid={Boolean(checkoutBuyerNameError) || undefined}
-                    value={buyerName}
-                    onChange={(input) => setBuyerName(input.target.value)}
-                    placeholder={session?.user.name ?? "Anonymous buyer name"}
-                    {...requiredField("Buyer name")}
-                  />
-                  <FieldMessage
-                    error={checkoutBuyerNameError}
-                    id="detail-buyer-name-error"
-                  />
-                </label>
-                <label>
-                  <RequiredLabel>Buyer email</RequiredLabel>
-                  <input
-                    aria-describedby="detail-buyer-email-error"
-                    aria-invalid={Boolean(checkoutBuyerEmailError) || undefined}
-                    type="email"
-                    value={buyerEmail}
-                    onChange={(input) => setBuyerEmail(input.target.value)}
-                    placeholder={
-                      session?.user.email ?? "Email for ticket delivery"
-                    }
-                    {...requiredField("Buyer email")}
-                  />
-                  <FieldMessage
-                    error={checkoutBuyerEmailError}
-                    id="detail-buyer-email-error"
-                  />
-                </label>
-                {displayEvent.booking?.seating ? (
-                  <div className="grid gap-3">
-                    <strong>
-                      Choose your seats · {selectedSeats.length} selected
-                    </strong>
-                    <SeatMap
-                      booking={displayEvent.booking}
-                      selected={selectedSeats}
-                      occupied={displayEvent.occupiedSeats}
-                      onSelect={(seat) => {
-                        const next = selectedSeats.includes(seat)
-                          ? selectedSeats.filter((s) => s !== seat)
-                          : selectedSeats.length < maximumQuantity
-                            ? [...selectedSeats, seat]
-                            : selectedSeats;
-                        setSelectedSeats(next);
-                        setQuantity(Math.max(1, next.length));
-                      }}
-                    />
-                    <p className="text-sm text-text-muted">
-                      Choose up to {maximumQuantity} seats. Selected:{" "}
-                      {selectedSeats.join(", ") || "None"}
-                    </p>
-                    <button
-                      type="button"
-                      className="button-secondary"
-                      onClick={async () => {
-                        setDisplayEvent(
-                          await api.getEvent(event.id, session?.token),
-                        );
-                        setSelectedSeats([]);
-                        setQuantity(1);
-                      }}
-                    >
-                      Refresh availability
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <label>
-                      <RequiredLabel>Quantity</RequiredLabel>
-                      <span className="quantity-stepper">
-                        <button
-                          type="button"
-                          aria-label="Decrease quantity"
-                          onClick={() => stepQuantity(-1)}
-                          disabled={quantity <= 1}
-                        >
-                          <Minus size={16} />
-                        </button>
-                        <input
-                          aria-describedby="detail-quantity-limit detail-quantity-error"
-                          aria-invalid={
-                            Boolean(checkoutQuantityError) || undefined
-                          }
-                          inputMode="numeric"
-                          pattern="[0-9,]*"
-                          title="Please enter a whole number."
-                          value={formattedQuantity}
-                          onChange={(input) =>
-                            updateQuantityFromText(input.target.value)
-                          }
-                          onKeyDown={(event) => {
-                            if (["e", "E", "+", "-", "."].includes(event.key)) {
-                              event.preventDefault();
-                            }
-                          }}
-                          onWheel={(event) => {
-                            if (
-                              document.activeElement !== event.currentTarget
-                            ) {
-                              return;
-                            }
-
-                            event.preventDefault();
-                            stepQuantity(event.deltaY > 0 ? 1 : -1);
-                          }}
-                          {...requiredField("Quantity")}
-                        />
-                        <button
-                          type="button"
-                          aria-label="Increase quantity"
-                          onClick={() => stepQuantity(1)}
-                          disabled={quantity >= maximumQuantity}
-                        >
-                          <Plus size={16} />
-                        </button>
-                      </span>
-                      <FieldMessage
-                        error={checkoutQuantityError}
-                        id="detail-quantity-error"
-                      />
-                      <span id="detail-quantity-limit">
-                        Maximum {selectedType?.maxPerOrder ?? 10} tickets per
-                        order. Availability may reduce this quantity.
-                      </span>
-                    </label>
-                  </>
-                )}
-
-                {unitPrice > 0 && (
-                  <>
-                    <div>
-                      <p className={kicker}>Payment method</p>
-                      <div className="grid grid-cols-2 gap-2 max-[520px]:grid-cols-1">
-                        {[
-                          {
-                            value: "mtn",
-                            label: "MTN MoMo",
-                            logo: "/payment/mtn-momo.svg",
-                          },
-                          {
-                            value: "airtel",
-                            label: "Airtel Money",
-                            logo: "/payment/airtel-money.svg",
-                          },
-                        ].map((option) => (
-                          <button
-                            className={`payment-option payment-option--${option.value}`}
-                            data-selected={paymentProvider === option.value}
-                            aria-pressed={paymentProvider === option.value}
-                            key={option.value}
-                            type="button"
-                            onClick={() =>
-                              setPaymentProvider(
-                                option.value as "airtel" | "mtn",
-                              )
-                            }
-                          >
-                            <span className="payment-option__poster">
-                              <img src={option.logo} alt="" />
-                            </span>
-                            <span className="payment-option__footer">
-                              <span>{option.label}</span>
-                              {paymentProvider === option.value && (
-                                <span className="payment-option__selected">
-                                  <CheckCircle2 size={16} />
-                                  Selected
-                                </span>
-                              )}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <PhoneNumberInput
-                      label="Mobile money number"
-                      value={mobileMoneyNumber}
-                      onChange={setMobileMoneyNumber}
-                      paymentProvider={paymentProvider}
-                      required
-                    />
-                  </>
-                )}
-
-                <button
-                  className={primaryAction}
-                  type="submit"
-                  disabled={
-                    (Boolean(displayEvent.booking?.seating) &&
-                      selectedSeats.length !== quantity) ||
-                    salesClosed ||
-                    checkoutEvent.soldOut ||
-                    categoryUnavailable
-                  }
+              {purchaseStatus === "processing" && (
+                <div
+                  className="checkout-processing"
+                  role="status"
+                  aria-live="polite"
                 >
-                  <CircleDollarSign size={18} />
-                  {unitPrice === 0
-                    ? "Get ticket"
-                    : `Pay with ${
-                        paymentProvider === "mtn" ? "MTN MoMo" : "Airtel Money"
-                      }`}
-                </button>
-              </form>
-              {purchaseState && (
-                <p className="mb-0 rounded-lg bg-accent-soft p-3 text-[0.92rem] font-(--weight-medium) text-accent">
-                  {purchaseState}
-                </p>
+                  <span className="checkout-processing__spinner">
+                    <LoaderCircle aria-hidden="true" size={42} />
+                  </span>
+                  <div>
+                    <p className={kicker}>Secure checkout</p>
+                    <h3 className="mb-2 text-[1.55rem] text-text">
+                      {unitPrice === 0
+                        ? "Saving your place"
+                        : "Completing your payment"}
+                    </h3>
+                    <p className="mb-0 text-text-muted">{purchaseState}</p>
+                  </div>
+                  <div
+                    className="checkout-processing__steps"
+                    aria-hidden="true"
+                  >
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                  <p className="mb-0 text-sm text-text-soft">
+                    Keep this window open. This usually takes a few seconds.
+                  </p>
+                </div>
               )}
+
+              {purchaseStatus === "success" && (
+                <div
+                  className="checkout-result checkout-result--success"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <span className="checkout-result__icon">
+                    <CheckCircle2 aria-hidden="true" size={38} />
+                  </span>
+                  <div>
+                    <p className={kicker}>Order confirmed</p>
+                    <h3 className="mb-2 text-[1.7rem] text-text">
+                      {tickets.length === 1
+                        ? "Your ticket is ready"
+                        : `${tickets.length} tickets are ready`}
+                    </h3>
+                    <p className="mb-0 text-text-muted">{purchaseState}</p>
+                  </div>
+                  <div className="checkout-result__delivery">
+                    <MailCheck aria-hidden="true" size={20} />
+                    <span>
+                      Sent to <strong>{buyerEmail}</strong>
+                    </span>
+                  </div>
+                  <button
+                    className={primaryAction}
+                    type="button"
+                    onClick={closeCheckout}
+                  >
+                    <TicketIcon size={18} />
+                    View tickets
+                  </button>
+                </div>
+              )}
+
+              <div
+                className={
+                  purchaseStatus === "processing" ||
+                  purchaseStatus === "success"
+                    ? "hidden"
+                    : "contents"
+                }
+              >
+                {purchaseStatus === "error" && (
+                  <div
+                    className="checkout-result checkout-result--error"
+                    role="alert"
+                  >
+                    <span className="checkout-result__icon">
+                      <AlertTriangle aria-hidden="true" size={28} />
+                    </span>
+                    <div>
+                      <strong>Checkout didn’t complete</strong>
+                      <p className="mb-0">{purchaseState}</p>
+                    </div>
+                  </div>
+                )}
+                {categoryUnavailable && (
+                  <p role="status" className="text-text">
+                    {salesStateLabels[selectedSalesState]}. Choose an available
+                    category to continue.
+                  </p>
+                )}
+                <div className="grid gap-3 rounded-lg border border-border bg-surface-muted p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <strong className="text-text">
+                      {selectedType?.name ?? "General admission"}
+                    </strong>
+                    <strong className="text-price">
+                      {money.format(ticketTotalCents / 100)}
+                    </strong>
+                  </div>
+                  <span className="text-[0.9rem] text-text-muted">
+                    {checkoutQuantity.toLocaleString("en-UG")} x{" "}
+                    {money.format(unitPrice / 100)}
+                  </span>
+                  <span className="text-[0.9rem] text-text-muted">
+                    {dateTime.format(new Date(checkoutEvent.startsAt))}
+                  </span>
+                </div>
+
+                <form
+                  className={formGrid}
+                  {...checkoutValidation.formProps(buyTickets)}
+                >
+                  <label>
+                    <RequiredLabel>Buyer name</RequiredLabel>
+                    <input
+                      aria-describedby="detail-buyer-name-error"
+                      aria-invalid={
+                        Boolean(checkoutBuyerNameError) || undefined
+                      }
+                      value={buyerName}
+                      onChange={(input) => setBuyerName(input.target.value)}
+                      placeholder={session?.user.name ?? "Anonymous buyer name"}
+                      autoComplete="name"
+                      {...requiredField("Buyer name")}
+                    />
+                    <FieldMessage
+                      error={checkoutBuyerNameError}
+                      id="detail-buyer-name-error"
+                    />
+                  </label>
+                  <label>
+                    <RequiredLabel>Buyer email</RequiredLabel>
+                    <input
+                      aria-describedby="detail-buyer-email-error"
+                      aria-invalid={
+                        Boolean(checkoutBuyerEmailError) || undefined
+                      }
+                      type="email"
+                      value={buyerEmail}
+                      onChange={(input) => setBuyerEmail(input.target.value)}
+                      autoComplete="email"
+                      placeholder={
+                        session?.user.email ?? "Email for ticket delivery"
+                      }
+                      {...requiredField("Buyer email")}
+                    />
+                    <FieldMessage
+                      error={checkoutBuyerEmailError}
+                      id="detail-buyer-email-error"
+                    />
+                  </label>
+                  {displayEvent.booking?.seating ? (
+                    <div className="grid gap-3">
+                      <strong>
+                        Choose your seats · {selectedSeats.length} selected
+                      </strong>
+                      <SeatMap
+                        booking={displayEvent.booking}
+                        selected={selectedSeats}
+                        occupied={displayEvent.occupiedSeats}
+                        onSelect={(seat) => {
+                          const next = selectedSeats.includes(seat)
+                            ? selectedSeats.filter((s) => s !== seat)
+                            : selectedSeats.length < maximumQuantity
+                              ? [...selectedSeats, seat]
+                              : selectedSeats;
+                          setSelectedSeats(next);
+                          setQuantity(Math.max(1, next.length));
+                        }}
+                      />
+                      <p className="text-sm text-text-muted">
+                        Choose up to {maximumQuantity} seats. Selected:{" "}
+                        {selectedSeats.join(", ") || "None"}
+                      </p>
+                      <button
+                        type="button"
+                        className="button-secondary"
+                        onClick={async () => {
+                          setDisplayEvent(
+                            await api.getEvent(event.id, session?.token),
+                          );
+                          setSelectedSeats([]);
+                          setQuantity(1);
+                        }}
+                      >
+                        Refresh availability
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <label>
+                        <RequiredLabel>Quantity</RequiredLabel>
+                        <span className="quantity-stepper">
+                          <button
+                            type="button"
+                            aria-label="Decrease quantity"
+                            onClick={() => stepQuantity(-1)}
+                            disabled={quantity <= 1}
+                          >
+                            <Minus size={16} />
+                          </button>
+                          <input
+                            aria-describedby="detail-quantity-limit detail-quantity-error"
+                            aria-invalid={
+                              Boolean(checkoutQuantityError) || undefined
+                            }
+                            inputMode="numeric"
+                            pattern="[0-9,]*"
+                            title="Please enter a whole number."
+                            value={formattedQuantity}
+                            onChange={(input) =>
+                              updateQuantityFromText(input.target.value)
+                            }
+                            onKeyDown={(event) => {
+                              if (
+                                ["e", "E", "+", "-", "."].includes(event.key)
+                              ) {
+                                event.preventDefault();
+                              }
+                            }}
+                            onWheel={(event) => {
+                              if (
+                                document.activeElement !== event.currentTarget
+                              ) {
+                                return;
+                              }
+
+                              event.preventDefault();
+                              stepQuantity(event.deltaY > 0 ? 1 : -1);
+                            }}
+                            {...requiredField("Quantity")}
+                          />
+                          <button
+                            type="button"
+                            aria-label="Increase quantity"
+                            onClick={() => stepQuantity(1)}
+                            disabled={quantity >= maximumQuantity}
+                          >
+                            <Plus size={16} />
+                          </button>
+                        </span>
+                        <FieldMessage
+                          error={checkoutQuantityError}
+                          id="detail-quantity-error"
+                        />
+                        <span id="detail-quantity-limit">
+                          Maximum {selectedType?.maxPerOrder ?? 10} tickets per
+                          order. Availability may reduce this quantity.
+                        </span>
+                      </label>
+                    </>
+                  )}
+
+                  {unitPrice > 0 && (
+                    <>
+                      <div>
+                        <p className={kicker}>Payment method</p>
+                        <div className="grid grid-cols-2 gap-2 max-[520px]:grid-cols-1">
+                          {[
+                            {
+                              value: "mtn",
+                              label: "MTN MoMo",
+                              logo: "/payment/mtn-momo.svg",
+                            },
+                            {
+                              value: "airtel",
+                              label: "Airtel Money",
+                              logo: "/payment/airtel-money.svg",
+                            },
+                          ].map((option) => (
+                            <button
+                              className={`payment-option payment-option--${option.value}`}
+                              data-selected={paymentProvider === option.value}
+                              aria-pressed={paymentProvider === option.value}
+                              key={option.value}
+                              type="button"
+                              onClick={() =>
+                                setPaymentProvider(
+                                  option.value as "airtel" | "mtn",
+                                )
+                              }
+                            >
+                              <span className="payment-option__poster">
+                                <img src={option.logo} alt="" />
+                              </span>
+                              <span className="payment-option__footer">
+                                <span>{option.label}</span>
+                                {paymentProvider === option.value && (
+                                  <span className="payment-option__selected">
+                                    <CheckCircle2 size={16} />
+                                    Selected
+                                  </span>
+                                )}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <PhoneNumberInput
+                        label="Mobile money number"
+                        value={mobileMoneyNumber}
+                        onChange={setMobileMoneyNumber}
+                        paymentProvider={paymentProvider}
+                        required
+                      />
+                    </>
+                  )}
+
+                  <button
+                    className={primaryAction}
+                    type="submit"
+                    disabled={
+                      (Boolean(displayEvent.booking?.seating) &&
+                        selectedSeats.length !== quantity) ||
+                      salesClosed ||
+                      checkoutEvent.soldOut ||
+                      categoryUnavailable
+                    }
+                  >
+                    <CircleDollarSign size={18} />
+                    {unitPrice === 0
+                      ? "Get ticket"
+                      : `Pay with ${
+                          paymentProvider === "mtn"
+                            ? "MTN MoMo"
+                            : "Airtel Money"
+                        }`}
+                  </button>
+                </form>
+              </div>
             </div>
           </section>
         </div>

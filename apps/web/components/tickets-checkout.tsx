@@ -4,6 +4,7 @@ import {
   CalendarDays,
   CircleDollarSign,
   History,
+  LoaderCircle,
   LogIn,
   Mail,
   MapPin,
@@ -56,6 +57,7 @@ export function TicketsCheckout() {
     mobileMoneyNumber,
     openAuth,
     purchaseState,
+    purchaseStatus,
     recoveryEmail,
     recoveryState,
     selectedSeats,
@@ -293,6 +295,7 @@ export function TicketsCheckout() {
                 value={buyerName}
                 onChange={(event) => setBuyerName(event.target.value)}
                 placeholder={session?.user.name ?? "Anonymous buyer name"}
+                autoComplete="name"
                 {...requiredField("Buyer name")}
               />
               <FieldMessage
@@ -308,6 +311,7 @@ export function TicketsCheckout() {
                 type="email"
                 value={buyerEmail}
                 onChange={(event) => setBuyerEmail(event.target.value)}
+                autoComplete="email"
                 placeholder={session?.user.email ?? "Email for ticket delivery"}
                 {...requiredField("Buyer email")}
               />
@@ -372,13 +376,22 @@ export function TicketsCheckout() {
               className={primaryAction}
               type="submit"
               disabled={
+                purchaseStatus === "processing" ||
                 unavailable ||
                 (Boolean(selectedEvent?.booking?.seating) &&
                   selectedSeats.length !== quantity)
               }
             >
-              <CircleDollarSign size={18} />
-              {unitPrice === 0 ? "Get ticket" : "Pay with mobile money"}
+              {purchaseStatus === "processing" ? (
+                <LoaderCircle className="animate-spin" size={18} />
+              ) : (
+                <CircleDollarSign size={18} />
+              )}
+              {purchaseStatus === "processing"
+                ? "Processing..."
+                : unitPrice === 0
+                  ? "Get ticket"
+                  : "Pay with mobile money"}
             </button>
           </form>
           <p className={helperLine}>
@@ -386,7 +399,14 @@ export function TicketsCheckout() {
             Register after checkout to track attendance, tickets, and payment
             methods.
           </p>
-          {purchaseState && <p className={stateLine}>{purchaseState}</p>}
+          {purchaseState && (
+            <p
+              className={`${stateLine} ${purchaseStatus === "error" ? "border border-[#e5484d]/50 bg-[#e5484d]/10 text-[#e5484d]" : purchaseStatus === "success" ? "border border-[#22a06b]/50 bg-[#22a06b]/10 text-[#22a06b]" : ""}`}
+              role={purchaseStatus === "error" ? "alert" : "status"}
+            >
+              {purchaseState}
+            </p>
+          )}
         </section>
 
         <section className={panelPadded}>
