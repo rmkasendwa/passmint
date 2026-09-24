@@ -6,17 +6,16 @@ events, checkout, delivery, recovery, attendee, scan, and reporting activity.
 
 ## Enable
 
-Create the account named by `ROOT_ADMIN_EMAIL`, set `PASSMINT_DEMO_MODE=true`
-outside production, then start the API or run the seed path that boots the API
-module. Demo mode refuses to start in production or when the configured root
-account does not exist.
+Set `PASSMINT_DEMO_MODE=true` outside production, then start the API or run the
+seed path that boots the API module. Demo mode refuses to start in production.
 
 On every API startup, Passmint also repairs the owner of any existing canonical
-seed event to the configured root administrator, even when demo mode is off.
+seed event to the dedicated demo organizer, even when demo mode is off.
 
 The demo seed creates:
 
-- seed events owned by the configured root administrator
+- a non-login demo organizer using `demo.organizer@example.test`
+- seed events owned by that dedicated demo organizer
 - curated event inventory and ticket categories
 - fulfilled orders with sandbox mobile-money payment records
 - issued and checked-in tickets

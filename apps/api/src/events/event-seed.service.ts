@@ -8,18 +8,23 @@ import {
 } from "@prisma/client";
 import { readFile } from "fs/promises";
 import { join } from "path";
-import { AuthService } from "../auth/auth.service";
 import { PrismaService } from "../prisma/prisma.service";
-import { UserRole } from "../users/user-role.enum";
 import { ImageStorageService } from "./image-storage.service";
 import { buildSeedEvents, SeedEvent } from "./seed-data/events";
+
+const demoOrganizer = {
+  id: "usr_demo_organizer",
+  name: "Passmint Demo Organizer",
+  email: "demo.organizer@example.test",
+  passwordHash: "demo-password-disabled",
+  role: "user" as const,
+};
 
 @Injectable()
 export class EventSeedService implements OnApplicationBootstrap {
   constructor(
     private readonly prisma: PrismaService,
     private readonly imageStorage: ImageStorageService,
-    private readonly authService: AuthService,
   ) {}
 
   async onApplicationBootstrap() {
@@ -29,19 +34,14 @@ export class EventSeedService implements OnApplicationBootstrap {
     }
 
     const now = new Date();
-    const owner = await this.rootAdmin();
     const seedEventWhere = this.seedEventWhere(now);
-    if (!owner) {
-      const existingSeedEvents = await this.prisma.event.count({
-        where: seedEventWhere,
-      });
-      if (demoMode || existingSeedEvents > 0) {
-        throw new Error(
-          "Seed events require an existing account matching ROOT_ADMIN_EMAIL.",
-        );
-      }
+    const existingSeedEvents = await this.prisma.event.count({
+      where: seedEventWhere,
+    });
+    if (!demoMode && existingSeedEvents === 0) {
       return;
     }
+    const owner = await this.ensureDemoOrganizer();
 
     if (demoMode) {
       await this.seed(now, owner.id);
@@ -54,23 +54,23 @@ export class EventSeedService implements OnApplicationBootstrap {
     });
   }
 
-  async seed(now = new Date(), rootOwnerId?: string) {
-    const ownerId = rootOwnerId ?? (await this.rootAdmin())?.id;
-    if (!ownerId) {
-      throw new Error(
-        "Demo mode requires an existing account matching ROOT_ADMIN_EMAIL.",
-      );
-    }
+  async seed(now = new Date(), demoOrganizerId?: string) {
+    const ownerId = demoOrganizerId ?? (await this.ensureDemoOrganizer()).id;
     for (const event of buildSeedEvents(now)) {
       await this.seedEvent(event, ownerId);
     }
     await this.seedOperationalHistory(now, ownerId);
   }
 
-  private async rootAdmin() {
-    await this.authService.reconcileRootAdmin();
-    return this.prisma.user.findFirst({
-      where: { role: UserRole.RootAdmin },
+  private ensureDemoOrganizer() {
+    return this.prisma.user.upsert({
+      where: { email: demoOrganizer.email },
+      update: {
+        name: demoOrganizer.name,
+        passwordHash: demoOrganizer.passwordHash,
+        role: demoOrganizer.role,
+      },
+      create: demoOrganizer,
       select: { id: true },
     });
   }

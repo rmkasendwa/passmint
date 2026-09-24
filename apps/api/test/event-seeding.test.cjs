@@ -3,20 +3,21 @@ const assert = require("node:assert/strict");
 const { EventSeedService } = require("../dist/events/event-seed.service");
 const { buildSeedEvents } = require("../dist/events/seed-data/events");
 
-function fakePrisma(initialEvents = [], rootAdminId = "usr_root") {
+function fakePrisma(initialEvents = []) {
   const records = new Map(initialEvents.map((event) => [event.id, event]));
   const created = [];
   const updated = [];
+  const organizerUpserts = [];
 
   return {
     records,
     created,
     updated,
+    organizerUpserts,
     user: {
-      async findFirst({ where }) {
-        return where.role === "root_admin" && rootAdminId
-          ? { id: rootAdminId }
-          : null;
+      async upsert(args) {
+        organizerUpserts.push(args);
+        return { id: "usr_demo_organizer" };
       },
     },
     event: {
@@ -87,10 +88,6 @@ function fakePrisma(initialEvents = [], rootAdminId = "usr_root") {
   };
 }
 
-const fakeAuth = {
-  async reconcileRootAdmin() {},
-};
-
 function fakeImageStorage() {
   const uploads = [];
   return {
@@ -113,12 +110,13 @@ test("production startup never seeds demo events", async () => {
   try {
     const prisma = fakePrisma();
     const images = fakeImageStorage();
-    const service = new EventSeedService(prisma, images, fakeAuth);
+    const service = new EventSeedService(prisma, images);
 
     await service.onApplicationBootstrap();
 
     assert.equal(prisma.records.size, 0);
     assert.equal(images.uploads.length, 0);
+    assert.equal(prisma.organizerUpserts.length, 0);
   } finally {
     if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
     else process.env.NODE_ENV = previousNodeEnv;
@@ -127,7 +125,7 @@ test("production startup never seeds demo events", async () => {
   }
 });
 
-test("startup repairs existing seed event ownership when demo mode is off", async () => {
+test("startup repairs seed ownership to the demo organizer when demo mode is off", async () => {
   const [definition] = buildSeedEvents(new Date("2026-09-21T15:00:00.000Z"));
   const prisma = fakePrisma([
     {
@@ -142,10 +140,13 @@ test("startup repairs existing seed event ownership when demo mode is off", asyn
   delete process.env.PASSMINT_DEMO_MODE;
 
   try {
-    const service = new EventSeedService(prisma, fakeImageStorage(), fakeAuth);
+    const service = new EventSeedService(prisma, fakeImageStorage());
     await service.onApplicationBootstrap();
 
-    assert.equal(prisma.records.get(definition.id).ownerId, "usr_root");
+    assert.equal(
+      prisma.records.get(definition.id).ownerId,
+      "usr_demo_organizer",
+    );
     assert.equal(
       prisma.records.get(definition.id).thumbnailUrl,
       "https://organizer.example/art.jpg",
@@ -175,7 +176,7 @@ test("seed events are varied, local, and scheduled more than one month ahead", (
 test("seeding twice creates each event once and does not upload artwork again", async () => {
   const prisma = fakePrisma();
   const images = fakeImageStorage();
-  const service = new EventSeedService(prisma, images, fakeAuth);
+  const service = new EventSeedService(prisma, images);
   const now = new Date("2026-09-21T15:00:00.000Z");
 
   await service.seed(now);
@@ -186,14 +187,21 @@ test("seeding twice creates each event once and does not upload artwork again", 
   assert.equal(prisma.records.size, 21);
   assert.equal(images.uploads.length, uploadsAfterFirstRun);
   assert.ok(
-    [...prisma.records.values()].every((event) => event.ownerId === "usr_root"),
+    [...prisma.records.values()].every(
+      (event) => event.ownerId === "usr_demo_organizer",
+    ),
+  );
+  assert.equal(prisma.organizerUpserts.at(-1).create.role, "user");
+  assert.equal(
+    prisma.organizerUpserts.at(-1).create.email,
+    "demo.organizer@example.test",
   );
   assert.ok(
     prisma.created.every((event) => event.thumbnailUrl.includes("/uploads/")),
   );
 });
 
-test("existing seed events are always assigned to the root administrator", async () => {
+test("existing seed events are always assigned to the demo organizer", async () => {
   const [legacyDefinition, ownedDefinition] = buildSeedEvents(
     new Date("2026-09-21T15:00:00.000Z"),
   );
@@ -213,7 +221,7 @@ test("existing seed events are always assigned to the root administrator", async
   };
   const prisma = fakePrisma([legacy, owned]);
   const images = fakeImageStorage();
-  const service = new EventSeedService(prisma, images, fakeAuth);
+  const service = new EventSeedService(prisma, images);
 
   await service.seed(new Date("2026-09-21T15:00:00.000Z"));
 
@@ -230,21 +238,25 @@ test("existing seed events are always assigned to the root administrator", async
     prisma.records.get(legacy.id).mapLocation,
     legacyDefinition.mapLocation,
   );
-  assert.equal(prisma.records.get(legacy.id).ownerId, "usr_root");
-  assert.equal(prisma.records.get(owned.id).ownerId, "usr_root");
+  assert.equal(prisma.records.get(legacy.id).ownerId, "usr_demo_organizer");
+  assert.equal(prisma.records.get(owned.id).ownerId, "usr_demo_organizer");
   assert.equal(
     prisma.records.get(owned.id).thumbnailUrl,
     "https://organizer.example/art.jpg",
   );
 });
 
-test("demo seeding refuses to create ownerless events without a root account", async () => {
-  const prisma = fakePrisma([], null);
-  const service = new EventSeedService(prisma, fakeImageStorage(), fakeAuth);
+test("demo seeding creates the dedicated organizer before its events", async () => {
+  const prisma = fakePrisma();
+  const service = new EventSeedService(prisma, fakeImageStorage());
 
-  await assert.rejects(
-    service.seed(new Date("2026-09-21T15:00:00.000Z")),
-    /requires an existing account matching ROOT_ADMIN_EMAIL/,
+  await service.seed(new Date("2026-09-21T15:00:00.000Z"));
+
+  assert.equal(prisma.organizerUpserts.length, 1);
+  assert.equal(prisma.organizerUpserts[0].create.id, "usr_demo_organizer");
+  assert.ok(
+    [...prisma.records.values()].every(
+      (event) => event.ownerId === "usr_demo_organizer",
+    ),
   );
-  assert.equal(prisma.records.size, 0);
 });
