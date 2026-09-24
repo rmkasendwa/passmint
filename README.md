@@ -114,6 +114,6 @@ pnpm run docker:build
 pnpm run docker:smoke
 ```
 
-Use `compose.production.yml` and `.env.production.example` for deployment. The original Compose file and `docker:up` remain for local development and require a real `AUTH_SECRET`. Current ticket issuance does not confirm payments or send email; deploying the image does not enable those pending integrations.
+Use `compose.production.yml` and `.env.production.example` for deployment. The original Compose file and `docker:up` remain for local development and require a real `AUTH_SECRET`. Set `TICKET_RECOVERY_SECRET` to a separate random value in deployed environments. Paid checkout currently uses the sandbox mobile-money provider, and ticket email delivery is recorded in the delivery outbox until a production email transport is configured.
 
 For Coolify, use the Dockerfile build pack with exposed port **8088** and follow the [Coolify setup](docs/deployment.md#coolify-deployment-dockerfile-build-pack), including first-deploy database initialization and persistent uploads.

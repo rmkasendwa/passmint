@@ -5,6 +5,7 @@ import {
   CircleDollarSign,
   History,
   LogIn,
+  Mail,
   MapPin,
   QrCode,
   Ticket as TicketIcon,
@@ -55,6 +56,8 @@ export function TicketsCheckout() {
     mobileMoneyNumber,
     openAuth,
     purchaseState,
+    recoveryEmail,
+    recoveryState,
     selectedSeats,
     setSelectedSeats,
     quantity,
@@ -67,9 +70,11 @@ export function TicketsCheckout() {
     setBuyerName,
     setMobileMoneyNumber,
     setQuantity,
+    setRecoveryEmail,
     ticketHistory,
     tickets,
     chooseEvent,
+    requestTicketRecovery,
     visibleEvents,
     buyTickets,
   } = useAppContext();
@@ -377,10 +382,39 @@ export function TicketsCheckout() {
             </button>
           </form>
           <p className={helperLine}>
-            Checkout works anonymously with an email address. Register after
-            checkout to track attendance, tickets, and payment methods.
+            Tickets appear here immediately and are sent to the buyer email.
+            Register after checkout to track attendance, tickets, and payment
+            methods.
           </p>
           {purchaseState && <p className={stateLine}>{purchaseState}</p>}
+        </section>
+
+        <section className={panelPadded}>
+          <div className={panelHeading}>
+            <Mail size={22} />
+            <h2>Recover guest tickets</h2>
+          </div>
+          <form className={formGrid} onSubmit={requestTicketRecovery}>
+            <label>
+              Buyer email
+              <input
+                type="email"
+                value={recoveryEmail}
+                onChange={(event) => setRecoveryEmail(event.target.value)}
+                placeholder={buyerEmail || "Email used at checkout"}
+                required
+              />
+            </label>
+            <button className={secondaryAction} type="submit">
+              <Mail size={17} />
+              Send recovery link
+            </button>
+          </form>
+          <p className={helperLine}>
+            For privacy, the response is the same whether or not tickets exist
+            for that email.
+          </p>
+          {recoveryState && <p className={stateLine}>{recoveryState}</p>}
         </section>
 
         <section className={panelPadded}>

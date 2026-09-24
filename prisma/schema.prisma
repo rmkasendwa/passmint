@@ -23,53 +23,86 @@ enum TicketStatus {
   @@map("tickets_status_enum")
 }
 
+enum OrderStatus {
+  created
+  awaiting_payment
+  payment_processing
+  paid
+  fulfilled
+  failed
+  cancelled
+  expired
+
+  @@map("orders_status_enum")
+}
+
+enum PaymentStatus {
+  not_required
+  pending
+  authorized
+  failed
+  refunded
+
+  @@map("payments_status_enum")
+}
+
+enum DeliveryStatus {
+  queued
+  sent
+  failed
+
+  @@map("ticket_deliveries_status_enum")
+}
+
 model User {
-  id           String   @id(map: "PK_a3ffb1c0c8416b9fc6f907b7433") @db.VarChar
-  email        String   @unique(map: "IDX_97672ac88f789774dd47f7c8be") @db.VarChar
-  name         String   @db.VarChar
-  passwordHash String   @db.VarChar
-  role         UserRole @default(user)
+  id           String        @id(map: "PK_a3ffb1c0c8416b9fc6f907b7433") @db.VarChar
+  email        String        @unique(map: "IDX_97672ac88f789774dd47f7c8be") @db.VarChar
+  name         String        @db.VarChar
+  passwordHash String        @db.VarChar
+  role         UserRole      @default(user)
   tickets      Ticket[]
+  orders       Order[]
   events       Event[]
   eventImports EventImport[]
-  createdAt    DateTime @default(now()) @db.Timestamp(6)
-  updatedAt    DateTime @default(now()) @updatedAt @db.Timestamp(6)
+  createdAt    DateTime      @default(now()) @db.Timestamp(6)
+  updatedAt    DateTime      @default(now()) @updatedAt @db.Timestamp(6)
 
   @@map("users")
 }
 
 model Event {
   importRecord EventImport?
-  booking Json?
+  booking      Json?
   ticketTypes  TicketType[]
-  status       String   @default("published") @db.VarChar
-  cancelledAt  DateTime? @db.Timestamptz(6)
-  publishAt    DateTime? @db.Timestamptz(6)
-  id           String   @id(map: "PK_40731c7151fe4be3116e45ddf73") @db.VarChar
-  name         String   @db.VarChar
+  status       String       @default("published") @db.VarChar
+  cancelledAt  DateTime?    @db.Timestamptz(6)
+  publishAt    DateTime?    @db.Timestamptz(6)
+  id           String       @id(map: "PK_40731c7151fe4be3116e45ddf73") @db.VarChar
+  name         String       @db.VarChar
   description  String
-  venue        String   @db.VarChar
+  venue        String       @db.VarChar
   mapLocation  String?
-  startsAt     DateTime @db.Timestamptz(6)
+  startsAt     DateTime     @db.Timestamptz(6)
   capacity     Int?
   priceCents   Int
   thumbnailUrl String?
-  ownerId      String?  @db.VarChar
-  owner        User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull, map: "FK_72bbe49600962f125177d7d6b68")
+  ownerId      String?      @db.VarChar
+  owner        User?        @relation(fields: [ownerId], references: [id], onDelete: SetNull, map: "FK_72bbe49600962f125177d7d6b68")
   tickets      Ticket[]
-  createdAt    DateTime @default(now()) @db.Timestamp(6)
-  updatedAt    DateTime @default(now()) @updatedAt @db.Timestamp(6)
+  orders       Order[]
+  createdAt    DateTime     @default(now()) @db.Timestamp(6)
+  updatedAt    DateTime     @default(now()) @updatedAt @db.Timestamp(6)
 
   @@map("events")
 }
 
 model EventImport {
-  archiveId         String @db.VarChar(71)
-  sourceEventId     String @db.VarChar
-  ownerId           String @db.VarChar
-  owner             User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  eventId           String @unique @db.VarChar
-  event             Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  archiveId         String   @db.VarChar(71)
+  sourceEventId     String   @db.VarChar
+  ownerId           String   @db.VarChar
+  owner             User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  eventId           String   @unique @db.VarChar
+  event             Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   ticketTypeMapping Json
   createdAt         DateTime @default(now()) @db.Timestamptz(6)
 
@@ -78,56 +111,148 @@ model EventImport {
 }
 
 model Ticket {
-  seatLabel String? @db.VarChar
-  activities TicketActivity[]
-  ticketTypeId String? @db.VarChar
-  ticketType   TicketType? @relation(fields: [ticketTypeId], references: [id])
-  ticketTypeName String @default("General admission")
+  seatLabel      String?          @db.VarChar
+  activities     TicketActivity[]
+  ticketTypeId   String?          @db.VarChar
+  ticketType     TicketType?      @relation(fields: [ticketTypeId], references: [id])
+  ticketTypeName String           @default("General admission")
   unitPriceCents Int?
-  id          String       @id(map: "PK_343bc942ae261cf7a1377f48fd0") @db.VarChar
-  code        String       @unique(map: "IDX_c6e20a830c0f8b571abd331b77") @db.VarChar
-  buyerName   String       @db.VarChar
-  buyerEmail  String       @db.VarChar
-  status      TicketStatus @default(issued)
-  checkedInAt DateTime?    @db.Timestamptz(6)
-  eventId     String?      @db.VarChar
-  event       Event?       @relation(fields: [eventId], references: [id], onDelete: Cascade, map: "FK_8a101375d173c39a7c1d02c9d7d")
-  ownerId     String?      @db.VarChar
-  owner       User?        @relation(fields: [ownerId], references: [id], onDelete: SetNull, map: "FK_7506734651265d3714ac06902d0")
-  createdAt   DateTime     @default(now()) @db.Timestamp(6)
-  updatedAt   DateTime     @default(now()) @updatedAt @db.Timestamp(6)
+  orderId        String?          @db.VarChar
+  order          Order?           @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  id             String           @id(map: "PK_343bc942ae261cf7a1377f48fd0") @db.VarChar
+  code           String           @unique(map: "IDX_c6e20a830c0f8b571abd331b77") @db.VarChar
+  buyerName      String           @db.VarChar
+  buyerEmail     String           @db.VarChar
+  status         TicketStatus     @default(issued)
+  checkedInAt    DateTime?        @db.Timestamptz(6)
+  eventId        String?          @db.VarChar
+  event          Event?           @relation(fields: [eventId], references: [id], onDelete: Cascade, map: "FK_8a101375d173c39a7c1d02c9d7d")
+  ownerId        String?          @db.VarChar
+  owner          User?            @relation(fields: [ownerId], references: [id], onDelete: SetNull, map: "FK_7506734651265d3714ac06902d0")
+  createdAt      DateTime         @default(now()) @db.Timestamp(6)
+  updatedAt      DateTime         @default(now()) @updatedAt @db.Timestamp(6)
 
-  @@map("tickets")
   @@index([eventId])
+  @@index([orderId])
+  @@map("tickets")
+}
+
+model Order {
+  id               String               @id @db.VarChar
+  reference        String               @unique @db.VarChar
+  eventId          String               @db.VarChar
+  event            Event                @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  ownerId          String?              @db.VarChar
+  owner            User?                @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  buyerName        String               @db.VarChar
+  buyerEmail       String               @db.VarChar
+  ticketTypeId     String?              @db.VarChar
+  ticketTypeName   String               @db.VarChar
+  quantity         Int
+  unitPriceCents   Int
+  totalCents       Int
+  currency         String               @default("UGX") @db.VarChar(3)
+  seatLabels       Json?
+  status           OrderStatus          @default(created)
+  paymentStatus    PaymentStatus        @default(not_required)
+  paymentProvider  String?              @db.VarChar
+  paymentReference String?              @db.VarChar
+  expiresAt        DateTime             @db.Timestamptz(6)
+  fulfilledAt      DateTime?            @db.Timestamptz(6)
+  cancelledAt      DateTime?            @db.Timestamptz(6)
+  tickets          Ticket[]
+  payments         Payment[]
+  deliveries       TicketDelivery[]
+  recoveryTokens   GuestRecoveryToken[]
+  createdAt        DateTime             @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime             @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@index([eventId, status])
+  @@index([buyerEmail, createdAt])
+  @@map("orders")
+}
+
+model Payment {
+  id          String        @id @db.VarChar
+  orderId     String        @db.VarChar
+  order       Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  provider    String        @db.VarChar
+  reference   String        @unique @db.VarChar
+  status      PaymentStatus @default(pending)
+  amountCents Int
+  currency    String        @default("UGX") @db.VarChar(3)
+  metadata    Json?
+  createdAt   DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime      @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@index([orderId])
+  @@map("payments")
+}
+
+model TicketDelivery {
+  id            String         @id @db.VarChar
+  orderId       String         @db.VarChar
+  order         Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status        DeliveryStatus @default(queued)
+  recipient     String         @db.VarChar
+  subject       String         @db.VarChar
+  message       String
+  attempts      Int            @default(0)
+  lastError     String?
+  nextAttemptAt DateTime?      @db.Timestamptz(6)
+  sentAt        DateTime?      @db.Timestamptz(6)
+  createdAt     DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime       @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@index([orderId])
+  @@index([status, nextAttemptAt])
+  @@map("ticket_deliveries")
+}
+
+model GuestRecoveryToken {
+  id        String    @id @db.VarChar
+  orderId   String    @db.VarChar
+  order     Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  emailHash String    @db.VarChar
+  tokenHash String    @unique @db.VarChar
+  expiresAt DateTime  @db.Timestamptz(6)
+  usedAt    DateTime? @db.Timestamptz(6)
+  revokedAt DateTime? @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([emailHash, expiresAt])
+  @@index([orderId])
+  @@map("guest_recovery_tokens")
 }
 
 model TicketActivity {
   decisionDurationMs Int?
-  id String @id @db.VarChar
-  ticketId String @db.VarChar
-  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  kind String @db.VarChar
-  operatorId String @db.VarChar
-  operatorName String
-  device String?
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  id                 String   @id @db.VarChar
+  ticketId           String   @db.VarChar
+  ticket             Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  kind               String   @db.VarChar
+  operatorId         String   @db.VarChar
+  operatorName       String
+  device             String?
+  createdAt          DateTime @default(now()) @db.Timestamptz(6)
 
   @@index([ticketId, createdAt, id])
   @@map("ticket_activities")
 }
 
 model TicketType {
-  id String @id @db.VarChar
-  eventId String @db.VarChar
-  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  name String @db.VarChar
-  priceCents Int
-  capacity Int?
-  maxPerOrder Int @default(10)
-  salesStart DateTime? @db.Timestamptz(6)
-  salesEnd DateTime? @db.Timestamptz(6)
-  tickets Ticket[]
-  createdAt DateTime @default(now())
+  id          String    @id @db.VarChar
+  eventId     String    @db.VarChar
+  event       Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name        String    @db.VarChar
+  priceCents  Int
+  capacity    Int?
+  maxPerOrder Int       @default(10)
+  salesStart  DateTime? @db.Timestamptz(6)
+  salesEnd    DateTime? @db.Timestamptz(6)
+  tickets     Ticket[]
+  createdAt   DateTime  @default(now())
+
   @@index([eventId])
   @@map("ticket_types")
 }
