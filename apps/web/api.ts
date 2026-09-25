@@ -119,9 +119,17 @@ export async function request<T>(
 
 export const api = {
   exportEvents: (payload: Record<string, unknown>, token: string) =>
-    request<Record<string, unknown>>("/events/archives/export", { method: "POST", body: JSON.stringify(payload) }, token),
+    request<Record<string, unknown>>(
+      "/events/archives/export",
+      { method: "POST", body: JSON.stringify(payload) },
+      token,
+    ),
   importEvents: (payload: Record<string, unknown>, token: string) =>
-    request<ImportReport>("/events/archives/import", { method: "POST", body: JSON.stringify(payload) }, token),
+    request<ImportReport>(
+      "/events/archives/import",
+      { method: "POST", body: JSON.stringify(payload) },
+      token,
+    ),
   scanMetrics: (id: string, day: string, token: string) =>
     request<ScanMetrics>(
       `/events/${encodeURIComponent(id)}/scan-metrics?${new URLSearchParams({ day })}`,
@@ -271,6 +279,15 @@ export const api = {
       },
       token,
     ),
+  requestTicketRecovery: (payload: { buyerEmail: string; eventId?: string }) =>
+    request<{ message: string }>("/tickets/recovery", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  redeemTicketRecovery: (token: string) =>
+    request<Ticket[]>(`/tickets/recovery/${encodeURIComponent(token)}`, {
+      cache: "no-store",
+    }),
   myTickets: (token: string) =>
     request<Ticket[]>("/tickets/mine", undefined, token),
   scanTicket: (code: string, token: string) =>
@@ -292,13 +309,22 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  demoAvailability: () =>
+    request<{ enabled: boolean }>("/auth/demo", { cache: "no-store" }),
+  loginToDemo: () => request<AuthSession>("/auth/demo", { method: "POST" }),
   me: (token: string) => request<User>("/auth/me", undefined, token),
 };
 
 export type ImportReport = {
   archiveId: string;
   dryRun: boolean;
-  counts: { total: number; valid: number; imported: number; skipped: number; failed: number };
+  counts: {
+    total: number;
+    valid: number;
+    imported: number;
+    skipped: number;
+    failed: number;
+  };
   summary: string;
 };
 

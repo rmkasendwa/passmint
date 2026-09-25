@@ -4,7 +4,9 @@ import {
   CalendarDays,
   CircleDollarSign,
   History,
+  LoaderCircle,
   LogIn,
+  Mail,
   MapPin,
   QrCode,
   Ticket as TicketIcon,
@@ -55,6 +57,9 @@ export function TicketsCheckout() {
     mobileMoneyNumber,
     openAuth,
     purchaseState,
+    purchaseStatus,
+    recoveryEmail,
+    recoveryState,
     selectedSeats,
     setSelectedSeats,
     quantity,
@@ -67,9 +72,11 @@ export function TicketsCheckout() {
     setBuyerName,
     setMobileMoneyNumber,
     setQuantity,
+    setRecoveryEmail,
     ticketHistory,
     tickets,
     chooseEvent,
+    requestTicketRecovery,
     visibleEvents,
     buyTickets,
   } = useAppContext();
@@ -288,6 +295,7 @@ export function TicketsCheckout() {
                 value={buyerName}
                 onChange={(event) => setBuyerName(event.target.value)}
                 placeholder={session?.user.name ?? "Anonymous buyer name"}
+                autoComplete="name"
                 {...requiredField("Buyer name")}
               />
               <FieldMessage
@@ -303,6 +311,7 @@ export function TicketsCheckout() {
                 type="email"
                 value={buyerEmail}
                 onChange={(event) => setBuyerEmail(event.target.value)}
+                autoComplete="email"
                 placeholder={session?.user.email ?? "Email for ticket delivery"}
                 {...requiredField("Buyer email")}
               />
@@ -367,20 +376,65 @@ export function TicketsCheckout() {
               className={primaryAction}
               type="submit"
               disabled={
+                purchaseStatus === "processing" ||
                 unavailable ||
                 (Boolean(selectedEvent?.booking?.seating) &&
                   selectedSeats.length !== quantity)
               }
             >
-              <CircleDollarSign size={18} />
-              {unitPrice === 0 ? "Get ticket" : "Pay with mobile money"}
+              {purchaseStatus === "processing" ? (
+                <LoaderCircle className="animate-spin" size={18} />
+              ) : (
+                <CircleDollarSign size={18} />
+              )}
+              {purchaseStatus === "processing"
+                ? "Processing..."
+                : unitPrice === 0
+                  ? "Get ticket"
+                  : "Pay with mobile money"}
             </button>
           </form>
           <p className={helperLine}>
-            Checkout works anonymously with an email address. Register after
-            checkout to track attendance, tickets, and payment methods.
+            Tickets appear here immediately and are sent to the buyer email.
+            Register after checkout to track attendance, tickets, and payment
+            methods.
           </p>
-          {purchaseState && <p className={stateLine}>{purchaseState}</p>}
+          {purchaseState && (
+            <p
+              className={`${stateLine} ${purchaseStatus === "error" ? "border border-[#e5484d]/50 bg-[#e5484d]/10 text-[#e5484d]" : purchaseStatus === "success" ? "border border-[#22a06b]/50 bg-[#22a06b]/10 text-[#22a06b]" : ""}`}
+              role={purchaseStatus === "error" ? "alert" : "status"}
+            >
+              {purchaseState}
+            </p>
+          )}
+        </section>
+
+        <section className={panelPadded}>
+          <div className={panelHeading}>
+            <Mail size={22} />
+            <h2>Recover guest tickets</h2>
+          </div>
+          <form className={formGrid} onSubmit={requestTicketRecovery}>
+            <label>
+              Buyer email
+              <input
+                type="email"
+                value={recoveryEmail}
+                onChange={(event) => setRecoveryEmail(event.target.value)}
+                placeholder={buyerEmail || "Email used at checkout"}
+                required
+              />
+            </label>
+            <button className={secondaryAction} type="submit">
+              <Mail size={17} />
+              Send recovery link
+            </button>
+          </form>
+          <p className={helperLine}>
+            For privacy, the response is the same whether or not tickets exist
+            for that email.
+          </p>
+          {recoveryState && <p className={stateLine}>{recoveryState}</p>}
         </section>
 
         <section className={panelPadded}>

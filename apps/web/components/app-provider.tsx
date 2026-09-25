@@ -34,6 +34,7 @@ import {
 } from "../event-utils";
 
 type HostEvent = typeof emptyHostEvent;
+type PurchaseStatus = "idle" | "processing" | "success" | "error";
 
 type AppContextValue = {
   authConfirmPassword: string;
@@ -66,10 +67,12 @@ type AppContextValue = {
   hostState: string;
   hostThumbnailName: string;
   loading: boolean;
+  loginToDemo: () => Promise<void>;
   mobileMoneyNumber: string;
   nextEvent?: Event;
   openAuth: (mode: "login" | "register") => void;
   purchaseState: string;
+  purchaseStatus: PurchaseStatus;
   publishEvent: (
     event: FormEvent<HTMLFormElement>,
   ) => Promise<Event | undefined>;
@@ -83,6 +86,10 @@ type AppContextValue = {
   resetEmail: string;
   resetPassword: string;
   resetState: string;
+  recoveryEmail: string;
+  recoveryState: string;
+  requestTicketRecovery: (event: FormEvent<HTMLFormElement>) => Promise<void>;
+  resetPurchase: () => void;
   scan: (code?: string) => Promise<void>;
   scanState: string;
   selectThumbnail: (file: File | null) => Promise<void>;
@@ -109,6 +116,7 @@ type AppContextValue = {
   setResetConfirmPassword: (value: string) => void;
   setResetEmail: (value: string) => void;
   setResetPassword: (value: string) => void;
+  setRecoveryEmail: (value: string) => void;
   submitAuth: (event: FormEvent<HTMLFormElement>) => Promise<void>;
   submitForgotPassword: (event: FormEvent<HTMLFormElement>) => void;
   submitResetPassword: (event: FormEvent<HTMLFormElement>) => void;
@@ -176,8 +184,12 @@ export function AppProvider({
   const [selectedEventId, setSelectedEventId] = useState(
     () => initialEvents[0]?.id ?? "",
   );
-  const [buyerName, setBuyerName] = useState("");
-  const [buyerEmail, setBuyerEmail] = useState("");
+  const [buyerName, setBuyerName] = useState(
+    () => initialSession?.user.name ?? "",
+  );
+  const [buyerEmail, setBuyerEmail] = useState(
+    () => initialSession?.user.email ?? "",
+  );
   const [mobileMoneyNumber, setMobileMoneyNumber] = useState("");
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [quantity, setQuantity] = useState(1);
@@ -187,6 +199,7 @@ export function AppProvider({
   const [gateResult, setGateResult] = useState<GateResult | null>(null);
   const [loading, setLoading] = useState(initialEvents.length === 0);
   const [purchaseState, setPurchaseState] = useState("");
+  const [purchaseStatus, setPurchaseStatus] = useState<PurchaseStatus>("idle");
   const [scanState, setScanState] = useState("");
   const [cameraEnabled, setCameraEnabled] = useState(false);
   const [query, setQuery] = useState("");
@@ -211,6 +224,8 @@ export function AppProvider({
   const [resetPassword, setResetPassword] = useState("");
   const [resetConfirmPassword, setResetConfirmPassword] = useState("");
   const [resetState, setResetState] = useState("");
+  const [recoveryEmail, setRecoveryEmail] = useState("");
+  const [recoveryState, setRecoveryState] = useState("");
   const [hostEvent, setHostEvent] = useState(emptyHostEvent);
   const [hostThumbnailName, setHostThumbnailName] = useState("");
   const [hostThumbnailFile, setHostThumbnailFile] = useState<{
@@ -314,6 +329,12 @@ export function AppProvider({
   }, [session, sessionLoaded]);
 
   useEffect(() => {
+    if (!session) return;
+    setBuyerName(session.user.name);
+    setBuyerEmail(session.user.email);
+  }, [session?.user.email, session?.user.name]);
+
+  useEffect(() => {
     if (!cameraEnabled || !videoRef.current) return;
 
     let cancelled = false;
@@ -353,6 +374,36 @@ export function AppProvider({
   useEffect(() => {
     if (pathname === "/check-in") return;
     setCameraEnabled(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || pathname !== "/tickets") return;
+    const token = new URLSearchParams(window.location.search).get(
+      "recoveryToken",
+    );
+    if (!token) return;
+    let active = true;
+    setRecoveryState("Recovering tickets...");
+    api
+      .redeemTicketRecovery(token)
+      .then((recovered) => {
+        if (!active) return;
+        setTickets(recovered);
+        setRecoveryState("Recovered tickets are ready below.");
+        const nextUrl = new URL(window.location.href);
+        nextUrl.searchParams.delete("recoveryToken");
+        window.history.replaceState({}, "", nextUrl);
+      })
+      .catch((error) => {
+        if (!active) return;
+        setRecoveryState(
+          (error as { message?: string }).message ??
+            "Recovery link is invalid or expired.",
+        );
+      });
+    return () => {
+      active = false;
+    };
   }, [pathname]);
 
   useEffect(() => {
@@ -491,7 +542,24 @@ export function AppProvider({
   }
 
   async function submitTicketPurchase(confirmAdditional = false) {
-    setPurchaseState("Creating tickets...");
+    const selectedType = selectedEvent?.ticketTypes?.find(
+      (type) => type.id === selectedTicketTypeId,
+    );
+    const paid =
+      (selectedType?.priceCents ?? selectedEvent?.priceCents ?? 0) > 0;
+    const demoCheckout = session?.user.id === "usr_demo_organizer";
+    setPurchaseStatus("processing");
+    setPurchaseState(
+      paid ? "Connecting to mobile money..." : "Reserving your tickets...",
+    );
+
+    if (demoCheckout) {
+      await new Promise((resolve) => window.setTimeout(resolve, 700));
+      setPurchaseState(
+        paid ? "Confirming the demo payment..." : "Confirming availability...",
+      );
+      await new Promise((resolve) => window.setTimeout(resolve, 900));
+    }
 
     const created = await api.buyTickets(
       {
@@ -506,6 +574,10 @@ export function AppProvider({
       },
       session?.token,
     );
+    if (demoCheckout) {
+      setPurchaseState("Preparing tickets and delivery...");
+      await new Promise((resolve) => window.setTimeout(resolve, 650));
+    }
     setTickets(created);
     setSelectedSeats([]);
     const latest = await api
@@ -516,10 +588,11 @@ export function AppProvider({
         current.map((event) => (event.id === latest.id ? latest : event)),
       );
     if (session) await loadHistory(session.token);
+    setPurchaseStatus("success");
     setPurchaseState(
       session
-        ? "Ticket purchase complete and saved to your history."
-        : "Ticket purchase complete. Register to track this and future tickets.",
+        ? "Ticket purchase complete. Tickets were sent by email and saved to your history."
+        : "Ticket purchase complete. Tickets were sent by email, and guest recovery is available below.",
     );
   }
 
@@ -536,6 +609,7 @@ export function AppProvider({
         totalAfterPurchase?: number;
       };
       if (fallback.result === "additional_confirmation_required") {
+        setPurchaseStatus("idle");
         const confirmed = window.confirm(
           `${fallback.message} This email already has ${fallback.existingTicketCount} ticket(s) for this event. Confirming will bring the total to ${fallback.totalAfterPurchase}.`,
         );
@@ -549,17 +623,42 @@ export function AppProvider({
             setPurchaseState(
               confirmedFallback.message ?? "Ticket purchase failed.",
             );
+            setPurchaseStatus("error");
             return;
           }
         }
 
         setPurchaseState("Additional ticket request cancelled.");
+        setPurchaseStatus("error");
         return;
       }
 
       const message =
         error instanceof Error ? error.message : "Ticket purchase failed.";
       setPurchaseState(fallback.message ?? message);
+      setPurchaseStatus("error");
+    }
+  }
+
+  function resetPurchase() {
+    setPurchaseState("");
+    setPurchaseStatus("idle");
+  }
+
+  async function requestTicketRecovery(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setRecoveryState("Preparing recovery email...");
+    try {
+      const response = await api.requestTicketRecovery({
+        buyerEmail: recoveryEmail,
+        ...(selectedEventId ? { eventId: selectedEventId } : {}),
+      });
+      setRecoveryState(response.message);
+    } catch (error) {
+      setRecoveryState(
+        (error as { message?: string }).message ??
+          "Ticket recovery could not be started.",
+      );
     }
   }
 
@@ -598,7 +697,7 @@ export function AppProvider({
       setSelectedSeats([]);
     }
     setSelectedEventId(eventId);
-    setPurchaseState("");
+    resetPurchase();
   }
 
   function updateHostEvent<K extends keyof HostEvent>(
@@ -795,6 +894,24 @@ export function AppProvider({
     }
   }
 
+  async function loginToDemo() {
+    setAuthState("Starting demo...");
+    try {
+      const nextSession = await api.loginToDemo();
+      await establishServerSession(nextSession.token);
+      setSession(nextSession);
+      setBuyerName(nextSession.user.name);
+      setBuyerEmail(nextSession.user.email);
+      setAuthState("Demo ready.");
+      const next = new URLSearchParams(window.location.search).get("next");
+      router.push(organizerReturnPath(next));
+      router.refresh();
+    } catch (error) {
+      const fallback = error as { message?: string };
+      setAuthState(fallback.message ?? "Unable to start the demo.");
+    }
+  }
+
   function submitForgotPassword(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setResetState(
@@ -859,10 +976,12 @@ export function AppProvider({
     hostState,
     hostThumbnailName,
     loading,
+    loginToDemo,
     mobileMoneyNumber,
     nextEvent,
     openAuth,
     purchaseState,
+    purchaseStatus,
     publishEvent,
     saveDraft,
     buyTickets,
@@ -874,6 +993,10 @@ export function AppProvider({
     resetEmail,
     resetPassword,
     resetState,
+    recoveryEmail,
+    recoveryState,
+    requestTicketRecovery,
+    resetPurchase,
     scan,
     scanState,
     selectThumbnail,
@@ -900,6 +1023,7 @@ export function AppProvider({
     setResetConfirmPassword,
     setResetEmail,
     setResetPassword,
+    setRecoveryEmail,
     submitAuth,
     submitForgotPassword,
     submitResetPassword,

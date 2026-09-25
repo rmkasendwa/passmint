@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Play } from "lucide-react";
 import Link from "next/link";
 import {
   type ChangeEventHandler,
@@ -9,7 +9,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import { getApiUrl } from "../api";
+import { api, getApiUrl } from "../api";
 import { useAppContext } from "./app-provider";
 import {
   FieldMessage,
@@ -28,20 +28,20 @@ const passwordInputWrapClass = "relative block";
 const passwordToggleClass =
   "absolute right-2 top-1/2 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-md text-text-soft hover:bg-surface-muted hover:text-text focus:outline-[3px_solid_rgb(22_125_119/18%)]";
 const labelRowClass = "flex items-center justify-between gap-3";
-const textLinkClass =
-  "font-(--weight-semibold) text-accent hover:text-text";
+const textLinkClass = "font-(--weight-semibold) text-accent hover:text-text";
 const submitClass =
   "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-(--button-bg) px-4 font-(--weight-bold) text-(--button-text) hover:bg-accent";
 const oauthButtonClass =
   "inline-flex min-h-12 items-center justify-center gap-2.5 whitespace-nowrap rounded-sm border border-[#747775] bg-white px-3 text-sm leading-5 font-medium text-[#1f1f1f] hover:bg-[#f8faff] focus:outline-2 focus:outline-offset-2 focus:outline-[#0b57d0] active:bg-[#f2f2f2]";
+const demoButtonClass =
+  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-accent bg-accent-soft px-4 font-(--weight-bold) text-accent hover:bg-surface-muted focus:outline-[3px_solid_rgb(22_125_119/18%)]";
 const dividerClass =
   "flex items-center gap-3 text-[0.76rem] font-(--weight-semibold) uppercase text-text-soft before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border";
 const stateClass =
   "mb-0 w-full max-w-107.5 rounded-lg bg-accent-soft p-3 text-[0.92rem] font-(--weight-medium) text-accent max-[820px]:max-w-none";
 const switchClass =
   "w-full max-w-107.5 text-[0.96rem] text-text-muted max-[820px]:max-w-none [&_a]:font-(--weight-semibold) [&_a]:text-accent [&_a:hover]:text-text [&_p]:mb-0";
-const strengthTrackClass =
-  "h-2 overflow-hidden rounded-full bg-surface-muted";
+const strengthTrackClass = "h-2 overflow-hidden rounded-full bg-surface-muted";
 const strengthBarClass =
   "block h-full rounded-full transition-[width,background-color]";
 const strengthTextClass =
@@ -215,11 +215,13 @@ export function LoginForm() {
     authEmail,
     authPassword,
     authState,
+    loginToDemo,
     setAuthEmail,
     setAuthPassword,
     submitAuth,
   } = useAppContext();
   const [oauthError, setOauthError] = useState("");
+  const [demoEnabled, setDemoEnabled] = useState(false);
   const validation = useInlineFormValidation();
   const [passwordRevealed, setPasswordRevealed] = useState(false);
   const emailError = validation.fieldError({
@@ -239,11 +241,28 @@ export function LoginForm() {
   useEffect(() => {
     const error = new URLSearchParams(window.location.search).get("error");
     if (error) setOauthError(error);
+    void api
+      .demoAvailability()
+      .then(({ enabled }) => setDemoEnabled(enabled))
+      .catch(() => setDemoEnabled(false));
   }, []);
 
   return (
     <>
       <form className={formClass} {...validation.formProps(submitAuth)}>
+        {demoEnabled && (
+          <>
+            <button
+              className={demoButtonClass}
+              type="button"
+              onClick={() => void loginToDemo()}
+            >
+              <Play aria-hidden="true" size={18} fill="currentColor" />
+              Enter demo
+            </button>
+            <div className={dividerClass}>or sign in</div>
+          </>
+        )}
         <GoogleAuthButton />
         <div className={dividerClass}>or</div>
         <label className={labelClass}>

@@ -7,12 +7,48 @@ function fakePrisma(initialEvents = []) {
   const records = new Map(initialEvents.map((event) => [event.id, event]));
   const created = [];
   const updated = [];
+  const organizerUpserts = [];
 
   return {
     records,
     created,
     updated,
+    organizerUpserts,
+    user: {
+      async upsert(args) {
+        organizerUpserts.push(args);
+        return { id: "usr_demo_organizer" };
+      },
+    },
     event: {
+      async count({ where }) {
+        return [...records.values()].filter((event) =>
+          where.OR.some((condition) =>
+            condition.id
+              ? event.id === condition.id
+              : event.name === condition.name,
+          ),
+        ).length;
+      },
+      async updateMany({ where, data }) {
+        let count = 0;
+        for (const [id, event] of records) {
+          if (
+            where.OR.some((condition) =>
+              condition.id
+                ? event.id === condition.id
+                : event.name === condition.name,
+            )
+          ) {
+            records.set(id, { ...event, ...data });
+            count += 1;
+          }
+        }
+        return { count };
+      },
+      async findMany() {
+        return [];
+      },
       async findFirst({ where }) {
         return [...records.values()].find((event) =>
           where.OR.some((condition) =>
@@ -27,7 +63,7 @@ function fakePrisma(initialEvents = []) {
         const event = {
           id: data.id,
           name: data.name,
-          ownerId: null,
+          ownerId: data.ownerId,
           thumbnailUrl: data.thumbnailUrl,
           mapLocation: data.mapLocation,
           startsAt: data.startsAt,
@@ -37,7 +73,13 @@ function fakePrisma(initialEvents = []) {
         return event;
       },
       async update({ where, data }) {
-        const event = { ...records.get(where.id), ...data };
+        const event = {
+          ...records.get(where.id),
+          ...data,
+          ...(data.owner?.connect?.id
+            ? { ownerId: data.owner.connect.id, owner: undefined }
+            : {}),
+        };
         records.set(where.id, event);
         updated.push({ where, data });
         return event;
@@ -59,11 +101,11 @@ function fakeImageStorage() {
   };
 }
 
-test("production startup never seeds demo events", async () => {
+test("production startup does not seed when demo mode is disabled", async () => {
   const previousNodeEnv = process.env.NODE_ENV;
-  const previousSeedSetting = process.env.SEED_DEMO_DATA;
+  const previousDemoMode = process.env.PASSMINT_DEMO_MODE;
   process.env.NODE_ENV = "production";
-  process.env.SEED_DEMO_DATA = "true";
+  process.env.PASSMINT_DEMO_MODE = "false";
 
   try {
     const prisma = fakePrisma();
@@ -74,11 +116,64 @@ test("production startup never seeds demo events", async () => {
 
     assert.equal(prisma.records.size, 0);
     assert.equal(images.uploads.length, 0);
+    assert.equal(prisma.organizerUpserts.length, 0);
   } finally {
     if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
     else process.env.NODE_ENV = previousNodeEnv;
-    if (previousSeedSetting === undefined) delete process.env.SEED_DEMO_DATA;
-    else process.env.SEED_DEMO_DATA = previousSeedSetting;
+    if (previousDemoMode === undefined) delete process.env.PASSMINT_DEMO_MODE;
+    else process.env.PASSMINT_DEMO_MODE = previousDemoMode;
+  }
+});
+
+test("production startup refuses explicitly enabled demo mode", async () => {
+  const previousNodeEnv = process.env.NODE_ENV;
+  const previousDemoMode = process.env.PASSMINT_DEMO_MODE;
+  process.env.NODE_ENV = "production";
+  process.env.PASSMINT_DEMO_MODE = "true";
+
+  try {
+    const service = new EventSeedService(fakePrisma(), fakeImageStorage());
+    await assert.rejects(
+      service.onApplicationBootstrap(),
+      /PASSMINT_DEMO_MODE cannot be enabled in production/,
+    );
+  } finally {
+    if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = previousNodeEnv;
+    if (previousDemoMode === undefined) delete process.env.PASSMINT_DEMO_MODE;
+    else process.env.PASSMINT_DEMO_MODE = previousDemoMode;
+  }
+});
+
+test("startup repairs seed ownership to the demo organizer when demo mode is off", async () => {
+  const [definition] = buildSeedEvents(new Date("2026-09-21T15:00:00.000Z"));
+  const prisma = fakePrisma([
+    {
+      id: definition.id,
+      name: definition.name,
+      ownerId: "usr_previous_owner",
+      thumbnailUrl: "https://organizer.example/art.jpg",
+      mapLocation: "Custom venue pin",
+    },
+  ]);
+  const previousDemoMode = process.env.PASSMINT_DEMO_MODE;
+  delete process.env.PASSMINT_DEMO_MODE;
+
+  try {
+    const service = new EventSeedService(prisma, fakeImageStorage());
+    await service.onApplicationBootstrap();
+
+    assert.equal(
+      prisma.records.get(definition.id).ownerId,
+      "usr_demo_organizer",
+    );
+    assert.equal(
+      prisma.records.get(definition.id).thumbnailUrl,
+      "https://organizer.example/art.jpg",
+    );
+  } finally {
+    if (previousDemoMode === undefined) delete process.env.PASSMINT_DEMO_MODE;
+    else process.env.PASSMINT_DEMO_MODE = previousDemoMode;
   }
 });
 
@@ -112,11 +207,21 @@ test("seeding twice creates each event once and does not upload artwork again", 
   assert.equal(prisma.records.size, 21);
   assert.equal(images.uploads.length, uploadsAfterFirstRun);
   assert.ok(
+    [...prisma.records.values()].every(
+      (event) => event.ownerId === "usr_demo_organizer",
+    ),
+  );
+  assert.equal(prisma.organizerUpserts.at(-1).create.role, "user");
+  assert.equal(
+    prisma.organizerUpserts.at(-1).create.email,
+    "demo.organizer@example.test",
+  );
+  assert.ok(
     prisma.created.every((event) => event.thumbnailUrl.includes("/uploads/")),
   );
 });
 
-test("legacy seed names are reused while organizer-owned events stay untouched", async () => {
+test("existing seed events are always assigned to the demo organizer", async () => {
   const [legacyDefinition, ownedDefinition] = buildSeedEvents(
     new Date("2026-09-21T15:00:00.000Z"),
   );
@@ -153,5 +258,25 @@ test("legacy seed names are reused while organizer-owned events stay untouched",
     prisma.records.get(legacy.id).mapLocation,
     legacyDefinition.mapLocation,
   );
-  assert.deepEqual(prisma.records.get(owned.id), owned);
+  assert.equal(prisma.records.get(legacy.id).ownerId, "usr_demo_organizer");
+  assert.equal(prisma.records.get(owned.id).ownerId, "usr_demo_organizer");
+  assert.equal(
+    prisma.records.get(owned.id).thumbnailUrl,
+    "https://organizer.example/art.jpg",
+  );
+});
+
+test("demo seeding creates the dedicated organizer before its events", async () => {
+  const prisma = fakePrisma();
+  const service = new EventSeedService(prisma, fakeImageStorage());
+
+  await service.seed(new Date("2026-09-21T15:00:00.000Z"));
+
+  assert.equal(prisma.organizerUpserts.length, 1);
+  assert.equal(prisma.organizerUpserts[0].create.id, "usr_demo_organizer");
+  assert.ok(
+    [...prisma.records.values()].every(
+      (event) => event.ownerId === "usr_demo_organizer",
+    ),
+  );
 });

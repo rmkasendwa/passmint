@@ -1,12 +1,21 @@
-import { BadRequestException, ConflictException, Injectable, Logger, OnApplicationBootstrap, UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { User } from '@prisma/client';
-import { createHmac, pbkdf2Sync, randomBytes, timingSafeEqual } from 'crypto';
-import { prefixedId } from '../common/prefixed-id';
-import { PrismaService } from '../prisma/prisma.service';
-import { UserRole } from '../users/user-role.enum';
-import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  Logger,
+  NotFoundException,
+  OnApplicationBootstrap,
+  UnauthorizedException,
+} from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { User } from "@prisma/client";
+import { createHmac, pbkdf2Sync, randomBytes, timingSafeEqual } from "crypto";
+import { demoOrganizerUpsert } from "../common/demo-mode";
+import { prefixedId } from "../common/prefixed-id";
+import { PrismaService } from "../prisma/prisma.service";
+import { UserRole } from "../users/user-role.enum";
+import { LoginDto } from "./dto/login.dto";
+import { RegisterDto } from "./dto/register.dto";
 
 type TokenPayload = {
   sub: string;
@@ -34,7 +43,7 @@ type GoogleUserInfo = {
   name?: string;
 };
 
-export const GOOGLE_OAUTH_STATE_COOKIE = 'passmint-google-oauth-state';
+export const GOOGLE_OAUTH_STATE_COOKIE = "passmint-google-oauth-state";
 
 @Injectable()
 export class AuthService implements OnApplicationBootstrap {
@@ -68,8 +77,8 @@ export class AuthService implements OnApplicationBootstrap {
     });
     this.logger.log(
       email
-        ? 'Root administrator configuration reconciled.'
-        : 'No root administrator is configured.',
+        ? "Root administrator configuration reconciled."
+        : "No root administrator is configured.",
     );
   }
 
@@ -78,16 +87,17 @@ export class AuthService implements OnApplicationBootstrap {
     const existing = await this.prisma.user.findUnique({ where: { email } });
 
     if (existing) {
-      throw new ConflictException('An account with this email already exists');
+      throw new ConflictException("An account with this email already exists");
     }
 
     const user = await this.prisma.user.create({
       data: {
-        id: prefixedId('usr'),
+        id: prefixedId("usr"),
         email,
         name: dto.name.trim(),
         passwordHash: this.hashPassword(dto.password),
-        role: email === this.rootAdminEmail() ? UserRole.RootAdmin : UserRole.User,
+        role:
+          email === this.rootAdminEmail() ? UserRole.RootAdmin : UserRole.User,
       },
     });
 
@@ -99,35 +109,50 @@ export class AuthService implements OnApplicationBootstrap {
     const user = await this.prisma.user.findUnique({ where: { email } });
 
     if (!user || !this.verifyPassword(dto.password, user.passwordHash)) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new UnauthorizedException("Invalid email or password");
     }
 
     return this.sessionFor(user);
   }
 
+  demoAvailability() {
+    return { enabled: this.demoModeEnabled() };
+  }
+
+  async loginToDemo() {
+    if (!this.demoModeEnabled()) {
+      throw new NotFoundException("Demo mode is not available.");
+    }
+    const user = await this.prisma.user.upsert(demoOrganizerUpsert());
+    return this.sessionFor(user);
+  }
+
   googleAuthorization(next?: string) {
-    const clientId = this.requiredGoogleConfig('GOOGLE_CLIENT_ID');
+    const clientId = this.requiredGoogleConfig("GOOGLE_CLIENT_ID");
     const redirectUri = this.googleRedirectUri();
     const state = this.createOAuthState(next);
     const params = new URLSearchParams({
       client_id: clientId,
       redirect_uri: redirectUri,
-      response_type: 'code',
-      scope: 'openid email profile',
+      response_type: "code",
+      scope: "openid email profile",
       state,
-      prompt: 'select_account',
+      prompt: "select_account",
     });
 
-    return { state, url: `https://accounts.google.com/o/oauth2/v2/auth?${params}` };
+    return {
+      state,
+      url: `https://accounts.google.com/o/oauth2/v2/auth?${params}`,
+    };
   }
 
   googleStateCookie() {
     return {
       httpOnly: true,
       maxAge: 10 * 60 * 1000,
-      path: '/',
-      sameSite: 'lax' as const,
-      secure: this.config.get<string>('NODE_ENV') === 'production',
+      path: "/",
+      sameSite: "lax" as const,
+      secure: this.config.get<string>("NODE_ENV") === "production",
     };
   }
 
@@ -138,18 +163,21 @@ export class AuthService implements OnApplicationBootstrap {
     const email = profile.email?.trim().toLowerCase();
 
     if (!email || !profile.email_verified) {
-      throw new UnauthorizedException('Google did not return a verified email address.');
+      throw new UnauthorizedException(
+        "Google did not return a verified email address.",
+      );
     }
 
     const user = await this.prisma.user.upsert({
       where: { email },
       update: {},
       create: {
-        id: prefixedId('usr'),
+        id: prefixedId("usr"),
         email,
-        name: profile.name?.trim() || email.split('@')[0],
+        name: profile.name?.trim() || email.split("@")[0],
         passwordHash: this.unusablePasswordHash(),
-        role: email === this.rootAdminEmail() ? UserRole.RootAdmin : UserRole.User,
+        role:
+          email === this.rootAdminEmail() ? UserRole.RootAdmin : UserRole.User,
       },
     });
 
@@ -165,21 +193,28 @@ export class AuthService implements OnApplicationBootstrap {
   }
 
   async verifyToken(token: string) {
-    const [payloadPart, signature] = token.split('.');
+    const [payloadPart, signature] = token.split(".");
     if (!payloadPart || !signature) return null;
 
     const expected = this.sign(payloadPart);
     const expectedBuffer = Buffer.from(expected);
     const actualBuffer = Buffer.from(signature);
 
-    if (expectedBuffer.length !== actualBuffer.length || !timingSafeEqual(expectedBuffer, actualBuffer)) {
+    if (
+      expectedBuffer.length !== actualBuffer.length ||
+      !timingSafeEqual(expectedBuffer, actualBuffer)
+    ) {
       return null;
     }
 
-    const payload = JSON.parse(Buffer.from(payloadPart, 'base64url').toString('utf8')) as TokenPayload;
+    const payload = JSON.parse(
+      Buffer.from(payloadPart, "base64url").toString("utf8"),
+    ) as TokenPayload;
     if (payload.exp < Math.floor(Date.now() / 1000)) return null;
 
-    const user = await this.prisma.user.findUnique({ where: { id: payload.sub } });
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.sub },
+    });
     if (!user) return null;
 
     return this.publicUser(user);
@@ -209,41 +244,53 @@ export class AuthService implements OnApplicationBootstrap {
       role: user.role as UserRole,
       exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 14,
     };
-    const payloadPart = Buffer.from(JSON.stringify(payload)).toString('base64url');
+    const payloadPart = Buffer.from(JSON.stringify(payload)).toString(
+      "base64url",
+    );
 
     return `${payloadPart}.${this.sign(payloadPart)}`;
   }
 
   private sign(payloadPart: string) {
-    return createHmac('sha256', this.secret()).update(payloadPart).digest('base64url');
+    return createHmac("sha256", this.secret())
+      .update(payloadPart)
+      .digest("base64url");
   }
 
   private createOAuthState(next?: string) {
     const payload: OAuthStatePayload = {
       exp: Math.floor(Date.now() / 1000) + 60 * 10,
-      nonce: randomBytes(16).toString('base64url'),
+      nonce: randomBytes(16).toString("base64url"),
       ...(this.safeNextPath(next) ? { next } : {}),
     };
-    const payloadPart = Buffer.from(JSON.stringify(payload)).toString('base64url');
+    const payloadPart = Buffer.from(JSON.stringify(payload)).toString(
+      "base64url",
+    );
 
     return `${payloadPart}.${this.sign(payloadPart)}`;
   }
 
   private verifyOAuthState(state: string) {
-    const [payloadPart, signature] = state.split('.');
-    if (!payloadPart || !signature) throw new BadRequestException('Invalid Google sign-in state.');
+    const [payloadPart, signature] = state.split(".");
+    if (!payloadPart || !signature)
+      throw new BadRequestException("Invalid Google sign-in state.");
 
     const expected = this.sign(payloadPart);
     const expectedBuffer = Buffer.from(expected);
     const actualBuffer = Buffer.from(signature);
 
-    if (expectedBuffer.length !== actualBuffer.length || !timingSafeEqual(expectedBuffer, actualBuffer)) {
-      throw new BadRequestException('Invalid Google sign-in state.');
+    if (
+      expectedBuffer.length !== actualBuffer.length ||
+      !timingSafeEqual(expectedBuffer, actualBuffer)
+    ) {
+      throw new BadRequestException("Invalid Google sign-in state.");
     }
 
-    const payload = JSON.parse(Buffer.from(payloadPart, 'base64url').toString('utf8')) as OAuthStatePayload;
+    const payload = JSON.parse(
+      Buffer.from(payloadPart, "base64url").toString("utf8"),
+    ) as OAuthStatePayload;
     if (payload.exp < Math.floor(Date.now() / 1000)) {
-      throw new BadRequestException('Google sign-in state expired.');
+      throw new BadRequestException("Google sign-in state expired.");
     }
 
     return {
@@ -253,33 +300,40 @@ export class AuthService implements OnApplicationBootstrap {
   }
 
   private async exchangeGoogleCode(code: string) {
-    const response = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    const response = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
-        client_id: this.requiredGoogleConfig('GOOGLE_CLIENT_ID'),
-        client_secret: this.requiredGoogleConfig('GOOGLE_CLIENT_SECRET'),
+        client_id: this.requiredGoogleConfig("GOOGLE_CLIENT_ID"),
+        client_secret: this.requiredGoogleConfig("GOOGLE_CLIENT_SECRET"),
         code,
-        grant_type: 'authorization_code',
+        grant_type: "authorization_code",
         redirect_uri: this.googleRedirectUri(),
       }),
     });
-    const data = (await response.json().catch(() => ({}))) as GoogleTokenResponse;
+    const data = (await response
+      .json()
+      .catch(() => ({}))) as GoogleTokenResponse;
 
     if (!response.ok || !data.access_token) {
-      throw new UnauthorizedException(data.error_description || data.error || 'Google sign-in failed.');
+      throw new UnauthorizedException(
+        data.error_description || data.error || "Google sign-in failed.",
+      );
     }
 
     return data.access_token;
   }
 
   private async fetchGoogleProfile(accessToken: string) {
-    const response = await fetch('https://openidconnect.googleapis.com/v1/userinfo', {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
+    const response = await fetch(
+      "https://openidconnect.googleapis.com/v1/userinfo",
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      },
+    );
 
     if (!response.ok) {
-      throw new UnauthorizedException('Unable to read your Google profile.');
+      throw new UnauthorizedException("Unable to read your Google profile.");
     }
 
     return (await response.json()) as GoogleUserInfo;
@@ -287,18 +341,20 @@ export class AuthService implements OnApplicationBootstrap {
 
   private googleRedirectUri() {
     const webOrigin = this.webOrigin();
-    const configured = this.config.get<string>('GOOGLE_REDIRECT_URI')?.trim();
+    const configured = this.config.get<string>("GOOGLE_REDIRECT_URI")?.trim();
     return configured
-      ? this.publicUrl(configured, 'GOOGLE_REDIRECT_URI')
+      ? this.publicUrl(configured, "GOOGLE_REDIRECT_URI")
       : `${webOrigin}/auth/google/callback`;
   }
 
   private webOrigin() {
-    const configured = this.config.get<string>('WEB_ORIGIN')?.trim();
+    const configured = this.config.get<string>("WEB_ORIGIN")?.trim();
     if (!configured) {
-      throw new BadRequestException('WEB_ORIGIN must be configured for Google sign-in.');
+      throw new BadRequestException(
+        "WEB_ORIGIN must be configured for Google sign-in.",
+      );
     }
-    return new URL(this.publicUrl(configured, 'WEB_ORIGIN')).origin;
+    return new URL(this.publicUrl(configured, "WEB_ORIGIN")).origin;
   }
 
   private publicUrl(value: string, key: string) {
@@ -309,73 +365,92 @@ export class AuthService implements OnApplicationBootstrap {
       throw new BadRequestException(`${key} must be a valid HTTP URL.`);
     }
 
-    if (!['http:', 'https:'].includes(url.protocol)) {
+    if (!["http:", "https:"].includes(url.protocol)) {
       throw new BadRequestException(`${key} must be a valid HTTP URL.`);
     }
 
-    if (['0.0.0.0', '[::]', '::'].includes(url.hostname)) {
-      if (this.config.get<string>('NODE_ENV') === 'production') {
+    if (["0.0.0.0", "[::]", "::"].includes(url.hostname)) {
+      if (this.config.get<string>("NODE_ENV") === "production") {
         throw new BadRequestException(`${key} must use a public hostname.`);
       }
-      url.hostname = 'localhost';
+      url.hostname = "localhost";
     }
 
-    return url.toString().replace(/\/$/, '');
+    return url.toString().replace(/\/$/, "");
   }
 
   googleCallbackUrl(token: string, next?: string) {
-    const url = new URL('/auth/google/callback', this.webOrigin());
-    url.searchParams.set('token', token);
-    if (next && this.safeNextPath(next)) url.searchParams.set('next', next);
+    const url = new URL("/auth/google/callback", this.webOrigin());
+    url.searchParams.set("token", token);
+    if (next && this.safeNextPath(next)) url.searchParams.set("next", next);
     return url.toString();
   }
 
   googleFailureUrl(message: string) {
-    const url = new URL('/login', this.webOrigin());
-    url.searchParams.set('error', message);
+    const url = new URL("/login", this.webOrigin());
+    url.searchParams.set("error", message);
     return url.toString();
   }
 
-  private requiredGoogleConfig(key: 'GOOGLE_CLIENT_ID' | 'GOOGLE_CLIENT_SECRET') {
+  private requiredGoogleConfig(
+    key: "GOOGLE_CLIENT_ID" | "GOOGLE_CLIENT_SECRET",
+  ) {
     const value = this.config.get<string>(key)?.trim();
-    if (!value) throw new BadRequestException('Google sign-in is not configured.');
+    if (!value)
+      throw new BadRequestException("Google sign-in is not configured.");
     return value;
   }
 
   private safeNextPath(value?: string) {
-    return Boolean(value && value.startsWith('/') && !value.startsWith('//'));
+    return Boolean(value && value.startsWith("/") && !value.startsWith("//"));
   }
 
   private secret() {
-    return this.config.get<string>('AUTH_SECRET') ?? 'passmint-dev-secret-change-me';
+    return (
+      this.config.get<string>("AUTH_SECRET") ?? "passmint-dev-secret-change-me"
+    );
+  }
+
+  private demoModeEnabled() {
+    return (
+      this.config.get<string>("PASSMINT_DEMO_MODE") === "true" &&
+      this.config.get<string>("NODE_ENV") !== "production"
+    );
   }
 
   private rootAdminEmail() {
-    const value = (this.config.get<string>('ROOT_ADMIN_EMAIL') ?? '')
+    const value = (this.config.get<string>("ROOT_ADMIN_EMAIL") ?? "")
       .trim()
       .toLowerCase();
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? value : null;
   }
 
   private hashPassword(password: string) {
-    const salt = randomBytes(16).toString('base64url');
-    const hash = pbkdf2Sync(password, salt, 120000, 32, 'sha256').toString('base64url');
+    const salt = randomBytes(16).toString("base64url");
+    const hash = pbkdf2Sync(password, salt, 120000, 32, "sha256").toString(
+      "base64url",
+    );
 
     return `${salt}.${hash}`;
   }
 
   private unusablePasswordHash() {
-    return `oauth-google.${randomBytes(32).toString('base64url')}`;
+    return `oauth-google.${randomBytes(32).toString("base64url")}`;
   }
 
   private verifyPassword(password: string, stored: string) {
-    const [salt, hash] = stored.split('.');
+    const [salt, hash] = stored.split(".");
     if (!salt || !hash) return false;
 
-    const attempted = pbkdf2Sync(password, salt, 120000, 32, 'sha256').toString('base64url');
+    const attempted = pbkdf2Sync(password, salt, 120000, 32, "sha256").toString(
+      "base64url",
+    );
     const expectedBuffer = Buffer.from(hash);
     const actualBuffer = Buffer.from(attempted);
 
-    return expectedBuffer.length === actualBuffer.length && timingSafeEqual(expectedBuffer, actualBuffer);
+    return (
+      expectedBuffer.length === actualBuffer.length &&
+      timingSafeEqual(expectedBuffer, actualBuffer)
+    );
   }
 }
