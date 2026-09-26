@@ -339,7 +339,7 @@ export function CreateEventForm({
                             ),
                           )
                         }
-                        placeholder="Standard, VIP, adult, child�"
+                        placeholder="Standard, VIP, adult, child..."
                       />
                     </label>
                     <div className="grid gap-3 sm:grid-cols-2">

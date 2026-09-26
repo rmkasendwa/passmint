@@ -550,13 +550,17 @@ export function AppProvider({
     const demoCheckout = session?.user.id === "usr_demo_organizer";
     setPurchaseStatus("processing");
     setPurchaseState(
-      paid ? "Connecting to mobile money..." : "Reserving your tickets...",
+      paid
+        ? "Sending the mobile-money payment request. Approve it on your phone to continue."
+        : "Reserving your tickets...",
     );
 
     if (demoCheckout) {
       await new Promise((resolve) => window.setTimeout(resolve, 700));
       setPurchaseState(
-        paid ? "Confirming the demo payment..." : "Confirming availability...",
+        paid
+          ? "Payment is pending approval. Tickets are not issued until confirmation completes."
+          : "Confirming availability...",
       );
       await new Promise((resolve) => window.setTimeout(resolve, 900));
     }
@@ -575,7 +579,7 @@ export function AppProvider({
       session?.token,
     );
     if (demoCheckout) {
-      setPurchaseState("Preparing tickets and delivery...");
+      setPurchaseState("Payment confirmed. Preparing tickets and delivery...");
       await new Promise((resolve) => window.setTimeout(resolve, 650));
     }
     setTickets(created);

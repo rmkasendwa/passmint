@@ -7,7 +7,15 @@ export const metadata: Metadata = {
 };
 import { DashboardWorkbench } from "../../components/dashboard-workbench";
 
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   await requireServerSession("/check-in");
-  return <DashboardWorkbench view="scan" />;
+  const eventIdParam = (await searchParams).eventId;
+  const focusEventId = Array.isArray(eventIdParam)
+    ? eventIdParam[0]
+    : eventIdParam;
+  return <DashboardWorkbench view="scan" focusEventId={focusEventId} />;
 }

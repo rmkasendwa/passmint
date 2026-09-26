@@ -72,23 +72,22 @@ export function AppShell({
     }`;
   const publicLinks = [
     { href: "/", label: "Discover events" },
+    { href: "/showcase", label: "Showcase" },
     { href: "/organizers", label: "For organizers" },
     { href: "/help", label: "Help" },
   ];
   const navigationItems = session ? links : publicLinks;
-  const navigationLinks = navigationItems.map(
-    ({ href, label }) => (
-      <Link
-        key={href}
-        href={href}
-        aria-current={active(href) ? "page" : undefined}
-        onClick={() => setMenuOpen(false)}
-        className={`inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold transition-colors ${active(href) ? "bg-accent-soft text-accent" : "text-text-muted hover:bg-surface-muted hover:text-text"}`}
-      >
-        {label}
-      </Link>
-    ),
-  );
+  const navigationLinks = navigationItems.map(({ href, label }) => (
+    <Link
+      key={href}
+      href={href}
+      aria-current={active(href) ? "page" : undefined}
+      onClick={() => setMenuOpen(false)}
+      className={`inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold transition-colors ${active(href) ? "bg-accent-soft text-accent" : "text-text-muted hover:bg-surface-muted hover:text-text"}`}
+    >
+      {label}
+    </Link>
+  ));
   const createEventAction = session && !isAdminRoute && (
     <Link
       href="/events/new"
@@ -102,18 +101,25 @@ export function AppShell({
   );
 
   return (
-    <div className={`app-shell theme-${resolvedTheme} ${isAdminRoute ? "app-shell--admin" : ""}`}>
+    <div
+      className={`app-shell theme-${resolvedTheme} ${isAdminRoute ? "app-shell--admin" : ""}`}
+    >
       <a href="#main-content" className="skip-link">
         Skip to content
       </a>
       <header className="site-header sticky top-0 z-30 min-h-16 w-full border-b border-border bg-[color-mix(in_srgb,var(--surface-raised)_92%,transparent)] backdrop-blur-[18px]">
         <div className="mx-auto grid min-h-16 w-[min(var(--content-max),calc(100%-var(--content-gutter)*2))] grid-cols-[auto_1fr_auto] items-center gap-6">
-          <Link className="brand" href={isAdminRoute ? "/admin" : "/"} aria-label={isAdminRoute ? "Passmint admin home" : "Passmint home"}>
+          <Link
+            className="brand"
+            href={isAdminRoute ? "/admin" : "/"}
+            aria-label={isAdminRoute ? "Passmint admin home" : "Passmint home"}
+          >
             <span className="brand-mark">
               <TicketIcon size={22} />
             </span>
             <span>
-              {isAdminRoute ? "Passmint Admin" : "Passmint"}<span className="brand-dot">.</span>
+              {isAdminRoute ? "Passmint Admin" : "Passmint"}
+              <span className="brand-dot">.</span>
             </span>
           </Link>
           {isAdminRoute ? (
@@ -177,7 +183,8 @@ export function AppShell({
                   >
                     My Events
                   </Link>
-                  {(session.user.role === "admin" || session.user.role === "root_admin") && (
+                  {(session.user.role === "admin" ||
+                    session.user.role === "root_admin") && (
                     <Link
                       href="/admin"
                       aria-current={active("/admin") ? "page" : undefined}

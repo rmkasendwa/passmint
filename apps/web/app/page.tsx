@@ -21,6 +21,12 @@ type SearchProps = {
 };
 const param = (value: string | string[] | undefined) =>
   (Array.isArray(value) ? value[0] : value) ?? "";
+
+function eventHref(eventId: string, params: URLSearchParams) {
+  const query = params.toString();
+  const returnTo = query ? `/?${query}#events` : "/#events";
+  return `/event/${eventId}?returnTo=${encodeURIComponent(returnTo)}`;
+}
 export async function generateMetadata({
   searchParams,
 }: SearchProps): Promise<Metadata> {
@@ -43,6 +49,10 @@ export default async function HomePage({ searchParams }: SearchProps) {
   const query = param(params.q).trim(),
     start = param(params.start),
     end = param(params.end);
+  const discoveryParams = new URLSearchParams();
+  if (query) discoveryParams.set("q", query);
+  if (start) discoveryParams.set("start", start);
+  if (end) discoveryParams.set("end", end);
   const visibleEvents = filterEvents(events, { q: query, start, end });
   const heroEvent = events.find((event) => eventStatus(event) === "Upcoming");
   const upcoming = events
@@ -94,7 +104,10 @@ export default async function HomePage({ searchParams }: SearchProps) {
             <br />a memory.
           </span>
           {heroEvent ? (
-            <Link href={`/event/${heroEvent.id}`} className="hero-ticket">
+            <Link
+              href={eventHref(heroEvent.id, discoveryParams)}
+              className="hero-ticket"
+            >
               <span className="ticket-date">
                 <strong>{new Date(heroEvent.startsAt).getDate()}</strong>
                 {new Intl.DateTimeFormat("en", { month: "short" }).format(
@@ -209,7 +222,7 @@ export default async function HomePage({ searchParams }: SearchProps) {
             {visibleEvents.map((event) => (
               <Link
                 className="discovery-card"
-                href={`/event/${event.id}`}
+                href={eventHref(event.id, discoveryParams)}
                 key={event.id}
               >
                 <div className="discovery-card-media">
@@ -295,7 +308,7 @@ export default async function HomePage({ searchParams }: SearchProps) {
             <div className="upcoming-list">
               {upcoming.map((event) => (
                 <Link
-                  href={`/event/${event.id}`}
+                  href={eventHref(event.id, discoveryParams)}
                   key={event.id}
                   className="upcoming-event"
                 >
