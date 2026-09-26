@@ -11,9 +11,11 @@ import { EventDetail } from "./event-detail";
 export async function ServerEventDetail({
   event,
   management = false,
+  returnTo,
 }: {
   event: Event;
   management?: boolean;
+  returnTo?: string;
 }) {
   const session = await getServerSession();
   const owner = typeof event.owner === "string" ? event.owner : event.owner?.id;
@@ -46,6 +48,7 @@ export async function ServerEventDetail({
       initialNow={Date.now()}
       initialTickets={tickets.filter((ticket) => ticket.event.id === event.id)}
       management={management}
+      returnTo={returnTo}
       initialReports={
         reports
           ? { sales: reports[0], attendees: reports[1], scans: reports[2] }

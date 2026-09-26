@@ -7,15 +7,21 @@ export const dynamic = "force-dynamic";
 
 export default async function EventPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ eventId: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { eventId } = await params;
+  const returnToParam = (await searchParams).returnTo;
+  const returnTo = Array.isArray(returnToParam)
+    ? returnToParam[0]
+    : returnToParam;
   const event = await getEventForPage(eventId);
 
   if (!event) notFound();
 
-  return <ServerEventDetail event={event} />;
+  return <ServerEventDetail event={event} returnTo={returnTo} />;
 }
 
 export async function generateMetadata({

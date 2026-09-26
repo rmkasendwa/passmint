@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ArrowLeft,
   AlertTriangle,
   CalendarDays,
   CheckCircle2,
@@ -22,6 +23,7 @@ import {
   Users,
   X,
 } from "lucide-react";
+import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { api, Event } from "../api";
 import { eventCategory, eventStatus, eventTone } from "../event-utils";
@@ -114,11 +116,13 @@ export function EventDetail({
   initialReports,
   initialNow,
   initialTickets = [],
+  returnTo,
 }: {
   event: Event;
   management?: boolean;
   initialNow?: number;
   initialTickets?: import("../api").Ticket[];
+  returnTo?: string;
   initialReports?: {
     sales: import("../api").SalesSummary;
     attendees: import("../api").AttendeePage;
@@ -299,6 +303,8 @@ export function EventDetail({
     ? selectedSeats.length
     : quantity;
   const ticketTotalCents = unitPrice * checkoutQuantity;
+  const checkoutFeeCents = 0;
+  const checkoutGrandTotalCents = ticketTotalCents + checkoutFeeCents;
   const startsAt = new Date(displayEvent.startsAt);
   const mapQuery = displayEvent.mapLocation || displayEvent.venue;
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`;
@@ -310,6 +316,10 @@ export function EventDetail({
   );
   const detailMood = eventIndex === 0 ? "gold" : "green";
   const detailTone = eventTone(Math.max(eventIndex, 0));
+  const safeReturnTo =
+    returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//")
+      ? returnTo
+      : "/#events";
   const editNameError = editValidation.fieldError({
     label: "Event name",
     required: true,
@@ -505,6 +515,12 @@ export function EventDetail({
     <section
       className={`event-detail-page event-detail-page--${detailMood} mx-auto mt-5 grid w-[min(var(--content-max),calc(100%-var(--content-gutter)*2))] max-w-(--content-max) gap-5 text-text`}
     >
+      {!management && (
+        <Link className="text-link w-fit" href={safeReturnTo}>
+          <ArrowLeft size={17} />
+          Back to events
+        </Link>
+      )}
       <section className="event-detail-showcase">
         <span className="event-detail-showcase__sheen" aria-hidden="true" />
         <span className="event-detail-showcase__orb" aria-hidden="true" />
@@ -1244,7 +1260,10 @@ export function EventDetail({
                         : "Pay now"}
             </button>
             {purchaseState && (
-              <p className="mb-0 rounded-lg bg-accent-soft p-3 text-[0.92rem] font-(--weight-medium) text-accent">
+              <p
+                role={purchaseStatus === "error" ? "alert" : "status"}
+                className={`mb-0 rounded-lg bg-accent-soft p-3 text-[0.92rem] font-(--weight-medium) text-accent ${purchaseStatus === "error" ? "border border-[#e5484d]/50 bg-[#e5484d]/10 text-[#e5484d]" : purchaseStatus === "success" ? "border border-[#22a06b]/50 bg-[#22a06b]/10 text-[#22a06b]" : ""}`}
+              >
                 {purchaseState}
               </p>
             )}
@@ -1317,7 +1336,8 @@ export function EventDetail({
                     <span />
                   </div>
                   <p className="mb-0 text-sm text-text-soft">
-                    Keep this window open. This usually takes a few seconds.
+                    Keep this window open. Approve the mobile-money prompt if
+                    your provider asks for confirmation.
                   </p>
                 </div>
               )}
@@ -1339,6 +1359,17 @@ export function EventDetail({
                         : `${tickets.length} tickets are ready`}
                     </h3>
                     <p className="mb-0 text-text-muted">{purchaseState}</p>
+                  </div>
+                  <div className="grid gap-2 rounded-lg border border-border bg-surface-muted p-3 text-sm text-text-muted">
+                    <strong className="text-text">{displayEvent.name}</strong>
+                    <span>
+                      {dateTime.format(new Date(displayEvent.startsAt))}
+                    </span>
+                    <span>{displayEvent.venue}</span>
+                    <span>
+                      Bring the QR code below. Venue staff can scan it directly
+                      from your phone.
+                    </span>
                   </div>
                   <div className="checkout-result__delivery">
                     <MailCheck aria-hidden="true" size={20} />
@@ -1391,12 +1422,16 @@ export function EventDetail({
                       {selectedType?.name ?? "General admission"}
                     </strong>
                     <strong className="text-price">
-                      {money.format(ticketTotalCents / 100)}
+                      {money.format(checkoutGrandTotalCents / 100)}
                     </strong>
                   </div>
                   <span className="text-[0.9rem] text-text-muted">
                     {checkoutQuantity.toLocaleString("en-UG")} x{" "}
                     {money.format(unitPrice / 100)}
+                  </span>
+                  <span className="text-[0.9rem] text-text-muted">
+                    Fees: {money.format(checkoutFeeCents / 100)} · Total due:{" "}
+                    {money.format(checkoutGrandTotalCents / 100)}
                   </span>
                   <span className="text-[0.9rem] text-text-muted">
                     {dateTime.format(new Date(checkoutEvent.startsAt))}
@@ -1607,6 +1642,7 @@ export function EventDetail({
                     className={primaryAction}
                     type="submit"
                     disabled={
+                      purchaseStatus === "processing" ||
                       (Boolean(displayEvent.booking?.seating) &&
                         selectedSeats.length !== quantity) ||
                       salesClosed ||
@@ -1614,14 +1650,22 @@ export function EventDetail({
                       categoryUnavailable
                     }
                   >
-                    <CircleDollarSign size={18} />
-                    {unitPrice === 0
-                      ? "Get ticket"
-                      : `Pay with ${
-                          paymentProvider === "mtn"
-                            ? "MTN MoMo"
-                            : "Airtel Money"
-                        }`}
+                    {purchaseStatus === "processing" ? (
+                      <LoaderCircle className="animate-spin" size={18} />
+                    ) : (
+                      <CircleDollarSign size={18} />
+                    )}
+                    {purchaseStatus === "processing"
+                      ? unitPrice === 0
+                        ? "Reserving..."
+                        : "Awaiting payment..."
+                      : unitPrice === 0
+                        ? "Get ticket"
+                        : `Pay with ${
+                            paymentProvider === "mtn"
+                              ? "MTN MoMo"
+                              : "Airtel Money"
+                          }`}
                   </button>
                 </form>
               </div>

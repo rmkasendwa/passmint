@@ -50,10 +50,12 @@ export function DashboardWorkbench({
   view = "events",
   initialEvents,
   initialSales,
+  focusEventId,
 }: {
   view?: "events" | "reports" | "scan" | "create";
   initialEvents?: Event[];
   initialSales?: SalesSummary;
+  focusEventId?: string;
 }) {
   const {
     cameraEnabled,
@@ -77,6 +79,9 @@ export function DashboardWorkbench({
   const [eventFilters, setEventFilters] = useState(emptyHostedEventFilters);
   const now = Date.now();
   const matchingEvents = filterHostedEvents(dashboardEvents, eventFilters, now);
+  const focusEvent = focusEventId
+    ? dashboardEvents.find((event) => event.id === focusEventId)
+    : undefined;
   const dashboardUpcomingCount = dashboardEvents.filter(
     (event) => hostedEventStatus(event, now) === "upcoming",
   ).length;
@@ -106,8 +111,10 @@ export function DashboardWorkbench({
               : view === "reports"
                 ? "Keep track of ticket activity across your events."
                 : view === "scan"
-                  ? "Welcome your guests. Scan a ticket to check them in."
-                  : "Set the details and save a draft, or publish when you�re ready."}
+                  ? focusEvent
+                    ? `Welcome guests for ${focusEvent.name}. Scan a ticket or type its code to check them in.`
+                    : "Welcome your guests. Scan a ticket to check them in."
+                  : "Set the details and save a draft, or publish when you're ready."}
           </p>
         </div>
         {view !== "create" && (
@@ -175,7 +182,7 @@ export function DashboardWorkbench({
                     eventFilters.status !== "all" ||
                     eventFilters.from ||
                     eventFilters.to
-                      ? " � Filters active"
+                      ? " - Filters active"
                       : ""}
                   </summary>
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -326,7 +333,7 @@ export function DashboardWorkbench({
                     Create your first event <ArrowRight size={17} />
                   </Link>
                   <span className="text-xs text-text-soft">
-                    Start with a draft. Publish when you�re ready.
+                    Start with a draft. Publish when you're ready.
                   </span>
                 </div>
               ) : matchingEvents.length === 0 ? (
@@ -387,12 +394,40 @@ export function DashboardWorkbench({
                                   ? "Unlimited event capacity"
                                   : `${event.remainingCapacity} remaining at event level`}
                         </p>
-                        <a
-                          className={secondaryAction}
-                          href={`/events/${event.id}`}
-                        >
-                          Manage event
-                        </a>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <Link
+                            className={primaryAction}
+                            href={`/events/${event.id}`}
+                          >
+                            Manage event
+                          </Link>
+                          {event.status === "published" && (
+                            <Link
+                              className={secondaryAction}
+                              href={`/event/${event.id}`}
+                            >
+                              Public page
+                            </Link>
+                          )}
+                          <Link
+                            className={secondaryAction}
+                            href={`/check-in?eventId=${encodeURIComponent(event.id)}`}
+                          >
+                            Check in guests
+                          </Link>
+                          <Link
+                            className={secondaryAction}
+                            href={`/reports?eventId=${encodeURIComponent(event.id)}`}
+                          >
+                            Reports
+                          </Link>
+                        </div>
+                        {event.status !== "published" && (
+                          <p className="mb-0 mt-3 text-sm text-text-soft">
+                            Publish this event before sharing its public ticket
+                            page.
+                          </p>
+                        )}
                       </div>
                     </article>
                   ))}
@@ -409,8 +444,9 @@ export function DashboardWorkbench({
                   <h2>Ticket scanning</h2>
                 </div>
                 <p className="mb-0 text-white/72">
-                  Scan QR tickets for events you created. Accepted tickets are
-                  marked entered and cannot be reused.
+                  {focusEvent
+                    ? `You are checking in guests for ${focusEvent.name}. Accepted tickets are marked entered and cannot be reused.`
+                    : "Scan QR tickets for events you created. Accepted tickets are marked entered and cannot be reused."}
                 </p>
                 <div className="mt-4 inline-flex min-h-9.5 items-center gap-2 rounded-lg bg-[#dff7e8] px-2.75 font-(--weight-semibold) text-[#14532d]">
                   <ShieldCheck size={18} />
